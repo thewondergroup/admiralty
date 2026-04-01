@@ -989,13 +989,28 @@ function CompassTool(){
   var state=useState(0);var heading=state[0];var setHeading=state[1];
   var liveState=useState(false);var live=liveState[0];var setLive=liveState[1];
   var dragState=useState(false);var dragging=dragState[0];var setDragging=dragState[1];
+  var permState=useState("unknown");var perm=permState[0];var setPerm=permState[1];
   var svgRef=useRef(null);
+  var needsPermission=typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function";
+  var startSensor=function(){
+    var fn=function(ev){
+      if(ev.webkitCompassHeading!=null){setHeading(Math.round(ev.webkitCompassHeading));setLive(true);}
+      else if(ev.alpha!=null){setHeading(Math.round(360-ev.alpha));setLive(true);}
+    };
+    window.addEventListener("deviceorientation",fn,true);
+    return fn;
+  };
+  var requestIOSPermission=function(){
+    DeviceOrientationEvent.requestPermission().then(function(result){
+      if(result==="granted"){setPerm("granted");startSensor();}
+      else{setPerm("denied");}
+    }).catch(function(){setPerm("denied");});
+  };
   useEffect(function(){
-    if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission!=="function"){
-      var fn=function(ev){if(ev.alpha!=null){setHeading(Math.round(360-ev.alpha));setLive(true);}};
-      window.addEventListener("deviceorientation",fn,true);
+    if(!needsPermission&&window.DeviceOrientationEvent){
+      var fn=startSensor();
       return function(){window.removeEventListener("deviceorientation",fn,true);};
-    }
+    } else if(needsPermission){setPerm("prompt");}
   },[]);
   var dodrag=useCallback(function(ev,svg){
     var r2=svg.getBoundingClientRect();
@@ -1032,6 +1047,8 @@ function CompassTool(){
         h("div",{style:{fontSize:9,color:live?"#4AE080":MU,letterSpacing:"0.14em",textTransform:"uppercase"}},live?"● LIVE SENSOR":"● MANUAL")
       )
     ),
+    needsPermission&&perm==="prompt"&&h("button",{onClick:requestIOSPermission,style:{background:"rgba(200,168,74,0.12)",border:"1px solid rgba(200,168,74,0.4)",borderRadius:6,color:GO,fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,padding:"12px 24px",cursor:"pointer",marginBottom:4}},"Enable Compass Sensor"),
+    needsPermission&&perm==="denied"&&h("div",{style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.25)",borderRadius:6,padding:"10px 14px",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:"#E08080",textAlign:"center",marginBottom:4}},"Sensor access denied. Go to Settings → Safari → Motion & Orientation Access to enable."),
     h("svg",{ref:svgRef,width:sz,height:sz,style:{cursor:live?"default":"grab"},
       onMouseDown:function(){if(!live)setDragging(true);},
       onMouseUp:function(){setDragging(false);},
@@ -1053,7 +1070,7 @@ function CompassTool(){
       h("circle",{cx:cx,cy:cy,r:6,fill:NC,stroke:NB,strokeWidth:1.5}),
       h("circle",{cx:cx,cy:cy,r:2.5,fill:WH})
     ),
-    h("div",{style:{fontSize:11,color:MU,textAlign:"center"}},live?"Using device compass sensor — point phone north to calibrate":"Drag the dial to set bearing manually")
+    h("div",{style:{fontSize:11,color:MU,textAlign:"center"}},live?"Using device compass — point phone north to calibrate":needsPermission&&perm==="prompt"?"Tap the button above to enable the live compass sensor":"Drag the dial to set bearing manually")
   );
 }
 
