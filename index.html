@@ -72,6 +72,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#C8A84A;cursor:pointer;border:2px solid #07101E}
 ::-webkit-scrollbar{width:2px}
 ::-webkit-scrollbar-thumb{background:rgba(200,168,74,0.2);border-radius:2px}
+.leaflet-control-attribution{background:rgba(4,12,26,0.75)!important;color:rgba(90,116,144,0.55)!important;font-size:9px!important;padding:2px 6px!important;border-radius:3px 0 0 0!important;box-shadow:none!important}
+.leaflet-control-attribution a{color:rgba(90,116,144,0.75)!important}
 </style>
 </head>
 <body>
@@ -1963,8 +1965,9 @@ function ChartTool(){
     }
     var doInit=function(){
       var L=window.L;
-      var map=L.map(mapRef.current,{zoomControl:false}).setView([lat,lon],13);
-      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85});
+      var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],13);
+      L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
+      var baseLayer=L.tileLayer("https://tiles.openseamap.org/base/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1});
       baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
       baseLayer.addTo(map);
       // Timeout fallback — if no tiles load within 8s, assume offline
@@ -2057,26 +2060,29 @@ function ChartTool(){
       })
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
-    h("div",{style:{flex:1,position:"relative",minHeight:0}},
-      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18"}}),
+    h("div",{style:{flex:1,position:"relative",minHeight:0,overflow:"hidden"}},
+      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18",touchAction:"none"}}),
       isOffline
-        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:32,textAlign:"center"}},
-            h("svg",{width:120,height:120,viewBox:"0 0 120 120"},
-              h("circle",{cx:60,cy:60,r:58,fill:"none",stroke:"rgba(200,168,74,0.08)",strokeWidth:1}),
-              h("circle",{cx:60,cy:60,r:40,fill:"none",stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
-              h("line",{x1:60,y1:2,x2:60,y2:118,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
-              h("line",{x1:2,y1:60,x2:118,y2:60,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
-              h("line",{x1:18,y1:18,x2:102,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
-              h("line",{x1:102,y1:18,x2:18,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
-              h("polygon",{points:"60,4 57,20 63,20",fill:"rgba(200,168,74,0.3)"}),
-              h("polygon",{points:"60,116 57,100 63,100",fill:"rgba(122,98,40,0.3)"}),
-              h("text",{x:60,y:64,fill:"rgba(200,168,74,0.15)",fontSize:28,textAnchor:"middle",fontFamily:"Georgia,serif"},"N")
+        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+            h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"🗺️"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
+            h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
+              h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),h("br"),h("br"),h("span",{style:{color:GD}},"Fair winds and following seas.")
             ),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"rgba(200,168,74,0.4)",letterSpacing:"0.04em"}},"No Chart Available Offline"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:MU,lineHeight:1.7,maxWidth:260}},"Chart tiles require an internet connection. At sea without signal, use your paper charts or a dedicated app such as Navionics."),
-            h("div",{style:{marginTop:8,display:"flex",flexDirection:"column",gap:6}},
-              [{icon:"🗺️",text:"Navionics — offline charts & tidal data"},{icon:"📄",text:"UKHO Admiralty paper charts"},{icon:"⚓",text:"iSailor — downloadable chart regions"}]
-              .map(function(item,i){return h("div",{key:i,style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"rgba(90,116,144,0.7)"}},item.icon+" "+item.text);})
+            h("div",{style:{display:"flex",flexDirection:"column",gap:0,width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
+              [{icon:"🗺️",name:"Navionics",desc:"Offline charts & tidal data"},
+               {icon:"⚓",name:"iSailor",desc:"Downloadable chart regions"},
+               {icon:"📋",name:"UKHO Admiralty",desc:"Official paper charts"}
+              ].map(function(item,i){
+                return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none",display:"flex",alignItems:"center",gap:10}},
+                  h("span",{style:{fontSize:16}}),
+                  h("div",null,
+                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
+                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
+                  )
+                );
+              })
             )
           )
         : h("div",{style:{position:"absolute",inset:0}},
@@ -5889,8 +5895,9 @@ function ChartTool(){
     }
     var doInit=function(){
       var L=window.L;
-      var map=L.map(mapRef.current,{zoomControl:false}).setView([lat,lon],13);
-      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85});
+      var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],13);
+      L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
+      var baseLayer=L.tileLayer("https://tiles.openseamap.org/base/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1});
       baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
       baseLayer.addTo(map);
       // Timeout fallback — if no tiles load within 8s, assume offline
@@ -5983,26 +5990,29 @@ function ChartTool(){
       })
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
-    h("div",{style:{flex:1,position:"relative",minHeight:0}},
-      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18"}}),
+    h("div",{style:{flex:1,position:"relative",minHeight:0,overflow:"hidden"}},
+      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18",touchAction:"none"}}),
       isOffline
-        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:32,textAlign:"center"}},
-            h("svg",{width:120,height:120,viewBox:"0 0 120 120"},
-              h("circle",{cx:60,cy:60,r:58,fill:"none",stroke:"rgba(200,168,74,0.08)",strokeWidth:1}),
-              h("circle",{cx:60,cy:60,r:40,fill:"none",stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
-              h("line",{x1:60,y1:2,x2:60,y2:118,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
-              h("line",{x1:2,y1:60,x2:118,y2:60,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
-              h("line",{x1:18,y1:18,x2:102,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
-              h("line",{x1:102,y1:18,x2:18,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
-              h("polygon",{points:"60,4 57,20 63,20",fill:"rgba(200,168,74,0.3)"}),
-              h("polygon",{points:"60,116 57,100 63,100",fill:"rgba(122,98,40,0.3)"}),
-              h("text",{x:60,y:64,fill:"rgba(200,168,74,0.15)",fontSize:28,textAnchor:"middle",fontFamily:"Georgia,serif"},"N")
+        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+            h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"🗺️"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
+            h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
+              h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),h("br"),h("br"),h("span",{style:{color:GD}},"Fair winds and following seas.")
             ),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"rgba(200,168,74,0.4)",letterSpacing:"0.04em"}},"No Chart Available Offline"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:MU,lineHeight:1.7,maxWidth:260}},"Chart tiles require an internet connection. At sea without signal, use your paper charts or a dedicated app such as Navionics."),
-            h("div",{style:{marginTop:8,display:"flex",flexDirection:"column",gap:6}},
-              [{icon:"🗺️",text:"Navionics — offline charts & tidal data"},{icon:"📄",text:"UKHO Admiralty paper charts"},{icon:"⚓",text:"iSailor — downloadable chart regions"}]
-              .map(function(item,i){return h("div",{key:i,style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"rgba(90,116,144,0.7)"}},item.icon+" "+item.text);})
+            h("div",{style:{display:"flex",flexDirection:"column",gap:0,width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
+              [{icon:"🗺️",name:"Navionics",desc:"Offline charts & tidal data"},
+               {icon:"⚓",name:"iSailor",desc:"Downloadable chart regions"},
+               {icon:"📋",name:"UKHO Admiralty",desc:"Official paper charts"}
+              ].map(function(item,i){
+                return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none",display:"flex",alignItems:"center",gap:10}},
+                  h("span",{style:{fontSize:16}}),
+                  h("div",null,
+                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
+                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
+                  )
+                );
+              })
             )
           )
         : h("div",{style:{position:"absolute",inset:0}},
