@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Admiralty">
-<meta name="application-name" content="Admiralty Handbook">
+<meta name="apple-mobile-web-app-title" content="Admiralty App">
+<meta name="application-name" content="Admiralty App">
 <meta name="theme-color" content="#07101E">
-<meta name="description" content="Mariner's quick reference — emergency procedures, navigation, tools and live weather">
-<title>Admiralty Handbook</title>
+<meta name="description" content="A mariner's handbook for modern times.">
+<title>Admiralty App</title>
 
 <script>
 // ── Inline PWA manifest ───────────────────────────────────────────────
 (function(){
   var manifest={
-    name:"Admiralty Handbook",
-    short_name:"Admiralty",
-    description:"Mariner's quick reference — emergency procedures, navigation, tools and live weather",
+    name:"Admiralty App",
+    short_name:"Admiralty App",
+    description:"A mariner's handbook for modern times.",
     start_url:"./",
     display:"standalone",
     orientation:"portrait",
@@ -3445,8 +3445,8 @@ function App(){
         h("polygon",{points:"26,4 24,16 28,16",fill:GO}),
         h("polygon",{points:"26,48 24,36 28,36",fill:GD})
       ),
-      h("div",null,
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:GL,letterSpacing:"0.04em",lineHeight:1}},"Admiralty Handbook"),
+      h("div",{style:{cursor:"pointer"},onClick:function(){setView("home");setActiveTab("home");setStack([]);setSearchQ("");}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:GL,letterSpacing:"0.04em",lineHeight:1}},"Admiralty App"),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:GD,letterSpacing:"0.04em",marginTop:2}},"Improvise. Adapt. Overcome.")
       ),
       h("button",{style:{background:"transparent",color:RE,border:"1px solid rgba(196,48,48,0.45)",borderRadius:4,fontSize:10,fontWeight:600,letterSpacing:"0.14em",padding:"7px 11px",cursor:"pointer",minHeight:34,fontFamily:"'Inter',system-ui,sans-serif",textTransform:"uppercase"},onClick:function(){push(view);setView("emergency");setActiveTab("emergency");}},"⚠ SOS")
@@ -3603,19 +3603,19 @@ ReactDOM.createRoot(document.getElementById("root")).render(h(App));
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Admiralty">
-<meta name="application-name" content="Admiralty Handbook">
+<meta name="apple-mobile-web-app-title" content="Admiralty App">
+<meta name="application-name" content="Admiralty App">
 <meta name="theme-color" content="#07101E">
-<meta name="description" content="Mariner's quick reference — emergency procedures, navigation, tools and live weather">
-<title>Admiralty Handbook</title>
+<meta name="description" content="A mariner's handbook for modern times.">
+<title>Admiralty App</title>
 
 <script>
 // ── Inline PWA manifest ───────────────────────────────────────────────
 (function(){
   var manifest={
-    name:"Admiralty Handbook",
-    short_name:"Admiralty",
-    description:"Mariner's quick reference — emergency procedures, navigation, tools and live weather",
+    name:"Admiralty App",
+    short_name:"Admiralty App",
+    description:"A mariner's handbook for modern times.",
     start_url:"./",
     display:"standalone",
     orientation:"portrait",
@@ -7026,8 +7026,8 @@ function App(){
         h("polygon",{points:"26,4 24,16 28,16",fill:GO}),
         h("polygon",{points:"26,48 24,36 28,36",fill:GD})
       ),
-      h("div",null,
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:GL,letterSpacing:"0.04em",lineHeight:1}},"Admiralty Handbook"),
+      h("div",{style:{cursor:"pointer"},onClick:function(){setView("home");setActiveTab("home");setStack([]);setSearchQ("");}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:GL,letterSpacing:"0.04em",lineHeight:1}},"Admiralty App"),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:GD,letterSpacing:"0.04em",marginTop:2}},"Improvise. Adapt. Overcome.")
       ),
       h("button",{style:{background:"transparent",color:RE,border:"1px solid rgba(196,48,48,0.45)",borderRadius:4,fontSize:10,fontWeight:600,letterSpacing:"0.14em",padding:"7px 11px",cursor:"pointer",minHeight:34,fontFamily:"'Inter',system-ui,sans-serif",textTransform:"uppercase"},onClick:function(){push(view);setView("emergency");setActiveTab("emergency");}},"⚠ SOS")
