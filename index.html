@@ -1198,6 +1198,7 @@ function WindAdvisorTool(){
   var ths=useState(null);var targetH=ths[0];var setTargetH=ths[1];
   var ss=useState(null);var selSector=ss[0];var setSelSector=ss[1];
   var ds=useState(false);var dragging=ds[0];var setDragging=ds[1];
+  var bfS=useState(4);var bf=bfS[0];var setBf=bfS[1];
   var svgRef=useRef(null);
   var getPos=function(hd){
     var rel=(hd-windDir+360)%360;
@@ -1237,11 +1238,27 @@ function WindAdvisorTool(){
     ),
     h("div",{style:{flex:1,overflowY:"auto"}},
       tab==="advisor"&&h("div",{style:{padding:16}},
-        h("div",{style:{fontSize:11,color:MU,textAlign:"center",marginBottom:8}},"Drag arrow to set wind · tap ring for heading advice"),
+        // Wind direction dial
+        h("div",{style:{fontSize:11,color:MU,textAlign:"center",marginBottom:8}},"Drag arrow to set wind direction · tap ring for heading advice"),
         h("div",{style:{display:"flex",justifyContent:"center"}},
           h("svg",{ref:svgRef,width:sz,height:sz,style:{cursor:"grab"},
-            onMouseDown:function(){setDragging(true);},onMouseUp:function(){setDragging(false);},onMouseLeave:function(){setDragging(false);},onMouseMove:onMM,
-            onTouchStart:function(){setDragging(true);},onTouchEnd:function(){setDragging(false);},onTouchMove:onTM
+            onMouseDown:function(ev){
+              var r2=svgRef.current.getBoundingClientRect();
+              var cx2=r2.left+r2.width/2,cy2=r2.top+r2.height/2;
+              var wa=(windDir-90)*Math.PI/180,ar=sz*0.38;
+              var ax=cx2+Math.cos(wa)*ar,ay=cy2+Math.sin(wa)*ar;
+              var dx=ev.clientX-ax,dy=ev.clientY-ay;
+              if(Math.sqrt(dx*dx+dy*dy)<28)setDragging(true);
+            },onMouseUp:function(){setDragging(false);},onMouseLeave:function(){setDragging(false);},onMouseMove:onMM,
+            onTouchStart:function(ev){
+              var r2=svgRef.current.getBoundingClientRect();
+              var cx2=r2.left+r2.width/2,cy2=r2.top+r2.height/2;
+              var wa=(windDir-90)*Math.PI/180,ar=sz*0.38;
+              var ax=cx2+Math.cos(wa)*ar,ay=cy2+Math.sin(wa)*ar;
+              var tx=ev.touches[0].clientX,ty=ev.touches[0].clientY;
+              var dx=tx-ax,dy=ty-ay;
+              if(Math.sqrt(dx*dx+dy*dy)<36)setDragging(true);
+            },onTouchEnd:function(){setDragging(false);},onTouchMove:onTM
           },
             (function(){
               var ps=[];
@@ -1249,20 +1266,13 @@ function WindAdvisorTool(){
                 var pos=getPos(d);
                 var a1=(d-91.5)*Math.PI/180,a2=(d-88.5)*Math.PI/180,rI=26,rO=r-2;
                 var dd=d;
-                ps.push(h("path",{key:d,
-                  d:"M"+(cx+Math.cos(a1)*rI)+","+(cy+Math.sin(a1)*rI)+" A"+rI+","+rI+" 0 0,1 "+(cx+Math.cos(a2)*rI)+","+(cy+Math.sin(a2)*rI)+" L"+(cx+Math.cos(a2)*rO)+","+(cy+Math.sin(a2)*rO)+" A"+rO+","+rO+" 0 0,0 "+(cx+Math.cos(a1)*rO)+","+(cy+Math.sin(a1)*rO)+" Z",
-                  fill:pos.color,opacity:pos.canSail?0.55:0.2,cursor:"pointer",
-                  onClick:(function(deg){return function(){setTargetH(deg);};})(dd)
-                }));
+                ps.push(h("path",{key:d,d:"M"+(cx+Math.cos(a1)*rI)+","+(cy+Math.sin(a1)*rI)+" A"+rI+","+rI+" 0 0,1 "+(cx+Math.cos(a2)*rI)+","+(cy+Math.sin(a2)*rI)+" L"+(cx+Math.cos(a2)*rO)+","+(cy+Math.sin(a2)*rO)+" A"+rO+","+rO+" 0 0,0 "+(cx+Math.cos(a1)*rO)+","+(cy+Math.sin(a1)*rO)+" Z",fill:pos.color,opacity:pos.canSail?0.55:0.2,cursor:"pointer",onClick:(function(deg){return function(){setTargetH(deg);};})(dd)}));
               }
               return ps;
             })(),
             h("circle",{cx:cx,cy:cy,r:r,fill:"none",stroke:NB,strokeWidth:1.5}),
             h("circle",{cx:cx,cy:cy,r:26,fill:NC,stroke:NB,strokeWidth:1}),
-            ["N","E","S","W"].map(function(card,i){
-              var a2=(i*90-90)*Math.PI/180;
-              return h("text",{key:card,x:cx+Math.cos(a2)*(r+11),y:cy+Math.sin(a2)*(r+11),fill:card==="N"?RE:GL,fontSize:9,fontWeight:700,textAnchor:"middle",dominantBaseline:"middle"},card);
-            }),
+            ["N","E","S","W"].map(function(card,i){var a2=(i*90-90)*Math.PI/180;return h("text",{key:card,x:cx+Math.cos(a2)*(r+11),y:cy+Math.sin(a2)*(r+11),fill:card==="N"?RE:GL,fontSize:9,fontWeight:700,textAnchor:"middle",dominantBaseline:"middle"},card);}),
             (function(){
               var wa=(windDir-90)*Math.PI/180;
               return [
@@ -1281,23 +1291,91 @@ function WindAdvisorTool(){
             h("div",{style:{fontSize:20,fontWeight:700,color:BL}},windDir+"°")
           ),
           targetH!==null&&h("div",{style:{textAlign:"center"}},
-            h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.08em"}},"Target"),
+            h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.08em"}},"Target Heading"),
             h("div",{style:{fontSize:20,fontWeight:700,color:WH}},targetH+"°")
           )
         ),
-        h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",marginBottom:8}},
-          [[GO,"Close-Hauled"],["#D4A840","Close Reach"],[AM,"Beam Reach"],["#D06820","Broad Reach"],["#A04010","Running"],[RE,"No-Go"]].map(function(pair){
-            return h("div",{key:pair[1],style:{display:"flex",alignItems:"center",gap:4}},
-              h("div",{style:{width:8,height:8,borderRadius:"50%",background:pair[0]}}),
-              h("span",{style:{fontSize:9,color:MU}},pair[1])
-            );
-          })
-        ),
-        windPos&&h("div",{style:{background:NC,border:"1px solid "+NB,borderRadius:10,padding:"12px 14px"}},
-          h("div",{style:{fontSize:15,fontWeight:700,color:windPos.color,marginBottom:4}},windPos.name),
-          h("div",{style:{fontSize:13,color:WH}},"Sails: "+windPos.sail),
-          !windPos.canSail&&h("div",{style:{fontSize:12,color:RE,marginTop:4}},"⚠ Cannot sail this heading — alter course at least 45°")
-        )
+        // Beaufort slider
+        (function(){
+          var bftDesc=["Calm","Light air","Light breeze","Gentle breeze","Moderate breeze","Fresh breeze","Strong breeze","Near gale","Gale","Severe gale","Storm","Violent storm","Hurricane"];
+          var bftColor=function(f){if(f<=3)return GR;if(f<=5)return "#6AAA40";if(f<=6)return AM;if(f<=7)return"#D06820";if(f<=9)return RE;return"#901010";};
+
+          // Full sail advice combining angle + Beaufort
+          var getSailAdvice=function(pos,force){
+            if(!pos||!pos.canSail)return null;
+            var name=pos.name;
+            var sails,reef,tips=[];
+            if(force<=3){
+              // Light winds
+              if(name==="Close-Hauled"){sails="Full main + genoa";reef="No reef needed";tips=["In light air, ease sheets slightly more than you think","Keep the boat flat — crew weight to leeward","Sail slightly lower than close-hauled to keep speed up","Watch for wind on the water — fill in before it reaches you"];}
+              else if(name==="Close Reach"){sails="Full main + genoa";reef="No reef needed";tips=["Genoa is your power sail in light winds — keep it full","Ease the mainsheet to reduce backwinding from the genoa","Sail trim is critical in light air — small adjustments count"];}
+              else if(name==="Beam Reach"){sails="Full main + genoa or cruising chute";reef="No reef needed";tips=["Consider the cruising chute for extra power","Keep the boat moving — momentum is everything in light air","Check telltales on both sails — they should stream aft"];}
+              else if(name==="Broad Reach"){sails="Full main + spinnaker or cruising chute";reef="No reef needed";tips=["Perfect conditions for the spinnaker — get it up","Ease the boom out as far as it will go","Watch for the chute collapsing — keep the boat moving"];}
+              else{sails="Full main + spinnaker, or goosewing the jib";reef="No reef needed";tips=["Rig a preventer on the boom — even in light air","Consider goosewinging — jib to opposite side from main","Watch for accidental gybes as the wind is light and variable"];}
+            } else if(force<=5){
+              // Moderate
+              if(name==="Close-Hauled"){sails="Full main + working jib";reef="No reef at F4, consider first reef at F5";tips=["Keep telltales streaming — ease sheets if they stall","Flatten the mainsail — outhaul and backstay on","Watch for gusts — ease mainsheet in puffs to reduce heel","Crew weight to windward to keep boat upright"];}
+              else if(name==="Close Reach"){sails="Full main + genoa";reef="No reef at F4, watch at F5";tips=["Good comfortable angle — use it if you can","Ease sheets a little more than close-hauled","Keep checking the sky to windward for squalls"];}
+              else if(name==="Beam Reach"){sails="Full main + genoa";reef="No reef needed — best sailing";tips=["Often the fastest point of sail — enjoy it","Check heel angle — if over 20°, ease the mainsheet","Keep weight centred or slightly to windward"];}
+              else if(name==="Broad Reach"){sails="Full main + genoa";reef="No reef at F4, watch at F5";tips=["Ease the vang slightly to let the top of the main twist","Watch for rolling — adjust your course slightly","Consider dropping the spinnaker and using genoa instead"];}
+              else{sails="Full main + jib — consider goosewing";reef="No reef needed";tips=["Rig a preventer now — this is when gybes happen","Watch for rhythmic rolling — if it starts, alter course slightly","Dead downwind is not always fastest — try a broad reach VMG"];}
+            } else if(force<=7){
+              // Strong
+              if(name==="Close-Hauled"){sails="Reefed main + working jib";reef="First reef at F6 — second reef at F7";tips=["Reef early — it’s always easier before you need to","Keep crew clipped on at all times","Ease the mainsheet in gusts rather than fighting the helm","If weather helm is heavy, the boat is telling you to reef"];}
+              else if(name==="Close Reach"){sails="Reefed main + working jib";reef="First reef at F6";tips=["Keep the boat as upright as possible — ease the main","Check all crew are harnessed and clipped","Review your destination ETA — can you make harbour before dark?"];}
+              else if(name==="Beam Reach"){sails="Reefed main + working jib";reef="First reef at F6 — second at F7";tips=["Fastest angle in strong wind — but demanding","Keep the mainsheet in your hand ready to ease","Watch heel carefully — if over 25° you need more reef"];}
+              else if(name==="Broad Reach"){sails="Reefed main + working jib";reef="First reef at F6";tips=["Rig a preventer — essential in these conditions","Watch for broaching in gusts — be ready on the helm","Ease out gently — sudden movements can broach the boat"];}
+              else{sails="Reefed main + small jib";reef="First reef — consider second";tips=["Rig a preventer immediately","Consider altering course to a broad reach instead","Accidental gybe in F7 can be dangerous — stay alert","Reduce sail area before you feel you need to"];}
+            } else {
+              // Severe
+              if(name==="Close-Hauled"){sails="Double reefed main + storm jib";reef="Two reefs minimum — consider heaving-to";tips=["If you can’t make progress to windward, heave-to","Consider making for nearest safe harbour","All crew harnessed and clipped on at all times","Check your bilges regularly"];}
+              else{sails="Storm sails or bare poles";reef="Heave-to or run off";tips=["In F8+ serious storm tactics are needed","Consider heaving-to to rest the crew and boat","If running before it, stream warps astern to slow speed","Brief all crew on MOB procedure — now","Check Mayday procedure — know your position"];}
+            }
+            return {sails:sails,reef:reef,tips:tips};
+          };
+
+          var advice=targetH!==null&&windPos?getSailAdvice(windPos,bf):null;
+          var bfColor=bftColor(bf);
+
+          return h("div",null,
+            // Beaufort selector
+            h("div",{style:{background:NC,border:"1px solid "+NB,borderRadius:8,padding:"10px 14px",marginBottom:10}},
+              h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}},
+                h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.08em"}},"Wind Strength"),
+                h("div",{style:{fontSize:13,fontWeight:700,color:bfColor}},"F"+bf+" — "+bftDesc[bf])
+              ),
+              h("input",{type:"range",min:0,max:12,step:1,value:bf,onChange:function(ev){setBf(Number(ev.target.value));},style:{width:"100%"}})
+            ),
+            // Sail advice card
+            targetH===null&&h("div",{style:{textAlign:"center",padding:"12px 0",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU}},"Tap the ring above to select a heading"),
+            advice&&h("div",{style:{background:NC,border:"1px solid "+(windPos.canSail?windPos.color+"44":RE+"44"),borderRadius:10,padding:"12px 14px",marginBottom:10}},
+              h("div",{style:{fontSize:16,fontWeight:700,color:windPos.color,marginBottom:2}},windPos.name),
+              h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}},"F"+bf+" — "+bftDesc[bf]),
+              h("div",{style:{marginBottom:8}},
+                h("div",{style:{fontSize:9,color:GO,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:3}},"⛵ Sails"),
+                h("div",{style:{fontSize:14,color:WH,fontFamily:"'Crimson Text',Georgia,serif"}},advice.sails)
+              ),
+              h("div",{style:{marginBottom:10}},
+                h("div",{style:{fontSize:9,color:AM,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:3}},"⚓ Reefing"),
+                h("div",{style:{fontSize:14,color:WH,fontFamily:"'Crimson Text',Georgia,serif"}},advice.reef)
+              ),
+              h("div",{style:{borderTop:"1px solid rgba(22,36,56,0.9)",paddingTop:8}},
+                h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:5}},"ℹ️ Tips"),
+                advice.tips.map(function(tip,i){
+                  return h("div",{key:i,style:{display:"flex",gap:6,marginBottom:4}},
+                    h("span",{style:{color:MU,fontSize:11,flexShrink:0}},"›"),
+                    h("div",{style:{fontSize:12,color:TX,fontFamily:"'Crimson Text',Georgia,serif",lineHeight:1.5}},tip)
+                  );
+                })
+              )
+            ),
+            windPos&&!windPos.canSail?h("div",{style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.25)",borderRadius:8,padding:"10px 14px",marginBottom:10}},
+              h("div",{style:{fontSize:14,fontWeight:700,color:RE,marginBottom:4}},"⚠ In Irons — No-Go Zone"),
+              h("div",{style:{fontSize:13,color:WH,fontFamily:"'Crimson Text',Georgia,serif",marginBottom:6}},"You cannot sail directly into the wind. Bear away at least 45° to either side."),
+              h("div",{style:{fontSize:12,color:TX,fontFamily:"'Crimson Text',Georgia,serif"}},"If stuck in irons: back the jib to one side to push the bow off the wind, then build speed before hardening up.")
+            ):null
+          );
+        })()
       ),
       tab==="pos"&&h("div",{style:{padding:16}},
         h("div",{style:{display:"flex",justifyContent:"center"}},
@@ -1346,10 +1424,10 @@ function WindAdvisorTool(){
 function HomeScreen(props){
   var QA=[
     {id:"compass",icon:"🧭",label:"Compass",sub:"Live bearing",action:function(){props.onTool("compass");}},
-    {id:"wind",icon:"🌬",label:"Wind Advisor",sub:"Points of sail",action:function(){props.onTool("wind");}},
-    {id:"anchor",icon:"⚓",label:"Anchor",sub:"Scope calc",action:function(){props.onTool("anchor");}},
-    {id:"beaufort",icon:"🌊",label:"Conditions",sub:"Beaufort scale",action:function(){props.onTool("beaufort");}},
-    {id:"passage",icon:"🗺️",label:"Passage",sub:"Plan your route",action:function(){props.onTool("passage");}},
+    {id:"weather",icon:"⛅",label:"Weather",sub:"Live conditions",action:function(){props.onTool("weather");}},
+    {id:"chart",icon:"🗺️",label:"Chart",sub:"OpenSeaMap",action:function(){props.onTool("chart");}},
+    {id:"passage",icon:"⛵",label:"Passage",sub:"Plan your route",action:function(){props.onTool("passage");}},
+    {id:"wind",icon:"🌬️",label:"Points of Sail",sub:"Sail advice by angle",action:function(){props.onTool("wind");}},
     {id:"nelson",icon:"⚜️",label:"Ask Nelson",sub:"What would he do?",action:function(){props.onNelson();}}
   ];
   var sectionsNav=[
@@ -3837,7 +3915,7 @@ function App(){
       // TOOLS
       view==="tools"&&h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
         h("div",{style:{display:"flex",flexWrap:"wrap",background:NM,borderBottom:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-          [["compass","🧭","Compass"],["wind","🌬️","Wind"],["anchor","⚓","Anchor"],["beaufort","🌊","Beaufort"],["tide","🌙","Tides"],["units","⚖️","Units"],["passage","⛵","Passage"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["weather","⛅","Weather"],["chart","🗺️","Chart"]].map(function(row){
+          [["compass","🧭","Compass"],["weather","⛅","Weather"],["chart","🗺️","Chart"],["wind","🌬️","Sail"],["passage","⛵","Passage"],["anchor","⚓","Anchor"],["tide","🌙","Tides"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["units","⚖️","Units"],["beaufort","🌊","Beaufort"]].map(function(row){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
@@ -5121,6 +5199,7 @@ function WindAdvisorTool(){
   var ths=useState(null);var targetH=ths[0];var setTargetH=ths[1];
   var ss=useState(null);var selSector=ss[0];var setSelSector=ss[1];
   var ds=useState(false);var dragging=ds[0];var setDragging=ds[1];
+  var bfS=useState(4);var bf=bfS[0];var setBf=bfS[1];
   var svgRef=useRef(null);
   var getPos=function(hd){
     var rel=(hd-windDir+360)%360;
@@ -5160,11 +5239,27 @@ function WindAdvisorTool(){
     ),
     h("div",{style:{flex:1,overflowY:"auto"}},
       tab==="advisor"&&h("div",{style:{padding:16}},
-        h("div",{style:{fontSize:11,color:MU,textAlign:"center",marginBottom:8}},"Drag arrow to set wind · tap ring for heading advice"),
+        // Wind direction dial
+        h("div",{style:{fontSize:11,color:MU,textAlign:"center",marginBottom:8}},"Drag arrow to set wind direction · tap ring for heading advice"),
         h("div",{style:{display:"flex",justifyContent:"center"}},
           h("svg",{ref:svgRef,width:sz,height:sz,style:{cursor:"grab"},
-            onMouseDown:function(){setDragging(true);},onMouseUp:function(){setDragging(false);},onMouseLeave:function(){setDragging(false);},onMouseMove:onMM,
-            onTouchStart:function(){setDragging(true);},onTouchEnd:function(){setDragging(false);},onTouchMove:onTM
+            onMouseDown:function(ev){
+              var r2=svgRef.current.getBoundingClientRect();
+              var cx2=r2.left+r2.width/2,cy2=r2.top+r2.height/2;
+              var wa=(windDir-90)*Math.PI/180,ar=sz*0.38;
+              var ax=cx2+Math.cos(wa)*ar,ay=cy2+Math.sin(wa)*ar;
+              var dx=ev.clientX-ax,dy=ev.clientY-ay;
+              if(Math.sqrt(dx*dx+dy*dy)<28)setDragging(true);
+            },onMouseUp:function(){setDragging(false);},onMouseLeave:function(){setDragging(false);},onMouseMove:onMM,
+            onTouchStart:function(ev){
+              var r2=svgRef.current.getBoundingClientRect();
+              var cx2=r2.left+r2.width/2,cy2=r2.top+r2.height/2;
+              var wa=(windDir-90)*Math.PI/180,ar=sz*0.38;
+              var ax=cx2+Math.cos(wa)*ar,ay=cy2+Math.sin(wa)*ar;
+              var tx=ev.touches[0].clientX,ty=ev.touches[0].clientY;
+              var dx=tx-ax,dy=ty-ay;
+              if(Math.sqrt(dx*dx+dy*dy)<36)setDragging(true);
+            },onTouchEnd:function(){setDragging(false);},onTouchMove:onTM
           },
             (function(){
               var ps=[];
@@ -5172,20 +5267,13 @@ function WindAdvisorTool(){
                 var pos=getPos(d);
                 var a1=(d-91.5)*Math.PI/180,a2=(d-88.5)*Math.PI/180,rI=26,rO=r-2;
                 var dd=d;
-                ps.push(h("path",{key:d,
-                  d:"M"+(cx+Math.cos(a1)*rI)+","+(cy+Math.sin(a1)*rI)+" A"+rI+","+rI+" 0 0,1 "+(cx+Math.cos(a2)*rI)+","+(cy+Math.sin(a2)*rI)+" L"+(cx+Math.cos(a2)*rO)+","+(cy+Math.sin(a2)*rO)+" A"+rO+","+rO+" 0 0,0 "+(cx+Math.cos(a1)*rO)+","+(cy+Math.sin(a1)*rO)+" Z",
-                  fill:pos.color,opacity:pos.canSail?0.55:0.2,cursor:"pointer",
-                  onClick:(function(deg){return function(){setTargetH(deg);};})(dd)
-                }));
+                ps.push(h("path",{key:d,d:"M"+(cx+Math.cos(a1)*rI)+","+(cy+Math.sin(a1)*rI)+" A"+rI+","+rI+" 0 0,1 "+(cx+Math.cos(a2)*rI)+","+(cy+Math.sin(a2)*rI)+" L"+(cx+Math.cos(a2)*rO)+","+(cy+Math.sin(a2)*rO)+" A"+rO+","+rO+" 0 0,0 "+(cx+Math.cos(a1)*rO)+","+(cy+Math.sin(a1)*rO)+" Z",fill:pos.color,opacity:pos.canSail?0.55:0.2,cursor:"pointer",onClick:(function(deg){return function(){setTargetH(deg);};})(dd)}));
               }
               return ps;
             })(),
             h("circle",{cx:cx,cy:cy,r:r,fill:"none",stroke:NB,strokeWidth:1.5}),
             h("circle",{cx:cx,cy:cy,r:26,fill:NC,stroke:NB,strokeWidth:1}),
-            ["N","E","S","W"].map(function(card,i){
-              var a2=(i*90-90)*Math.PI/180;
-              return h("text",{key:card,x:cx+Math.cos(a2)*(r+11),y:cy+Math.sin(a2)*(r+11),fill:card==="N"?RE:GL,fontSize:9,fontWeight:700,textAnchor:"middle",dominantBaseline:"middle"},card);
-            }),
+            ["N","E","S","W"].map(function(card,i){var a2=(i*90-90)*Math.PI/180;return h("text",{key:card,x:cx+Math.cos(a2)*(r+11),y:cy+Math.sin(a2)*(r+11),fill:card==="N"?RE:GL,fontSize:9,fontWeight:700,textAnchor:"middle",dominantBaseline:"middle"},card);}),
             (function(){
               var wa=(windDir-90)*Math.PI/180;
               return [
@@ -5204,23 +5292,91 @@ function WindAdvisorTool(){
             h("div",{style:{fontSize:20,fontWeight:700,color:BL}},windDir+"°")
           ),
           targetH!==null&&h("div",{style:{textAlign:"center"}},
-            h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.08em"}},"Target"),
+            h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.08em"}},"Target Heading"),
             h("div",{style:{fontSize:20,fontWeight:700,color:WH}},targetH+"°")
           )
         ),
-        h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",marginBottom:8}},
-          [[GO,"Close-Hauled"],["#D4A840","Close Reach"],[AM,"Beam Reach"],["#D06820","Broad Reach"],["#A04010","Running"],[RE,"No-Go"]].map(function(pair){
-            return h("div",{key:pair[1],style:{display:"flex",alignItems:"center",gap:4}},
-              h("div",{style:{width:8,height:8,borderRadius:"50%",background:pair[0]}}),
-              h("span",{style:{fontSize:9,color:MU}},pair[1])
-            );
-          })
-        ),
-        windPos&&h("div",{style:{background:NC,border:"1px solid "+NB,borderRadius:10,padding:"12px 14px"}},
-          h("div",{style:{fontSize:15,fontWeight:700,color:windPos.color,marginBottom:4}},windPos.name),
-          h("div",{style:{fontSize:13,color:WH}},"Sails: "+windPos.sail),
-          !windPos.canSail&&h("div",{style:{fontSize:12,color:RE,marginTop:4}},"⚠ Cannot sail this heading — alter course at least 45°")
-        )
+        // Beaufort slider
+        (function(){
+          var bftDesc=["Calm","Light air","Light breeze","Gentle breeze","Moderate breeze","Fresh breeze","Strong breeze","Near gale","Gale","Severe gale","Storm","Violent storm","Hurricane"];
+          var bftColor=function(f){if(f<=3)return GR;if(f<=5)return "#6AAA40";if(f<=6)return AM;if(f<=7)return"#D06820";if(f<=9)return RE;return"#901010";};
+
+          // Full sail advice combining angle + Beaufort
+          var getSailAdvice=function(pos,force){
+            if(!pos||!pos.canSail)return null;
+            var name=pos.name;
+            var sails,reef,tips=[];
+            if(force<=3){
+              // Light winds
+              if(name==="Close-Hauled"){sails="Full main + genoa";reef="No reef needed";tips=["In light air, ease sheets slightly more than you think","Keep the boat flat — crew weight to leeward","Sail slightly lower than close-hauled to keep speed up","Watch for wind on the water — fill in before it reaches you"];}
+              else if(name==="Close Reach"){sails="Full main + genoa";reef="No reef needed";tips=["Genoa is your power sail in light winds — keep it full","Ease the mainsheet to reduce backwinding from the genoa","Sail trim is critical in light air — small adjustments count"];}
+              else if(name==="Beam Reach"){sails="Full main + genoa or cruising chute";reef="No reef needed";tips=["Consider the cruising chute for extra power","Keep the boat moving — momentum is everything in light air","Check telltales on both sails — they should stream aft"];}
+              else if(name==="Broad Reach"){sails="Full main + spinnaker or cruising chute";reef="No reef needed";tips=["Perfect conditions for the spinnaker — get it up","Ease the boom out as far as it will go","Watch for the chute collapsing — keep the boat moving"];}
+              else{sails="Full main + spinnaker, or goosewing the jib";reef="No reef needed";tips=["Rig a preventer on the boom — even in light air","Consider goosewinging — jib to opposite side from main","Watch for accidental gybes as the wind is light and variable"];}
+            } else if(force<=5){
+              // Moderate
+              if(name==="Close-Hauled"){sails="Full main + working jib";reef="No reef at F4, consider first reef at F5";tips=["Keep telltales streaming — ease sheets if they stall","Flatten the mainsail — outhaul and backstay on","Watch for gusts — ease mainsheet in puffs to reduce heel","Crew weight to windward to keep boat upright"];}
+              else if(name==="Close Reach"){sails="Full main + genoa";reef="No reef at F4, watch at F5";tips=["Good comfortable angle — use it if you can","Ease sheets a little more than close-hauled","Keep checking the sky to windward for squalls"];}
+              else if(name==="Beam Reach"){sails="Full main + genoa";reef="No reef needed — best sailing";tips=["Often the fastest point of sail — enjoy it","Check heel angle — if over 20°, ease the mainsheet","Keep weight centred or slightly to windward"];}
+              else if(name==="Broad Reach"){sails="Full main + genoa";reef="No reef at F4, watch at F5";tips=["Ease the vang slightly to let the top of the main twist","Watch for rolling — adjust your course slightly","Consider dropping the spinnaker and using genoa instead"];}
+              else{sails="Full main + jib — consider goosewing";reef="No reef needed";tips=["Rig a preventer now — this is when gybes happen","Watch for rhythmic rolling — if it starts, alter course slightly","Dead downwind is not always fastest — try a broad reach VMG"];}
+            } else if(force<=7){
+              // Strong
+              if(name==="Close-Hauled"){sails="Reefed main + working jib";reef="First reef at F6 — second reef at F7";tips=["Reef early — it’s always easier before you need to","Keep crew clipped on at all times","Ease the mainsheet in gusts rather than fighting the helm","If weather helm is heavy, the boat is telling you to reef"];}
+              else if(name==="Close Reach"){sails="Reefed main + working jib";reef="First reef at F6";tips=["Keep the boat as upright as possible — ease the main","Check all crew are harnessed and clipped","Review your destination ETA — can you make harbour before dark?"];}
+              else if(name==="Beam Reach"){sails="Reefed main + working jib";reef="First reef at F6 — second at F7";tips=["Fastest angle in strong wind — but demanding","Keep the mainsheet in your hand ready to ease","Watch heel carefully — if over 25° you need more reef"];}
+              else if(name==="Broad Reach"){sails="Reefed main + working jib";reef="First reef at F6";tips=["Rig a preventer — essential in these conditions","Watch for broaching in gusts — be ready on the helm","Ease out gently — sudden movements can broach the boat"];}
+              else{sails="Reefed main + small jib";reef="First reef — consider second";tips=["Rig a preventer immediately","Consider altering course to a broad reach instead","Accidental gybe in F7 can be dangerous — stay alert","Reduce sail area before you feel you need to"];}
+            } else {
+              // Severe
+              if(name==="Close-Hauled"){sails="Double reefed main + storm jib";reef="Two reefs minimum — consider heaving-to";tips=["If you can’t make progress to windward, heave-to","Consider making for nearest safe harbour","All crew harnessed and clipped on at all times","Check your bilges regularly"];}
+              else{sails="Storm sails or bare poles";reef="Heave-to or run off";tips=["In F8+ serious storm tactics are needed","Consider heaving-to to rest the crew and boat","If running before it, stream warps astern to slow speed","Brief all crew on MOB procedure — now","Check Mayday procedure — know your position"];}
+            }
+            return {sails:sails,reef:reef,tips:tips};
+          };
+
+          var advice=targetH!==null&&windPos?getSailAdvice(windPos,bf):null;
+          var bfColor=bftColor(bf);
+
+          return h("div",null,
+            // Beaufort selector
+            h("div",{style:{background:NC,border:"1px solid "+NB,borderRadius:8,padding:"10px 14px",marginBottom:10}},
+              h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}},
+                h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.08em"}},"Wind Strength"),
+                h("div",{style:{fontSize:13,fontWeight:700,color:bfColor}},"F"+bf+" — "+bftDesc[bf])
+              ),
+              h("input",{type:"range",min:0,max:12,step:1,value:bf,onChange:function(ev){setBf(Number(ev.target.value));},style:{width:"100%"}})
+            ),
+            // Sail advice card
+            targetH===null&&h("div",{style:{textAlign:"center",padding:"12px 0",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU}},"Tap the ring above to select a heading"),
+            advice&&h("div",{style:{background:NC,border:"1px solid "+(windPos.canSail?windPos.color+"44":RE+"44"),borderRadius:10,padding:"12px 14px",marginBottom:10}},
+              h("div",{style:{fontSize:16,fontWeight:700,color:windPos.color,marginBottom:2}},windPos.name),
+              h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}},"F"+bf+" — "+bftDesc[bf]),
+              h("div",{style:{marginBottom:8}},
+                h("div",{style:{fontSize:9,color:GO,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:3}},"⛵ Sails"),
+                h("div",{style:{fontSize:14,color:WH,fontFamily:"'Crimson Text',Georgia,serif"}},advice.sails)
+              ),
+              h("div",{style:{marginBottom:10}},
+                h("div",{style:{fontSize:9,color:AM,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:3}},"⚓ Reefing"),
+                h("div",{style:{fontSize:14,color:WH,fontFamily:"'Crimson Text',Georgia,serif"}},advice.reef)
+              ),
+              h("div",{style:{borderTop:"1px solid rgba(22,36,56,0.9)",paddingTop:8}},
+                h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:5}},"ℹ️ Tips"),
+                advice.tips.map(function(tip,i){
+                  return h("div",{key:i,style:{display:"flex",gap:6,marginBottom:4}},
+                    h("span",{style:{color:MU,fontSize:11,flexShrink:0}},"›"),
+                    h("div",{style:{fontSize:12,color:TX,fontFamily:"'Crimson Text',Georgia,serif",lineHeight:1.5}},tip)
+                  );
+                })
+              )
+            ),
+            windPos&&!windPos.canSail?h("div",{style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.25)",borderRadius:8,padding:"10px 14px",marginBottom:10}},
+              h("div",{style:{fontSize:14,fontWeight:700,color:RE,marginBottom:4}},"⚠ In Irons — No-Go Zone"),
+              h("div",{style:{fontSize:13,color:WH,fontFamily:"'Crimson Text',Georgia,serif",marginBottom:6}},"You cannot sail directly into the wind. Bear away at least 45° to either side."),
+              h("div",{style:{fontSize:12,color:TX,fontFamily:"'Crimson Text',Georgia,serif"}},"If stuck in irons: back the jib to one side to push the bow off the wind, then build speed before hardening up.")
+            ):null
+          );
+        })()
       ),
       tab==="pos"&&h("div",{style:{padding:16}},
         h("div",{style:{display:"flex",justifyContent:"center"}},
@@ -5269,10 +5425,10 @@ function WindAdvisorTool(){
 function HomeScreen(props){
   var QA=[
     {id:"compass",icon:"🧭",label:"Compass",sub:"Live bearing",action:function(){props.onTool("compass");}},
-    {id:"wind",icon:"🌬",label:"Wind Advisor",sub:"Points of sail",action:function(){props.onTool("wind");}},
-    {id:"anchor",icon:"⚓",label:"Anchor",sub:"Scope calc",action:function(){props.onTool("anchor");}},
-    {id:"beaufort",icon:"🌊",label:"Conditions",sub:"Beaufort scale",action:function(){props.onTool("beaufort");}},
-    {id:"passage",icon:"🗺️",label:"Passage",sub:"Plan your route",action:function(){props.onTool("passage");}},
+    {id:"weather",icon:"⛅",label:"Weather",sub:"Live conditions",action:function(){props.onTool("weather");}},
+    {id:"chart",icon:"🗺️",label:"Chart",sub:"OpenSeaMap",action:function(){props.onTool("chart");}},
+    {id:"passage",icon:"⛵",label:"Passage",sub:"Plan your route",action:function(){props.onTool("passage");}},
+    {id:"wind",icon:"🌬️",label:"Points of Sail",sub:"Sail advice by angle",action:function(){props.onTool("wind");}},
     {id:"nelson",icon:"⚜️",label:"Ask Nelson",sub:"What would he do?",action:function(){props.onNelson();}}
   ];
   var sectionsNav=[
@@ -7760,7 +7916,7 @@ function App(){
       // TOOLS
       view==="tools"&&h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
         h("div",{style:{display:"flex",flexWrap:"wrap",background:NM,borderBottom:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-          [["compass","🧭","Compass"],["wind","🌬️","Wind"],["anchor","⚓","Anchor"],["beaufort","🌊","Beaufort"],["tide","🌙","Tides"],["units","⚖️","Units"],["passage","⛵","Passage"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["weather","⛅","Weather"],["chart","🗺️","Chart"]].map(function(row){
+          [["compass","🧭","Compass"],["weather","⛅","Weather"],["chart","🗺️","Chart"],["wind","🌬️","Sail"],["passage","⛵","Passage"],["anchor","⚓","Anchor"],["tide","🌙","Tides"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["units","⚖️","Units"],["beaufort","🌊","Beaufort"]].map(function(row){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
