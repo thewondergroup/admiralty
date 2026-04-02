@@ -2049,11 +2049,12 @@ function ChartTool(){
       var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],13);
       L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
       var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:1});
-      baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
+      var tileErrors=0;
+      baseLayer.on("tileerror",function(){tileErrors++;if(tileErrors>=3)setIsOffline(true);});
+      baseLayer.on("tileload",function(){tileErrors=0;setIsOffline(false);});
       baseLayer.addTo(map);
       // Timeout fallback — if no tiles load within 8s, assume offline
-      var tileTimeout=setTimeout(function(){if(loading)setIsOffline(true);},8000);
-      baseLayer.once("tileload",function(){clearTimeout(tileTimeout);setIsOffline(false);});
+      baseLayer.once("tileload",function(){setIsOffline(false);setLoading(false);});
       L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
       L.control.zoom({position:"topright"}).addTo(map);
       if(lat&&lon){
@@ -2160,12 +2161,7 @@ function ChartTool(){
           );
         })
       ),
-      !navigator.onLine
-        ?h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center",background:"#040C18"}},
-           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"#DFC070",marginBottom:12}},"No connection"),
-           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:"#5A7490",lineHeight:1.7}},"Wind & weather data requires an internet connection.")
-         )
-        :h("iframe",{key:windyPos.lat+","+windyPos.lon,src:windyUrl,style:{flex:1,border:"none",width:"100%",minHeight:0},allowFullScreen:true})
+      h("iframe",{key:windyPos.lat+","+windyPos.lon,src:windyUrl,style:{flex:1,border:"none",width:"100%",minHeight:0},allowFullScreen:true})
     ),
     mode==="chart"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
     h("div",{style:{padding:"8px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
@@ -2187,7 +2183,7 @@ function ChartTool(){
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
-      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18",overflowY:"auto"}},
         h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"\ud83d\uddfa\ufe0f"),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
         h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
@@ -6098,11 +6094,12 @@ function ChartTool(){
       var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],13);
       L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
       var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:1});
-      baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
+      var tileErrors=0;
+      baseLayer.on("tileerror",function(){tileErrors++;if(tileErrors>=3)setIsOffline(true);});
+      baseLayer.on("tileload",function(){tileErrors=0;setIsOffline(false);});
       baseLayer.addTo(map);
       // Timeout fallback — if no tiles load within 8s, assume offline
-      var tileTimeout=setTimeout(function(){if(loading)setIsOffline(true);},8000);
-      baseLayer.once("tileload",function(){clearTimeout(tileTimeout);setIsOffline(false);});
+      baseLayer.once("tileload",function(){setIsOffline(false);setLoading(false);});
       L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
       L.control.zoom({position:"topright"}).addTo(map);
       if(lat&&lon){
@@ -6209,12 +6206,7 @@ function ChartTool(){
           );
         })
       ),
-      !navigator.onLine
-        ?h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center",background:"#040C18"}},
-           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"#DFC070",marginBottom:12}},"No connection"),
-           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:"#5A7490",lineHeight:1.7}},"Wind & weather data requires an internet connection.")
-         )
-        :h("iframe",{key:windyPos.lat+","+windyPos.lon,src:windyUrl,style:{flex:1,border:"none",width:"100%",minHeight:0},allowFullScreen:true})
+      h("iframe",{key:windyPos.lat+","+windyPos.lon,src:windyUrl,style:{flex:1,border:"none",width:"100%",minHeight:0},allowFullScreen:true})
     ),
     mode==="chart"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
     h("div",{style:{padding:"8px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
@@ -6236,7 +6228,7 @@ function ChartTool(){
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
-      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18",overflowY:"auto"}},
         h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"\ud83d\uddfa\ufe0f"),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
         h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
