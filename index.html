@@ -1079,54 +1079,158 @@ function CompassTool(){
 
 // ── Anchor Tool ───────────────────────────────────────────────────────
 function AnchorTool(){
-  var ds=useState(5);var depth=ds[0];var setDepth=ds[1];
-  var cs=useState("moderate");var cond=cs[0];var setCond=cs[1];
-  var chs=useState(10);var chain=chs[0];var setChain=chs[1];
-  var conds={
-    calm:{ratio:3,label:"Calm",color:GR},
-    moderate:{ratio:5,label:"Moderate",color:AM},
-    windy:{ratio:6,label:"Windy",color:"#D06820"},
-    storm:{ratio:7,label:"Storm",color:RE}
+  var dS=useState(4);var depth=dS[0];var setDepth=dS[1];
+  var sS=useState(7);var scope=sS[0];var setScope=sS[1];
+  var cS=useState(3);var chain=cS[0];var setChain=cS[1];
+  var tS=useState("mixed");var rodeType=tS[0];var setRodeType=tS[1];
+  // Anchor watch state
+  var watchS=useState(false);var watching=watchS[0];var setWatching=watchS[1];
+  var anchorPosS=useState(null);var anchorPos=anchorPosS[0];var setAnchorPos=anchorPosS[1];
+  var radiusS=useState(50);var watchRadius=radiusS[0];var setWatchRadius=radiusS[1];
+  var currentPosS=useState(null);var currentPos=currentPosS[0];var setCurrentPos=currentPosS[1];
+  var driftDistS=useState(0);var driftDist=driftDistS[0];var setDriftDist=driftDistS[1];
+  var alarmS=useState(false);var alarm=alarmS[0];var setAlarm=alarmS[1];
+  var watchIdRef=useRef(null);
+  var audioRef=useRef(null);
+  var tabS=useState("calc");var anchorTab=tabS[0];var setAnchorTab=tabS[1];
+
+  var minScope=rodeType==="chain"?3:rodeType==="mixed"?5:7;
+  var recChain=Math.ceil(depth*scope);
+  var rode=rodeType==="chain"?recChain:rodeType==="mixed"?chain+" m chain + "+(recChain-chain)+" m warp":recChain+" m warp";
+  var holdingDesc=scope>=7?"Excellent":scope>=5?"Good":scope>=3?"Minimum":"Insufficient";
+  var holdingCol=scope>=7?GR:scope>=5?GO:scope>=3?AM:RE;
+
+  // Haversine in metres
+  var distM=function(lat1,lon1,lat2,lon2){
+    var R=6371000;
+    var dLat=(lat2-lat1)*Math.PI/180;var dLon=(lon2-lon1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   };
-  var cv=conds[cond];
-  var scope=Math.ceil(depth*cv.ratio);
-  var rope=Math.max(0,scope-chain);
-  var swing=Math.ceil(scope*0.9);
-  return h("div",{style:{padding:16}},
-    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}},
-      h("div",null,
-        h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:5}},"Water Depth"),
-        h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-          h("input",{type:"range",min:1,max:40,value:depth,onChange:function(ev){setDepth(Number(ev.target.value));}}),
-          h("span",{style:{fontSize:18,fontWeight:700,color:WH,minWidth:40}},depth+"m")
+
+  var startWatch=function(){
+    if(!navigator.geolocation){return;}
+    navigator.geolocation.getCurrentPosition(function(p){
+      var aPos={lat:p.coords.latitude,lon:p.coords.longitude};
+      setAnchorPos(aPos);setCurrentPos(aPos);setWatching(true);setAlarm(false);setDriftDist(0);
+      watchIdRef.current=navigator.geolocation.watchPosition(function(p2){
+        var cPos={lat:p2.coords.latitude,lon:p2.coords.longitude};
+        setCurrentPos(cPos);
+        var d=distM(aPos.lat,aPos.lon,cPos.lat,cPos.lon);
+        setDriftDist(Math.round(d));
+        if(d>watchRadius){
+          setAlarm(true);
+          try{navigator.vibrate([300,100,300,100,300]);}catch(e){}
+          // Audio alarm
+          try{
+            if(!audioRef.current){
+              var ctx=new(window.AudioContext||window.webkitAudioContext)();
+              audioRef.current=ctx;
+            }
+            var ctx2=audioRef.current;
+            var osc=ctx2.createOscillator();var gain=ctx2.createGain();
+            osc.connect(gain);gain.connect(ctx2.destination);
+            osc.frequency.value=880;osc.type="square";
+            gain.gain.value=0.3;
+            osc.start();osc.stop(ctx2.currentTime+0.5);
+          }catch(e){}
+        } else {setAlarm(false);}
+      },function(){},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+    },function(e){});
+  };
+
+  var stopWatch=function(){
+    if(watchIdRef.current!==null){navigator.geolocation.clearWatch(watchIdRef.current);watchIdRef.current=null;}
+    setWatching(false);setAlarm(false);setAnchorPos(null);setCurrentPos(null);setDriftDist(0);
+  };
+
+  useEffect(function(){return function(){if(watchIdRef.current!==null){navigator.geolocation.clearWatch(watchIdRef.current);}};},[]); 
+
+  var tabStyle=function(active){return {flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:active?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:active?"2px solid "+GO:"2px solid transparent"};};
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+      h("button",{onClick:function(){setAnchorTab("calc");},style:tabStyle(anchorTab==="calc")},"Scope Calculator"),
+      h("button",{onClick:function(){setAnchorTab("watch");},style:tabStyle(anchorTab==="watch")},"Anchor Watch"+(watching?" \u25cf":""))
+    ),
+    anchorTab==="watch"?h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      h(STitle,{noTop:true},"Anchor Watch"),
+      !watching?h("div",null,
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:16,lineHeight:1.6}},"Sets your current GPS position as the anchor point and monitors for dragging. An alarm will sound if the boat moves beyond the set radius."),
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Watch radius (metres)"),
+          h("input",{type:"range",min:20,max:150,step:5,value:watchRadius,onChange:function(ev){setWatchRadius(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:GL,textAlign:"center",marginTop:4}},watchRadius+" m")
+        ),
+        h("button",{onClick:startWatch,style:{width:"100%",background:"rgba(46,112,68,0.15)",border:"1px solid rgba(46,112,68,0.4)",borderRadius:8,padding:"14px",cursor:"pointer",color:GR,fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600}},"\u2693 Set Anchor & Start Watch")
+      ):h("div",null,
+        alarm?h("div",{style:{background:"rgba(196,48,48,0.15)",border:"2px solid rgba(196,48,48,0.6)",borderRadius:10,padding:"16px",marginBottom:14,textAlign:"center",animation:"pulse 1s infinite"}},
+          h("div",{style:{fontSize:32,marginBottom:6}},"\u26a0\ufe0f"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"#FF6B6B",marginBottom:4}},"ANCHOR DRAGGING"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:"#E08080"}},"Drift: "+driftDist+" m \u2014 Radius: "+watchRadius+" m")
+        ):h("div",{style:{background:"rgba(46,112,68,0.1)",border:"1px solid rgba(46,112,68,0.3)",borderRadius:10,padding:"16px",marginBottom:14,textAlign:"center"}},
+          h("div",{style:{fontSize:28,marginBottom:6}},"\u2693"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,fontWeight:600,color:GR,marginBottom:4}},"Holding"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU}},"Drift: "+driftDist+" m of "+watchRadius+" m radius")
+        ),
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}},
+          h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",textAlign:"center"}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Anchor position"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},anchorPos?anchorPos.lat.toFixed(5)+"\u00b0":"\u2014"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},anchorPos?anchorPos.lon.toFixed(5)+"\u00b0":"\u2014")
+          ),
+          h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",textAlign:"center"}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Current position"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},currentPos?currentPos.lat.toFixed(5)+"\u00b0":"\u2014"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},currentPos?currentPos.lon.toFixed(5)+"\u00b0":"\u2014")
+          )
+        ),
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Adjust radius (metres)"),
+          h("input",{type:"range",min:20,max:150,step:5,value:watchRadius,onChange:function(ev){setWatchRadius(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL,textAlign:"center",marginTop:4}},watchRadius+" m")
+        ),
+        h("button",{onClick:stopWatch,style:{width:"100%",background:"rgba(196,48,48,0.08)",border:"1px solid rgba(196,48,48,0.3)",borderRadius:8,padding:"12px",cursor:"pointer",color:"#E08080",fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,fontWeight:600}},"Stop Anchor Watch")
+      ),
+      h(InfoBox,{type:"tip",title:"Tip"},"Set the radius to roughly your rode length. GPS accuracy is typically 3\u201310 m, so set at least 20 m to avoid false alarms. Keep the screen on or use your browser\u2019s background location setting.")
+    ):h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      h(STitle,{noTop:true},"Anchor Scope"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Depth at HW (m)"),
+          h("input",{type:"range",min:1,max:30,step:0.5,value:depth,onChange:function(ev){setDepth(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:GL,textAlign:"center",marginTop:4}},depth+" m")
+        ),
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Scope ratio"),
+          h("input",{type:"range",min:3,max:10,step:1,value:scope,onChange:function(ev){setScope(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:holdingCol,textAlign:"center",marginTop:4}},scope+":1")
         )
       ),
-      h("div",null,
-        h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:5}},"Chain on Board"),
-        h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-          h("input",{type:"range",min:0,max:50,value:chain,onChange:function(ev){setChain(Number(ev.target.value));}}),
-          h("span",{style:{fontSize:18,fontWeight:700,color:WH,minWidth:40}},chain+"m")
-        )
-      )
-    ),
-    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}},
-      Object.keys(conds).map(function(k){
-        var v=conds[k];
-        return h("button",{key:k,onClick:function(){setCond(k);},style:{background:cond===k?"rgba(200,168,74,0.12)":NC,border:"1px solid "+(cond===k?v.color:NB),borderRadius:8,padding:"8px 4px",cursor:"pointer",color:cond===k?v.color:MU,fontFamily:"inherit",fontSize:12,fontWeight:cond===k?700:400}},v.label);
-      })
-    ),
-    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:6}},
-      [["Scope",scope+"m",GO],["Chain",chain+"m",AM],["Rope",rope>0?rope+"m":"—",rope>0?"#FF9090":GR],["Swing",swing+"m",MU]].map(function(row){
-        return h("div",{key:row[0],style:{background:NC,border:"1px solid "+NB,borderRadius:8,padding:"8px 4px",textAlign:"center"}},
-          h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}},row[0]),
-          h("div",{style:{fontSize:18,fontWeight:700,color:row[2]}},row[1])
-        );
-      })
-    ),
-    h(AnchorDiagram,{depth:depth,scope:scope,chain:chain}),
-    rope>0
-      ?h("div",{style:{background:"rgba(204,128,48,0.08)",border:"1px solid rgba(204,128,48,0.35)",borderRadius:8,padding:"8px 10px",fontSize:12,color:AM,marginTop:4}},"⚠ Add "+rope+"m of rope to your "+chain+"m chain")
-      :h("div",{style:{background:"rgba(54,122,78,0.08)",border:"1px solid rgba(54,122,78,0.35)",borderRadius:8,padding:"8px 10px",fontSize:12,color:GR,marginTop:4}},"✓ "+chain+"m chain is sufficient")
+      h("div",{style:{display:"flex",gap:6,marginBottom:14}},
+        ["chain","mixed","warp"].map(function(t){return h("button",{key:t,onClick:function(){setRodeType(t);},style:{flex:1,background:rodeType===t?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(rodeType===t?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:rodeType===t?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13}},t.charAt(0).toUpperCase()+t.slice(1));})
+      ),
+      rodeType==="mixed"&&h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Chain length (m)"),
+        h("input",{type:"range",min:1,max:15,step:1,value:chain,onChange:function(ev){setChain(Number(ev.target.value));},style:{width:"100%"}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL,textAlign:"center",marginTop:4}},chain+" m")
+      ),
+      h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Total rode"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},recChain+" m")
+          ),
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Holding"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:holdingCol}},holdingDesc)
+          )
+        ),
+        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},rode)
+      ),
+      scope<minScope&&h(InfoBox,{type:"warn",title:"Insufficient scope"},"Minimum safe scope for "+rodeType+" is "+minScope+":1. Increase your rode or find shallower water."),
+      h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/warp: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
+    )
   );
 }
 
@@ -1690,7 +1794,669 @@ function WeatherDecisionTool(){
 }
 
 // ── Passage Planner ────────────────────────────────────────────────────
+function ShipsLog(){
+  // Voyage storage: {voyages:[{id,name,started,ended,entries:[{id,time,type,lat,lon,note,loggedBy,windDir,windForce,seaState,visibility,baro,course,speed}]}], activeId:null}
+  var loadData=function(){try{return JSON.parse(localStorage.getItem("admiralty_voyages")||'{"voyages":[],"activeId":null}');}catch(e){return {voyages:[],activeId:null};}};
+  var dataS=useState(loadData);var voyData=dataS[0];var setVoyData=dataS[1];
+  var save=function(d){try{localStorage.setItem("admiralty_voyages",JSON.stringify(d));}catch(e){}};
+  var update=function(fn){setVoyData(function(prev){var nxt=JSON.parse(JSON.stringify(prev));fn(nxt);save(nxt);return nxt;});};
+
+  var viewS=useState("current");var logView=viewS[0];var setLogView=viewS[1];
+  var reviewIdS=useState(null);var reviewId=reviewIdS[0];var setReviewId=reviewIdS[1];
+
+  // Entry form state
+  var noteS=useState("");var note=noteS[0];var setNote=noteS[1];
+  var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var posS=useState(null);var logPos=posS[0];var setLogPos=posS[1];
+  var typeS=useState("position");var entryType=typeS[0];var setEntryType=typeS[1];
+  var byS=useState(function(){try{return localStorage.getItem("admiralty_logby")||"";}catch(e){return "";}});var loggedBy=byS[0];var setLoggedBy=byS[1];
+  var windDirS=useState("");var windDir=windDirS[0];var setWindDir=windDirS[1];
+  var windForceS=useState("");var windForce=windForceS[0];var setWindForce=windForceS[1];
+  var seaStateS=useState("");var seaState=seaStateS[0];var setSeaState=seaStateS[1];
+  var visS=useState("");var visibility=visS[0];var setVisibility=visS[1];
+  var baroS=useState("");var baro=baroS[0];var setBaro=baroS[1];
+  var courseS=useState("");var course=courseS[0];var setCourse=courseS[1];
+  var spdS=useState("");var logSpeed=spdS[0];var setLogSpeed=spdS[1];
+  var voyNameS=useState("");var voyName=voyNameS[0];var setVoyName=voyNameS[1];
+  var confirmS=useState(null);var confirmAction=confirmS[0];var setConfirmAction=confirmS[1];
+
+  // Track map
+  var mapRef=useRef(null);
+  var mapInstanceRef=useRef(null);
+
+  var activeVoyage=voyData.activeId?voyData.voyages.find(function(v){return v.id===voyData.activeId;}):null;
+  var reviewVoyage=reviewId?voyData.voyages.find(function(v){return v.id===reviewId;}):null;
+  var displayVoyage=logView==="review"?reviewVoyage:activeVoyage;
+
+  var getPos=function(){
+    if(!navigator.geolocation)return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(function(p){
+      setLogPos({lat:p.coords.latitude,lon:p.coords.longitude});setGpsLoading(false);
+    },function(){setGpsLoading(false);},{timeout:10000,maximumAge:30000});
+  };
+
+  var startVoyage=function(){
+    if(!voyName.trim())return;
+    update(function(d){
+      var v={id:Date.now(),name:voyName.trim(),started:new Date().toISOString(),ended:null,entries:[]};
+      d.voyages.unshift(v);d.activeId=v.id;
+    });
+    setVoyName("");
+  };
+
+  var endVoyage=function(){
+    update(function(d){
+      var v=d.voyages.find(function(v2){return v2.id===d.activeId;});
+      if(v)v.ended=new Date().toISOString();
+      d.activeId=null;
+    });
+  };
+
+  var deleteVoyage=function(id){
+    update(function(d){
+      d.voyages=d.voyages.filter(function(v){return v.id!==id;});
+      if(d.activeId===id)d.activeId=null;
+    });
+    if(reviewId===id){setReviewId(null);setLogView("current");}
+    setConfirmAction(null);
+  };
+
+  var addEntry=function(){
+    if(!activeVoyage)return;
+    var entry={id:Date.now(),time:new Date().toISOString(),type:entryType,lat:logPos?logPos.lat:null,lon:logPos?logPos.lon:null,note:note.trim(),loggedBy:loggedBy.trim(),windDir:windDir,windForce:windForce,seaState:seaState,visibility:visibility,baro:baro,course:course,speed:logSpeed};
+    update(function(d){
+      var v=d.voyages.find(function(v2){return v2.id===d.activeId;});
+      if(v)v.entries.unshift(entry);
+    });
+    setNote("");setLogPos(null);setWindDir("");setWindForce("");setSeaState("");setVisibility("");setBaro("");setCourse("");setLogSpeed("");
+    try{localStorage.setItem("admiralty_logby",loggedBy);}catch(e){}
+    try{navigator.vibrate(15);}catch(e){}
+  };
+
+  var removeEntry=function(voyId,entryId){
+    update(function(d){
+      var v=d.voyages.find(function(v2){return v2.id===voyId;});
+      if(v)v.entries=v.entries.filter(function(e){return e.id!==entryId;});
+    });
+  };
+
+  var fmtTime=function(iso){
+    var d=new Date(iso);
+    return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false});
+  };
+
+  var fmtDate=function(iso){return new Date(iso).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});};
+
+  var typeIcon=function(t){
+    var m={position:"\ud83d\udccd",course:"\u21bb",weather:"\u26c5",sail:"\u26f5",watch:"\ud83d\udc41",note:"\u270d\ufe0f"};
+    return m[t]||"\ud83d\udccd";
+  };
+
+  var exportVoyage=function(voy){
+    var lines=["SHIP'S LOG: "+voy.name,"Started: "+fmtDate(voy.started)+(voy.ended?" \u2014 Ended: "+fmtDate(voy.ended):""),"=========",""];
+    voy.entries.slice().reverse().forEach(function(e){
+      var line=fmtTime(e.time)+"  ["+e.type.toUpperCase()+"]";
+      if(e.loggedBy)line+="  ("+e.loggedBy+")";
+      if(e.lat!==null)line+="  "+e.lat.toFixed(5)+"\u00b0, "+e.lon.toFixed(5)+"\u00b0";
+      if(e.course)line+="  Crs: "+e.course+"\u00b0";
+      if(e.speed)line+="  Spd: "+e.speed+"kts";
+      if(e.windDir||e.windForce)line+="  Wind: "+(e.windDir||"?")+" F"+(e.windForce||"?");
+      if(e.seaState)line+="  Sea: "+e.seaState;
+      if(e.visibility)line+="  Vis: "+e.visibility;
+      if(e.baro)line+="  Baro: "+e.baro+"mb";
+      if(e.note)line+="  "+e.note;
+      lines.push(line);
+    });
+    try{navigator.clipboard.writeText(lines.join("\n"));}catch(ex){}
+  };
+
+  var TYPES=[["position","Position"],["course","Course \u0394"],["weather","Weather"],["sail","Sail \u0394"],["watch","Watch \u0394"],["note","Note"]];
+  var WIND_DIRS=["N","NE","E","SE","S","SW","W","NW"];
+  var SEA_STATES=["Calm","Slight","Moderate","Rough","Very rough"];
+  var VIS_OPTS=["Good","Moderate","Poor","Fog"];
+
+  var chipStyle=function(active){return {padding:"6px 10px",cursor:"pointer",border:"1px solid "+(active?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:5,background:active?"rgba(200,168,74,0.1)":NC,color:active?GO:MU,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:500};};
+
+  // Track map
+  var initTrackMap=function(voy){
+    if(mapInstanceRef.current)return;
+    if(!mapRef.current)return;
+    if(!document.getElementById("leaflet-css")){
+      var link=document.createElement("link");link.id="leaflet-css";link.rel="stylesheet";
+      link.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(link);
+    }
+    var doInit=function(){
+      var L=window.L;
+      var pts=voy.entries.filter(function(e){return e.lat!==null;}).reverse();
+      var center=pts.length>0?[pts[pts.length-1].lat,pts[pts.length-1].lon]:[51.4779,-0.0015];
+      var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView(center,10);
+      L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(map);
+      L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{maxZoom:18}).addTo(map);
+      L.control.zoom({position:"topright"}).addTo(map);
+      if(pts.length>=2){
+        var latlngs=pts.map(function(e){return [e.lat,e.lon];});
+        L.polyline(latlngs,{color:"#C8A84A",weight:2.5,opacity:0.9}).addTo(map);
+      }
+      pts.forEach(function(e,idx){
+        var isFirst=idx===0;var isLast=idx===pts.length-1;
+        var col=isLast?"#2E7044":isFirst?"#5A7490":"#C8A84A";
+        var sz=isLast?10:isFirst?8:6;
+        var icon=L.divIcon({className:"",html:'<div style="width:'+sz+'px;height:'+sz+'px;background:'+col+';border:1.5px solid #07101E;border-radius:50%;box-shadow:0 0 0 2px '+col+'44"></div>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+        L.marker([e.lat,e.lon],{icon:icon}).addTo(map).bindPopup('<div style="font-family:Inter,sans-serif;font-size:11px;color:#07101E;min-width:120px"><b>'+fmtTime(e.time)+'</b><br>'+e.lat.toFixed(4)+'\u00b0, '+e.lon.toFixed(4)+'\u00b0'+(e.loggedBy?' \u2014 '+e.loggedBy:'')+(e.note?'<br><i>'+e.note+'</i>':'')+'</div>');
+      });
+      if(pts.length>=2){
+        map.fitBounds(L.latLngBounds(pts.map(function(e){return [e.lat,e.lon];})),{padding:[30,30]});
+      } else if(pts.length===1){map.setView([pts[0].lat,pts[0].lon],13);}
+      mapInstanceRef.current=map;
+      setTimeout(function(){map.invalidateSize();},100);
+    };
+    if(window.L){doInit();return;}
+    var script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.onload=doInit;
+    document.head.appendChild(script);
+  };
+
+  useEffect(function(){
+    if(logView==="track"&&displayVoyage){
+      if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}
+      setTimeout(function(){initTrackMap(displayVoyage);},100);
+    }
+    return function(){if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}};
+  },[logView,reviewId,displayVoyage?displayVoyage.entries.length:0]);
+
+  var tabStyle=function(active){return {flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:active?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:active?"2px solid "+GO:"2px solid transparent"};};
+
+  // Render entry list (shared between current and review)
+  var renderEntries=function(voy,canDelete){
+    if(!voy||!voy.entries.length)return h("div",{style:{textAlign:"center",padding:"24px 16px"}},
+      h("div",{style:{fontSize:28,opacity:0.2,marginBottom:10}},"\ud83d\udcd3"),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU}},"No entries yet.")
+    );
+    return h("div",null,
+      h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6}},voy.entries.length+" entr"+(voy.entries.length===1?"y":"ies")),
+      voy.entries.map(function(e){
+        var details=[];
+        if(e.course)details.push(e.course+"\u00b0");
+        if(e.speed)details.push(e.speed+"kts");
+        if(e.windDir||e.windForce)details.push("Wind "+(e.windDir||"")+" F"+(e.windForce||"?"));
+        if(e.seaState)details.push(e.seaState);
+        if(e.visibility)details.push("Vis: "+e.visibility);
+        if(e.baro)details.push(e.baro+"mb");
+        return h("div",{key:e.id,style:{padding:"8px 0",borderBottom:"1px solid rgba(22,36,56,0.8)"}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:2}},
+            h("div",{style:{fontSize:12}},typeIcon(e.type)),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:GO,fontWeight:600}},fmtTime(e.time)),
+            e.loggedBy&&h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,fontStyle:"italic"}},e.loggedBy),
+            e.lat!==null&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:10,color:MU}},e.lat.toFixed(4)+"\u00b0, "+e.lon.toFixed(4)+"\u00b0"),
+            canDelete&&h("div",{style:{marginLeft:"auto",flexShrink:0}},h("button",{onClick:function(){removeEntry(voy.id,e.id);},style:{background:"none",border:"none",color:"rgba(196,48,48,0.4)",fontSize:13,cursor:"pointer",padding:"2px 4px"}},"\u00d7"))
+          ),
+          details.length>0&&h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU,marginBottom:2,paddingLeft:22}},details.join(" \u00b7 ")),
+          e.note&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,lineHeight:1.4,paddingLeft:22}},e.note)
+        );
+      })
+    );
+  };
+
+  var hasPositions=displayVoyage&&displayVoyage.entries.some(function(e){return e.lat!==null;});
+  var pastVoyages=voyData.voyages.filter(function(v){return v.id!==voyData.activeId;});
+
+  // Confirmation dialog
+  var confirmDialog=confirmAction?h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}},
+    h("div",{style:{background:NM,border:"1px solid rgba(200,168,74,0.2)",borderRadius:10,padding:"20px",maxWidth:300,width:"100%"}},
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,color:WH,marginBottom:6}},confirmAction.title),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,fontStyle:"italic",marginBottom:16,lineHeight:1.5}},confirmAction.message),
+      h("div",{style:{display:"flex",gap:8}},
+        h("button",{onClick:function(){setConfirmAction(null);},style:{flex:1,background:NC,border:"1px solid rgba(22,36,56,1)",borderRadius:6,padding:"10px",cursor:"pointer",color:MU,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}},"Cancel"),
+        h("button",{onClick:function(){confirmAction.onConfirm();},style:{flex:1,background:"rgba(196,48,48,0.12)",border:"1px solid rgba(196,48,48,0.3)",borderRadius:6,padding:"10px",cursor:"pointer",color:"#E08080",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}},confirmAction.confirmLabel||"Delete")
+      )
+    )
+  ):null;
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    confirmDialog,
+    // Tab bar
+    h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+      h("button",{onClick:function(){setLogView("current");setReviewId(null);},style:tabStyle(logView==="current")},"Log"),
+      displayVoyage&&h("button",{onClick:function(){setLogView("track");},style:tabStyle(logView==="track")},hasPositions?"Track":"Track"),
+      h("button",{onClick:function(){setLogView("voyages");},style:tabStyle(logView==="voyages")},"Voyages"+(pastVoyages.length>0?" ("+voyData.voyages.length+")":""))
+    ),
+
+    // TRACK MAP VIEW
+    logView==="track"?h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
+      !hasPositions?h("div",{style:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center"}},
+        h("div",null,
+          h("div",{style:{fontSize:36,opacity:0.2,marginBottom:12}},"\ud83d\uddfa\ufe0f"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:MU}},"No positions logged yet. Add entries with GPS to see your track.")
+        )
+      ):h("div",{ref:mapRef,style:{flex:1,background:"#040C18",minHeight:0}})
+    ):
+
+    // VOYAGES LIST VIEW
+    logView==="voyages"?h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      h(STitle,{noTop:true},"Voyages"),
+      voyData.voyages.length===0?h("div",{style:{textAlign:"center",padding:"32px 16px"}},
+        h("div",{style:{fontSize:28,opacity:0.2,marginBottom:10}},"\u26f5"),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU}},"No voyages yet. Start one from the Log tab.")
+      ):h("div",null,
+        voyData.voyages.map(function(v){
+          var isActive=v.id===voyData.activeId;
+          var nEntries=v.entries.length;
+          var nPos=v.entries.filter(function(e){return e.lat!==null;}).length;
+          return h("div",{key:v.id,style:{background:isActive?"rgba(46,112,68,0.08)":NC,border:"1px solid "+(isActive?"rgba(46,112,68,0.25)":"rgba(200,168,74,0.1)"),borderRadius:8,padding:"12px",marginBottom:8}},
+            h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},v.name),
+              isActive&&h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GR,fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase"}},"ACTIVE")
+            ),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU,marginBottom:8}},
+              fmtDate(v.started)+(v.ended?" \u2014 "+fmtDate(v.ended):"")+" \u00b7 "+nEntries+" entr"+(nEntries===1?"y":"ies")+(nPos>0?" \u00b7 "+nPos+" positions":"")
+            ),
+            h("div",{style:{display:"flex",gap:6}},
+              h("button",{onClick:function(){setReviewId(v.id);setLogView("current");},style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"7px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"View"),
+              nPos>0&&h("button",{onClick:function(){setReviewId(v.id);setLogView("track");},style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"7px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"Track"),
+              h("button",{onClick:function(){exportVoyage(v);},style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"7px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"\ud83d\udccb Copy"),
+              !isActive&&h("button",{onClick:function(){setConfirmAction({title:"Delete voyage?",message:"Delete \""+v.name+"\" and all its entries? This cannot be undone.",confirmLabel:"Delete",onConfirm:function(){deleteVoyage(v.id);}});},style:{background:"rgba(196,48,48,0.06)",border:"1px solid rgba(196,48,48,0.2)",borderRadius:5,padding:"7px 10px",cursor:"pointer",color:"#E08080",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"\u00d7")
+            )
+          );
+        })
+      )
+    ):
+
+    // CURRENT/REVIEW VIEW
+    h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      // Reviewing a past voyage
+      reviewId&&reviewId!==voyData.activeId?h("div",null,
+        h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:12}},
+          h("button",{onClick:function(){setReviewId(null);setLogView("voyages");},style:{background:"none",border:"none",color:GO,fontSize:22,cursor:"pointer",padding:0}},"\u2039"),
+          h("div",null,
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,fontWeight:600,color:WH}},reviewVoyage?reviewVoyage.name:""),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU}},reviewVoyage?fmtDate(reviewVoyage.started)+(reviewVoyage.ended?" \u2014 "+fmtDate(reviewVoyage.ended):""):"")
+          )
+        ),
+        renderEntries(reviewVoyage,true)
+      ):
+
+      // No active voyage - prompt to start one
+      !activeVoyage?h("div",null,
+        h(STitle,{noTop:true},"Start a Voyage"),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:16,lineHeight:1.6}},"Name your voyage to begin logging. All entries will be grouped under this passage."),
+        h("div",{style:{display:"flex",gap:8,marginBottom:16}},
+          h("input",{type:"text",placeholder:"e.g. Solent to Cherbourg\u2026",value:voyName,onChange:function(ev){setVoyName(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")startVoyage();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:14,fontFamily:"'Crimson Text',Georgia,serif",padding:"10px 12px",outline:"none"}}),
+          h("button",{onClick:startVoyage,disabled:!voyName.trim(),style:{background:"rgba(46,112,68,0.15)",border:"1px solid rgba(46,112,68,0.4)",borderRadius:6,padding:"10px 16px",cursor:"pointer",color:GR,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600,opacity:voyName.trim()?1:0.4}},"\u26f5 Start")
+        ),
+        pastVoyages.length>0&&h("div",null,
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8,marginTop:16}},"Past voyages"),
+          pastVoyages.slice(0,3).map(function(v){
+            return h("div",{key:v.id,onClick:function(){setReviewId(v.id);},style:{padding:"10px",background:NC,border:"1px solid rgba(200,168,74,0.1)",borderRadius:6,marginBottom:6,cursor:"pointer"}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},v.name),
+              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU}},fmtDate(v.started)+" \u00b7 "+v.entries.length+" entries")
+            );
+          })
+        )
+      ):
+
+      // Active voyage - log form + entries
+      h("div",null,
+        h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}},
+          h("div",null,
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,fontWeight:600,color:WH}},activeVoyage.name),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:GR}},"Started "+fmtDate(activeVoyage.started))
+          ),
+          h("button",{onClick:function(){setConfirmAction({title:"End voyage?",message:"End \""+activeVoyage.name+"\"? You can still view it in past voyages.",confirmLabel:"End voyage",onConfirm:function(){endVoyage();setConfirmAction(null);}});},style:{background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"6px 12px",cursor:"pointer",color:MU,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"End voyage")
+        ),
+        // Entry type
+        h("div",{style:{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}},
+          TYPES.map(function(t){return h("button",{key:t[0],onClick:function(){setEntryType(t[0]);},style:chipStyle(entryType===t[0])},typeIcon(t[0])+" "+t[1]);})
+        ),
+        // GPS + logged by
+        h("div",{style:{display:"flex",gap:8,marginBottom:8}},
+          h("button",{onClick:getPos,disabled:gpsLoading,style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600,textAlign:"left"}},gpsLoading?"Getting GPS\u2026":logPos?"\u2713 "+logPos.lat.toFixed(4)+"\u00b0, "+logPos.lon.toFixed(4)+"\u00b0":"\ud83d\udccd Position"),
+          h("input",{type:"text",placeholder:"Logged by\u2026",value:loggedBy,onChange:function(ev){setLoggedBy(ev.target.value);},style:{width:100,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:12,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}})
+        ),
+        // Course & speed
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}},
+          h("input",{type:"number",placeholder:"Course \u00b0",value:course,onChange:function(ev){setCourse(ev.target.value);},style:{background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}}),
+          h("input",{type:"number",placeholder:"Speed kts",value:logSpeed,onChange:function(ev){setLogSpeed(ev.target.value);},step:"0.5",style:{background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}})
+        ),
+        // Conditions
+        h("div",{style:{marginBottom:8}},
+          h("div",{style:{display:"flex",flexWrap:"wrap",gap:4,marginBottom:5}},
+            WIND_DIRS.map(function(d){return h("button",{key:d,onClick:function(){setWindDir(windDir===d?"":d);},style:chipStyle(windDir===d)},d);})
+          ),
+          h("div",{style:{display:"flex",gap:4,marginBottom:5,flexWrap:"wrap"}},
+            [0,1,2,3,4,5,6,7,8].map(function(f){return h("button",{key:f,onClick:function(){setWindForce(windForce===String(f)?"":String(f));},style:chipStyle(windForce===String(f))},"F"+f);})
+          ),
+          h("div",{style:{display:"flex",gap:4,marginBottom:5,flexWrap:"wrap"}},
+            SEA_STATES.map(function(s2){return h("button",{key:s2,onClick:function(){setSeaState(seaState===s2?"":s2);},style:chipStyle(seaState===s2)},s2);})
+          ),
+          h("div",{style:{display:"flex",gap:4,flexWrap:"wrap"}},
+            VIS_OPTS.map(function(v){return h("button",{key:v,onClick:function(){setVisibility(visibility===v?"":v);},style:chipStyle(visibility===v)},v);}),
+            h("input",{type:"number",placeholder:"Baro mb",value:baro,onChange:function(ev){setBaro(ev.target.value);},style:{width:80,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:12,fontFamily:"'Crimson Text',Georgia,serif",padding:"6px 8px",outline:"none"}})
+          )
+        ),
+        // Notes + log button
+        h("div",{style:{display:"flex",gap:8,marginBottom:14}},
+          h("input",{type:"text",placeholder:"Notes\u2026",value:note,onChange:function(ev){setNote(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")addEntry();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}}),
+          h("button",{onClick:addEntry,style:{background:"rgba(46,112,68,0.15)",border:"1px solid rgba(46,112,68,0.4)",borderRadius:6,padding:"8px 16px",cursor:"pointer",color:GR,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}},"\u2713 Log")
+        ),
+        // Entries
+        renderEntries(activeVoyage,true)
+      )
+    )
+  );
+}
+
+function RoutePlanner(props){
+  var mapRef=useRef(null);
+  var mapInstanceRef=useRef(null);
+  var wpS=useState([]);var waypoints=wpS[0];var setWaypoints=wpS[1];
+  var markersRef=useRef([]);
+  var lineRef=useRef(null);
+  var spdS=useState(5);var routeSpeed=spdS[0];var setRouteSpeed=spdS[1];
+  var loadingS=useState(true);var mapLoading=loadingS[0];var setMapLoading=loadingS[1];
+  var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
+  var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
+  var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
+  var errS=useState(null);var err=errS[0];var setErr=errS[1];
+  var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var offS=useState(false);var isOffline=offS[0];var setIsOffline=offS[1];
+  var savedRef=useRef(false);
+
+  // Haversine distance in nautical miles
+  var haversine=function(lat1,lon1,lat2,lon2){
+    var R=3440.065;// Earth radius in nm
+    var dLat=(lat2-lat1)*Math.PI/180;
+    var dLon=(lon2-lon1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  };
+  // Initial bearing in degrees
+  var bearing=function(lat1,lon1,lat2,lon2){
+    var dLon=(lon2-lon1)*Math.PI/180;
+    var y=Math.sin(dLon)*Math.cos(lat2*Math.PI/180);
+    var x=Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180)-Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos(dLon);
+    var b=Math.atan2(y,x)*180/Math.PI;
+    return (b+360)%360;
+  };
+
+  // Compass direction from degrees
+  var compassDir=function(deg){
+    var dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    return dirs[Math.round(deg/22.5)%16];
+  };
+
+  // Compute legs from waypoints
+  var legs=[];
+  var totalDist=0;
+  for(var i=1;i<waypoints.length;i++){
+    var d=haversine(waypoints[i-1].lat,waypoints[i-1].lon,waypoints[i].lat,waypoints[i].lon);
+    var b=bearing(waypoints[i-1].lat,waypoints[i-1].lon,waypoints[i].lat,waypoints[i].lon);
+    legs.push({from:i,to:i+1,dist:d,brg:b});
+    totalDist+=d;
+  }
+  var totalHrs=routeSpeed>0?totalDist/routeSpeed:0;
+  var etaH=Math.floor(totalHrs);
+  var etaM=Math.round((totalHrs-etaH)*60);
+
+  // Save to localStorage
+  var saveRoute=function(wps){
+    try{localStorage.setItem("admiralty_route",JSON.stringify({waypoints:wps,speed:routeSpeed}));}catch(e){}
+  };
+
+  // Load from localStorage
+  var loadRoute=function(){
+    try{
+      var s=localStorage.getItem("admiralty_route");
+      if(s){var d=JSON.parse(s);if(d.waypoints&&d.waypoints.length){setWaypoints(d.waypoints);if(d.speed)setRouteSpeed(d.speed);return d.waypoints;}}
+    }catch(e){}
+    return null;
+  };
+
+  // Update markers and line on map
+  var updateMapOverlays=function(wps){
+    if(!mapInstanceRef.current||!window.L)return;
+    var L=window.L;
+    // Remove old markers
+    markersRef.current.forEach(function(m){m.remove();});
+    markersRef.current=[];
+    // Remove old line
+    if(lineRef.current){lineRef.current.remove();lineRef.current=null;}
+    // Add new markers
+    wps.forEach(function(wp,idx){
+      var icon=L.divIcon({className:"",html:'<div style="width:24px;height:24px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:11px;font-weight:700;color:#07101E;box-shadow:0 0 0 3px rgba(200,168,74,0.3)">'+(idx+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+      var m=L.marker([wp.lat,wp.lon],{icon:icon,draggable:true}).addTo(mapInstanceRef.current);
+      m.on("dragend",function(ev){
+        var ll=ev.target.getLatLng();
+        setWaypoints(function(prev){
+          var nw=prev.slice();nw[idx]={lat:ll.lat,lon:ll.lng};
+          saveRoute(nw);
+          return nw;
+        });
+      });
+      m.bindPopup('<div style="font-family:Inter,sans-serif;font-size:12px;color:#07101E"><b>WP '+(idx+1)+'</b><br>'+wp.lat.toFixed(4)+'\u00b0, '+wp.lon.toFixed(4)+'\u00b0</div>');
+      markersRef.current.push(m);
+    });
+    // Draw line
+    if(wps.length>=2){
+      var latlngs=wps.map(function(wp){return [wp.lat,wp.lon];});
+      lineRef.current=L.polyline(latlngs,{color:"#C8A84A",weight:2,opacity:0.8,dashArray:"8,6"}).addTo(mapInstanceRef.current);
+    }
+  };
+
+  // Init map
+  var initMap=function(lat,lon){
+    if(mapInstanceRef.current)return;
+    if(!mapRef.current)return;
+    if(!document.getElementById("leaflet-css")){
+      var link=document.createElement("link");
+      link.id="leaflet-css";link.rel="stylesheet";
+      link.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(link);
+    }
+    var doInit=function(){
+      var L=window.L;
+      var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],10);
+      L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
+      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:1});
+      var tileErrors=0;
+      baseLayer.on("tileerror",function(){tileErrors++;if(tileErrors>=3)setIsOffline(true);});
+      baseLayer.on("tileload",function(){tileErrors=0;setIsOffline(false);});
+      baseLayer.addTo(map);
+      baseLayer.once("tileload",function(){setIsOffline(false);setMapLoading(false);});
+      L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
+      L.control.zoom({position:"topright"}).addTo(map);
+
+      // Tap to add waypoint
+      map.on("click",function(ev){
+        var ll=ev.latlng;
+        setWaypoints(function(prev){
+          var nw=prev.concat([{lat:ll.lat,lon:ll.lng}]);
+          saveRoute(nw);
+          return nw;
+        });
+      });
+
+      mapInstanceRef.current=map;
+      setTimeout(function(){map.invalidateSize();setMapLoading(false);},100);
+
+      // Load saved route
+      var saved=loadRoute();
+      if(saved&&saved.length){
+        savedRef.current=true;
+        setTimeout(function(){
+          updateMapOverlays(saved);
+          if(saved.length>=2){
+            var bounds=L.latLngBounds(saved.map(function(wp){return [wp.lat,wp.lon];}));
+            map.fitBounds(bounds,{padding:[40,40]});
+          } else {
+            map.setView([saved[0].lat,saved[0].lon],12);
+          }
+        },200);
+      }
+    };
+    if(window.L){doInit();return;}
+    var script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.onload=doInit;
+    document.head.appendChild(script);
+  };
+
+  // Effect: update overlays when waypoints change
+  useEffect(function(){
+    if(savedRef.current){savedRef.current=false;return;}
+    updateMapOverlays(waypoints);
+  },[waypoints.length]);
+
+  // Mount map
+  useEffect(function(){
+    setTimeout(function(){initMap(51.4779,-0.0015);},100);
+    return function(){
+      if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}
+    };
+  },[]);
+
+  // Search
+  var doSearch=function(){
+    if(!searchQ.trim())return;
+    setSearching(true);setSearchResults([]);setErr(null);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(searchQ)+"&count=6&language=en&format=json")
+      .then(function(r){return r.json();})
+      .then(function(geo){
+        setSearching(false);
+        if(!geo.results||!geo.results.length){setErr("Location not found.");return;}
+        if(geo.results.length===1){
+          var r=geo.results[0];
+          if(mapInstanceRef.current){mapInstanceRef.current.setView([r.latitude,r.longitude],12);}
+          setSearchResults([]);setSearchQ("");
+        } else {setSearchResults(geo.results);}
+      }).catch(function(){setSearching(false);setErr("Search failed.");});
+  };
+
+  var goToPlace=function(lat,lon){
+    setSearchResults([]);setSearchQ("");
+    if(mapInstanceRef.current){mapInstanceRef.current.setView([lat,lon],12);}
+  };
+
+  var goToPosition=function(){
+    if(!navigator.geolocation){setErr("GPS not available.");return;}
+    setGpsLoading(true);setErr(null);
+    navigator.geolocation.getCurrentPosition(function(p){
+      var lat=p.coords.latitude,lon=p.coords.longitude;
+      setGpsLoading(false);
+      if(mapInstanceRef.current){mapInstanceRef.current.setView([lat,lon],13);}
+    },function(e){
+      setGpsLoading(false);
+      if(e.code===1)setErr("Location access denied.");
+      else setErr("Could not get position.");
+    },{timeout:10000,maximumAge:60000});
+  };
+
+  var removeWaypoint=function(idx){
+    setWaypoints(function(prev){
+      var nw=prev.slice();nw.splice(idx,1);
+      saveRoute(nw);
+      return nw;
+    });
+  };
+
+  var clearRoute=function(){
+    setWaypoints([]);
+    saveRoute([]);
+    if(lineRef.current){lineRef.current.remove();lineRef.current=null;}
+    markersRef.current.forEach(function(m){m.remove();});
+    markersRef.current=[];
+  };
+
+  var tabBtn=function(active){return {padding:"5px 10px",cursor:"pointer",border:"none",background:active?"rgba(200,168,74,0.12)":"transparent",color:active?GO:MU,fontSize:10,fontFamily:"'Inter',sans-serif",fontWeight:600,borderRadius:4,letterSpacing:"0.04em"};};
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    // Search bar
+    h("div",{style:{padding:"6px 8px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
+      h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")doSearch();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:"#EAE4D4",fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"6px 10px",outline:"none"}}),
+      h("button",{onClick:doSearch,disabled:searching||!searchQ.trim(),style:{background:"rgba(200,168,74,0.1)",border:"1px solid rgba(200,168,74,0.3)",borderRadius:5,color:"#C8A84A",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,padding:"6px 10px",cursor:"pointer",opacity:searching||!searchQ.trim()?0.5:1}},searching?"\u2026":"Go"),
+      h("button",{onClick:goToPosition,disabled:gpsLoading,title:"My position",style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:"#C8A84A",fontSize:14,padding:"6px 9px",cursor:"pointer"}},gpsLoading?"\u2026":"\ud83d\udccd")
+    ),
+    // Search results dropdown
+    searchResults.length>0&&h("div",{style:{background:"#0D1C30",borderBottom:"1px solid rgba(22,36,56,0.9)",maxHeight:140,overflowY:"auto",flexShrink:0}},
+      searchResults.map(function(r,i){
+        var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+        return h("div",{key:i,onClick:function(){goToPlace(r.latitude,r.longitude);},style:{padding:"9px 12px",cursor:"pointer",borderBottom:i<searchResults.length-1?"1px solid rgba(22,36,56,0.8)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:"#EAE4D4"}},name),
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:"#5A7490",flexShrink:0}},r.latitude.toFixed(2)+"\u00b0 "+r.longitude.toFixed(2)+"\u00b0")
+        );
+      })
+    ),
+    err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic",flexShrink:0}},err),
+    // Map
+    h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
+      mapLoading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic"}},"Loading chart\u2026")
+      ),
+      isOffline&&h("div",{style:{position:"absolute",top:8,left:8,right:8,zIndex:1000,background:"rgba(196,48,48,0.15)",border:"1px solid rgba(196,48,48,0.3)",borderRadius:6,padding:"8px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:12,color:"#E08080"}},
+        "Offline \u2014 saved waypoints visible, new tiles unavailable"
+      )
+    ),
+    // Route info panel
+    h("div",{style:{background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",flexShrink:0,maxHeight:"40%",overflowY:"auto"}},
+      // Totals bar
+      waypoints.length>=2&&h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:0,borderBottom:"1px solid rgba(22,36,56,0.9)"}},
+        h("div",{style:{padding:"8px 10px",textAlign:"center"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}},"Total"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL}},totalDist.toFixed(1)+" nm")
+        ),
+        h("div",{style:{padding:"8px 10px",textAlign:"center",borderLeft:"1px solid rgba(22,36,56,0.9)",borderRight:"1px solid rgba(22,36,56,0.9)"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}},"ETA at "+routeSpeed+" kts"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL}},etaH+"h "+etaM+"m")
+        ),
+        h("div",{style:{padding:"8px 10px",textAlign:"center"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}},"Legs"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL}},legs.length)
+        )
+      ),
+      // Speed input
+      waypoints.length>=2&&h("div",{style:{padding:"6px 12px",borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:8}},
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}},"Speed"),
+        h("input",{type:"range",min:1,max:15,step:0.5,value:routeSpeed,onChange:function(ev){var v=Number(ev.target.value);setRouteSpeed(v);try{localStorage.setItem("admiralty_route",JSON.stringify({waypoints:waypoints,speed:v}));}catch(e){}},style:{flex:1}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:GL,minWidth:40,textAlign:"right"}},routeSpeed+" kts")
+      ),
+      // Leg list
+      legs.length>0&&h("div",{style:{borderBottom:"1px solid rgba(22,36,56,0.9)"}},
+        legs.map(function(leg,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"5px 12px",borderBottom:i<legs.length-1?"1px solid rgba(14,22,36,0.8)":"none",gap:8}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GO,fontWeight:700,minWidth:46}},leg.from+"\u2192"+leg.to),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL,flex:1}},leg.dist.toFixed(1)+" nm"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU}},Math.round(leg.brg)+"\u00b0 "+compassDir(leg.brg))
+          );
+        })
+      ),
+      // Waypoint list with remove
+      waypoints.length>0&&h("div",{style:{padding:"6px 12px 2px"}},
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Waypoints"),
+        waypoints.map(function(wp,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"4px 0",gap:6}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:GO,fontWeight:700,minWidth:28}},"WP"+(i+1)),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:12,color:WH,flex:1}},wp.lat.toFixed(4)+"\u00b0, "+wp.lon.toFixed(4)+"\u00b0"),
+            h("button",{onClick:function(){removeWaypoint(i);},style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.2)",borderRadius:4,color:"#E08080",fontSize:11,padding:"2px 7px",cursor:"pointer",fontFamily:"'Inter',sans-serif"}},"\u00d7")
+          );
+        })
+      ),
+      // Actions
+      h("div",{style:{padding:"8px 12px",display:"flex",gap:6,flexWrap:"wrap"}},
+        waypoints.length>0&&h("button",{onClick:function(){if(waypoints.length<1)return;setWaypoints(function(prev){var nw=prev.slice(0,-1);saveRoute(nw);return nw;});},style:{flex:"1 0 auto",background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u21a9 Undo"),
+        waypoints.length>=2&&h("button",{onClick:function(){setWaypoints(function(prev){var nw=prev.slice().reverse();saveRoute(nw);return nw;});},style:{flex:"1 0 auto",background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u21c4 Reverse"),
+        waypoints.length>0&&h("button",{onClick:clearRoute,style:{flex:"1 0 auto",background:"rgba(196,48,48,0.08)",border:"1px solid rgba(196,48,48,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:"#E08080",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u00d7 Clear"),
+        waypoints.length>=2&&props.onUseInCalc&&h("button",{onClick:function(){props.onUseInCalc(Math.round(totalDist*10)/10);},style:{flex:"1 0 100%",background:"rgba(40,96,168,0.12)",border:"1px solid rgba(40,96,168,0.3)",borderRadius:6,padding:"9px 10px",cursor:"pointer",color:"#6A9FD8",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u2192 Use "+totalDist.toFixed(1)+" nm in Calculator"),
+        waypoints.length===0&&h("div",{style:{textAlign:"center",width:"100%",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,fontStyle:"italic",padding:"4px 0"}},"Tap the chart to place waypoints")
+      )
+    )
+  );
+}
+
 function PassageTool(){
+  var ptS=useState("route");var passTab=ptS[0];var setPassTab=ptS[1];
   var ds=useState(20);var dist=ds[0];var setDist=ds[1];
   var ss=useState(5);var speed=ss[0];var setSpeed=ss[1];
   var ts=useState(6);var tideHrs=ts[0];var setTideHrs=ts[1];
@@ -1710,12 +2476,26 @@ function PassageTool(){
   var daylight=arrH>=6&&arrH<=20;
   var depFmt=fmt(depHour,0);
   var arrFmt=fmt(arrH,arrM);
-  return h("div",{style:{padding:16}},
+  var tabStyle=function(active){return {flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:active?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:active?"2px solid "+GO:"2px solid transparent"};};
+  var passTabBar=h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+    h("button",{onClick:function(){setPassTab("route");},style:tabStyle(passTab==="route")},"Route"),
+    h("button",{onClick:function(){setPassTab("calc");},style:tabStyle(passTab==="calc")},"Calculator")
+  );
+  if(passTab==="route"){
+    return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+      passTabBar,
+      h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},h(RoutePlanner,{onUseInCalc:function(d){setDist(d);setPassTab("calc");}}))
+    );
+  }
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    passTabBar,
+    h("div",{style:{flex:1,overflowY:"auto"}},
+    h("div",{style:{padding:16}},
     h(STitle,{noTop:true},"Passage Details"),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
       h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Distance (nm)"),
-        h("input",{type:"range",min:1,max:200,step:1,value:dist,onChange:function(ev){setDist(Number(ev.target.value));}}),
+        h("input",{type:"range",min:1,max:500,step:1,value:dist,onChange:function(ev){setDist(Number(ev.target.value));}}),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:GL,textAlign:"center",marginTop:4}},dist+" nm")
       ),
       h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
@@ -1735,7 +2515,7 @@ function PassageTool(){
       )
     ),
     h("div",{style:{display:"flex",gap:6,marginBottom:14}},
-      ["with","against"].map(function(d){return h("button",{key:d,onClick:function(){setTideDir(d);},style:{flex:1,background:tideDir===d?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(tideDir===d?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:tideDir===d?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:14}},tideDir===d?"✓ ":"",(d==="with"?"🟢 Tide with you":"🔴 Tide against you"));})),
+      ["with","against"].map(function(d){return h("button",{key:d,onClick:function(){setTideDir(d);},style:{flex:1,background:tideDir===d?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(tideDir===d?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:tideDir===d?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:14}},tideDir===d?"\u2713 ":"",(d==="with"?"\ud83d\udfe2 Tide with you":"\ud83d\udd34 Tide against you"));})),
     h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:12}},
         h("div",null,h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Depart"),h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},depFmt)),
@@ -1748,8 +2528,9 @@ function PassageTool(){
       )
     ),
     !daylight&&h(InfoBox,{type:"warn",title:"Night arrival"},"ETA is after dark or early morning. Ensure nav lights are working, crew are rested, and harbour entry is safe at night."),
-    tideChanges>=1&&h(InfoBox,{type:"tip",title:"Tide will turn en route"},"The passage takes more than 6 hours — the tidal stream will reverse at least once. Check tidal atlas for net effect on your course."),
+    tideChanges>=1&&h(InfoBox,{type:"tip",title:"Tide will turn en route"},"The passage takes more than 6 hours \u2014 the tidal stream will reverse at least once. Check tidal atlas for net effect on your course."),
     h(InfoBox,{type:"tip",title:"Tip"},"These are estimates only. Always use an official tidal atlas and chart for actual passage planning.")
+  ))
   );
 }
 
@@ -3871,6 +4652,19 @@ function App(){
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
   var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
+  var TOOL_ORDER=["compass","weather","chart","wind","passage","anchor","tide","fuel","lights","deviation","units","beaufort"];
+  var swipeRef=useRef({startX:0,startY:0,started:false});
+  var swipeTool=function(dir){
+    var idx=TOOL_ORDER.indexOf(toolTab);if(idx===-1)return;
+    var ni=idx+dir;if(ni<0||ni>=TOOL_ORDER.length)return;
+    setToolTab(TOOL_ORDER[ni]);try{navigator.vibrate(8);}catch(e){}
+  };
+  var onTouchStart=function(ev){var t=ev.touches[0];swipeRef.current={startX:t.clientX,startY:t.clientY,started:true};};
+  var onTouchEnd=function(ev){
+    if(!swipeRef.current.started)return;swipeRef.current.started=false;
+    var t=ev.changedTouches[0];var dx=t.clientX-swipeRef.current.startX;var dy=t.clientY-swipeRef.current.startY;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){swipeTool(dx<0?1:-1);}
+  };
 
   var push=function(v){setStack(function(p){return p.concat([v]);});};
   var goBack=useCallback(function(){setStack(function(p){var n2=p.slice();var pv=n2.pop();setView(pv||"home");return n2;});},[]); 
@@ -3923,7 +4717,7 @@ function App(){
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
-    h("div",{style:{flex:1,overflowY:toolTab==="chart"?"hidden":"auto",overflowX:"hidden"}},
+    h("div",{style:{flex:1,overflowY:(toolTab==="chart"||toolTab==="passage"||view==="log")?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
       searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
@@ -3963,7 +4757,7 @@ function App(){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
-        h("div",{style:{flex:1,overflowY:"auto"}},
+        h("div",{style:{flex:1,overflowY:"auto"},onTouchStart:onTouchStart,onTouchEnd:onTouchEnd},
           toolTab==="compass"&&h(CompassTool),
           toolTab==="wind"&&h(WindAdvisorTool),
           toolTab==="anchor"&&h(AnchorTool),
@@ -4014,11 +4808,12 @@ function App(){
           );})
       ),
       // NELSON
-      view==="nelson"&&h(NelsonView)
+      view==="nelson"&&h(NelsonView),
+      view==="log"&&h(ShipsLog)
     ),
     // BOTTOM NAV
     h("div",{style:{display:"flex",background:NM,borderTop:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-      [["home","⛵","Home"],["tools","🔧","Tools"],["emergency","⚠️","SOS"],["checklists","📋","Lists"],["nelson","⚜️","Nelson"]].map(function(row){
+      [["home","⛵","Home"],["tools","🔧","Tools"],["emergency","⚠️","SOS"],["checklists","📋","Lists"],["log","✏️","Log"]].map(function(row){
         var tab=row[0],icon=row[1],lbl=row[2];
         return h("button",{key:tab,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 2px 10px",cursor:"pointer",border:"none",background:"none",color:tab==="emergency"?RE:activeTab===tab?GO:MU,fontSize:8,letterSpacing:"0.08em",textTransform:"uppercase",gap:3,minHeight:52,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500},onClick:function(){
           setActiveTab(tab);setSearchQ("");setStack([]);
@@ -4026,7 +4821,7 @@ function App(){
           else if(tab==="tools")setView("tools");
           else if(tab==="emergency"){push("home");setView("emergency");}
           else if(tab==="checklists"){setView("checklist");}
-          else if(tab==="nelson")setView("nelson");
+          else if(tab==="log")setView("log");
         }},h("span",{style:{fontSize:18}},icon),lbl);
       })
     )
@@ -5124,54 +5919,158 @@ function CompassTool(){
 
 // ── Anchor Tool ───────────────────────────────────────────────────────
 function AnchorTool(){
-  var ds=useState(5);var depth=ds[0];var setDepth=ds[1];
-  var cs=useState("moderate");var cond=cs[0];var setCond=cs[1];
-  var chs=useState(10);var chain=chs[0];var setChain=chs[1];
-  var conds={
-    calm:{ratio:3,label:"Calm",color:GR},
-    moderate:{ratio:5,label:"Moderate",color:AM},
-    windy:{ratio:6,label:"Windy",color:"#D06820"},
-    storm:{ratio:7,label:"Storm",color:RE}
+  var dS=useState(4);var depth=dS[0];var setDepth=dS[1];
+  var sS=useState(7);var scope=sS[0];var setScope=sS[1];
+  var cS=useState(3);var chain=cS[0];var setChain=cS[1];
+  var tS=useState("mixed");var rodeType=tS[0];var setRodeType=tS[1];
+  // Anchor watch state
+  var watchS=useState(false);var watching=watchS[0];var setWatching=watchS[1];
+  var anchorPosS=useState(null);var anchorPos=anchorPosS[0];var setAnchorPos=anchorPosS[1];
+  var radiusS=useState(50);var watchRadius=radiusS[0];var setWatchRadius=radiusS[1];
+  var currentPosS=useState(null);var currentPos=currentPosS[0];var setCurrentPos=currentPosS[1];
+  var driftDistS=useState(0);var driftDist=driftDistS[0];var setDriftDist=driftDistS[1];
+  var alarmS=useState(false);var alarm=alarmS[0];var setAlarm=alarmS[1];
+  var watchIdRef=useRef(null);
+  var audioRef=useRef(null);
+  var tabS=useState("calc");var anchorTab=tabS[0];var setAnchorTab=tabS[1];
+
+  var minScope=rodeType==="chain"?3:rodeType==="mixed"?5:7;
+  var recChain=Math.ceil(depth*scope);
+  var rode=rodeType==="chain"?recChain:rodeType==="mixed"?chain+" m chain + "+(recChain-chain)+" m warp":recChain+" m warp";
+  var holdingDesc=scope>=7?"Excellent":scope>=5?"Good":scope>=3?"Minimum":"Insufficient";
+  var holdingCol=scope>=7?GR:scope>=5?GO:scope>=3?AM:RE;
+
+  // Haversine in metres
+  var distM=function(lat1,lon1,lat2,lon2){
+    var R=6371000;
+    var dLat=(lat2-lat1)*Math.PI/180;var dLon=(lon2-lon1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   };
-  var cv=conds[cond];
-  var scope=Math.ceil(depth*cv.ratio);
-  var rope=Math.max(0,scope-chain);
-  var swing=Math.ceil(scope*0.9);
-  return h("div",{style:{padding:16}},
-    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}},
-      h("div",null,
-        h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:5}},"Water Depth"),
-        h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-          h("input",{type:"range",min:1,max:40,value:depth,onChange:function(ev){setDepth(Number(ev.target.value));}}),
-          h("span",{style:{fontSize:18,fontWeight:700,color:WH,minWidth:40}},depth+"m")
+
+  var startWatch=function(){
+    if(!navigator.geolocation){return;}
+    navigator.geolocation.getCurrentPosition(function(p){
+      var aPos={lat:p.coords.latitude,lon:p.coords.longitude};
+      setAnchorPos(aPos);setCurrentPos(aPos);setWatching(true);setAlarm(false);setDriftDist(0);
+      watchIdRef.current=navigator.geolocation.watchPosition(function(p2){
+        var cPos={lat:p2.coords.latitude,lon:p2.coords.longitude};
+        setCurrentPos(cPos);
+        var d=distM(aPos.lat,aPos.lon,cPos.lat,cPos.lon);
+        setDriftDist(Math.round(d));
+        if(d>watchRadius){
+          setAlarm(true);
+          try{navigator.vibrate([300,100,300,100,300]);}catch(e){}
+          // Audio alarm
+          try{
+            if(!audioRef.current){
+              var ctx=new(window.AudioContext||window.webkitAudioContext)();
+              audioRef.current=ctx;
+            }
+            var ctx2=audioRef.current;
+            var osc=ctx2.createOscillator();var gain=ctx2.createGain();
+            osc.connect(gain);gain.connect(ctx2.destination);
+            osc.frequency.value=880;osc.type="square";
+            gain.gain.value=0.3;
+            osc.start();osc.stop(ctx2.currentTime+0.5);
+          }catch(e){}
+        } else {setAlarm(false);}
+      },function(){},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+    },function(e){});
+  };
+
+  var stopWatch=function(){
+    if(watchIdRef.current!==null){navigator.geolocation.clearWatch(watchIdRef.current);watchIdRef.current=null;}
+    setWatching(false);setAlarm(false);setAnchorPos(null);setCurrentPos(null);setDriftDist(0);
+  };
+
+  useEffect(function(){return function(){if(watchIdRef.current!==null){navigator.geolocation.clearWatch(watchIdRef.current);}};},[]); 
+
+  var tabStyle=function(active){return {flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:active?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:active?"2px solid "+GO:"2px solid transparent"};};
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+      h("button",{onClick:function(){setAnchorTab("calc");},style:tabStyle(anchorTab==="calc")},"Scope Calculator"),
+      h("button",{onClick:function(){setAnchorTab("watch");},style:tabStyle(anchorTab==="watch")},"Anchor Watch"+(watching?" \u25cf":""))
+    ),
+    anchorTab==="watch"?h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      h(STitle,{noTop:true},"Anchor Watch"),
+      !watching?h("div",null,
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:16,lineHeight:1.6}},"Sets your current GPS position as the anchor point and monitors for dragging. An alarm will sound if the boat moves beyond the set radius."),
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Watch radius (metres)"),
+          h("input",{type:"range",min:20,max:150,step:5,value:watchRadius,onChange:function(ev){setWatchRadius(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:GL,textAlign:"center",marginTop:4}},watchRadius+" m")
+        ),
+        h("button",{onClick:startWatch,style:{width:"100%",background:"rgba(46,112,68,0.15)",border:"1px solid rgba(46,112,68,0.4)",borderRadius:8,padding:"14px",cursor:"pointer",color:GR,fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600}},"\u2693 Set Anchor & Start Watch")
+      ):h("div",null,
+        alarm?h("div",{style:{background:"rgba(196,48,48,0.15)",border:"2px solid rgba(196,48,48,0.6)",borderRadius:10,padding:"16px",marginBottom:14,textAlign:"center",animation:"pulse 1s infinite"}},
+          h("div",{style:{fontSize:32,marginBottom:6}},"\u26a0\ufe0f"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"#FF6B6B",marginBottom:4}},"ANCHOR DRAGGING"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:"#E08080"}},"Drift: "+driftDist+" m \u2014 Radius: "+watchRadius+" m")
+        ):h("div",{style:{background:"rgba(46,112,68,0.1)",border:"1px solid rgba(46,112,68,0.3)",borderRadius:10,padding:"16px",marginBottom:14,textAlign:"center"}},
+          h("div",{style:{fontSize:28,marginBottom:6}},"\u2693"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,fontWeight:600,color:GR,marginBottom:4}},"Holding"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU}},"Drift: "+driftDist+" m of "+watchRadius+" m radius")
+        ),
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}},
+          h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",textAlign:"center"}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Anchor position"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},anchorPos?anchorPos.lat.toFixed(5)+"\u00b0":"\u2014"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},anchorPos?anchorPos.lon.toFixed(5)+"\u00b0":"\u2014")
+          ),
+          h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",textAlign:"center"}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Current position"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},currentPos?currentPos.lat.toFixed(5)+"\u00b0":"\u2014"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL}},currentPos?currentPos.lon.toFixed(5)+"\u00b0":"\u2014")
+          )
+        ),
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Adjust radius (metres)"),
+          h("input",{type:"range",min:20,max:150,step:5,value:watchRadius,onChange:function(ev){setWatchRadius(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL,textAlign:"center",marginTop:4}},watchRadius+" m")
+        ),
+        h("button",{onClick:stopWatch,style:{width:"100%",background:"rgba(196,48,48,0.08)",border:"1px solid rgba(196,48,48,0.3)",borderRadius:8,padding:"12px",cursor:"pointer",color:"#E08080",fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,fontWeight:600}},"Stop Anchor Watch")
+      ),
+      h(InfoBox,{type:"tip",title:"Tip"},"Set the radius to roughly your rode length. GPS accuracy is typically 3\u201310 m, so set at least 20 m to avoid false alarms. Keep the screen on or use your browser\u2019s background location setting.")
+    ):h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      h(STitle,{noTop:true},"Anchor Scope"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Depth at HW (m)"),
+          h("input",{type:"range",min:1,max:30,step:0.5,value:depth,onChange:function(ev){setDepth(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:GL,textAlign:"center",marginTop:4}},depth+" m")
+        ),
+        h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Scope ratio"),
+          h("input",{type:"range",min:3,max:10,step:1,value:scope,onChange:function(ev){setScope(Number(ev.target.value));},style:{width:"100%"}}),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:holdingCol,textAlign:"center",marginTop:4}},scope+":1")
         )
       ),
-      h("div",null,
-        h("div",{style:{fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:5}},"Chain on Board"),
-        h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-          h("input",{type:"range",min:0,max:50,value:chain,onChange:function(ev){setChain(Number(ev.target.value));}}),
-          h("span",{style:{fontSize:18,fontWeight:700,color:WH,minWidth:40}},chain+"m")
-        )
-      )
-    ),
-    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}},
-      Object.keys(conds).map(function(k){
-        var v=conds[k];
-        return h("button",{key:k,onClick:function(){setCond(k);},style:{background:cond===k?"rgba(200,168,74,0.12)":NC,border:"1px solid "+(cond===k?v.color:NB),borderRadius:8,padding:"8px 4px",cursor:"pointer",color:cond===k?v.color:MU,fontFamily:"inherit",fontSize:12,fontWeight:cond===k?700:400}},v.label);
-      })
-    ),
-    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:6}},
-      [["Scope",scope+"m",GO],["Chain",chain+"m",AM],["Rope",rope>0?rope+"m":"—",rope>0?"#FF9090":GR],["Swing",swing+"m",MU]].map(function(row){
-        return h("div",{key:row[0],style:{background:NC,border:"1px solid "+NB,borderRadius:8,padding:"8px 4px",textAlign:"center"}},
-          h("div",{style:{fontSize:9,color:MU,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}},row[0]),
-          h("div",{style:{fontSize:18,fontWeight:700,color:row[2]}},row[1])
-        );
-      })
-    ),
-    h(AnchorDiagram,{depth:depth,scope:scope,chain:chain}),
-    rope>0
-      ?h("div",{style:{background:"rgba(204,128,48,0.08)",border:"1px solid rgba(204,128,48,0.35)",borderRadius:8,padding:"8px 10px",fontSize:12,color:AM,marginTop:4}},"⚠ Add "+rope+"m of rope to your "+chain+"m chain")
-      :h("div",{style:{background:"rgba(54,122,78,0.08)",border:"1px solid rgba(54,122,78,0.35)",borderRadius:8,padding:"8px 10px",fontSize:12,color:GR,marginTop:4}},"✓ "+chain+"m chain is sufficient")
+      h("div",{style:{display:"flex",gap:6,marginBottom:14}},
+        ["chain","mixed","warp"].map(function(t){return h("button",{key:t,onClick:function(){setRodeType(t);},style:{flex:1,background:rodeType===t?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(rodeType===t?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:rodeType===t?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13}},t.charAt(0).toUpperCase()+t.slice(1));})
+      ),
+      rodeType==="mixed"&&h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Chain length (m)"),
+        h("input",{type:"range",min:1,max:15,step:1,value:chain,onChange:function(ev){setChain(Number(ev.target.value));},style:{width:"100%"}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL,textAlign:"center",marginTop:4}},chain+" m")
+      ),
+      h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Total rode"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},recChain+" m")
+          ),
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Holding"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:holdingCol}},holdingDesc)
+          )
+        ),
+        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},rode)
+      ),
+      scope<minScope&&h(InfoBox,{type:"warn",title:"Insufficient scope"},"Minimum safe scope for "+rodeType+" is "+minScope+":1. Increase your rode or find shallower water."),
+      h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/warp: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
+    )
   );
 }
 
@@ -5735,7 +6634,669 @@ function WeatherDecisionTool(){
 }
 
 // ── Passage Planner ────────────────────────────────────────────────────
+function ShipsLog(){
+  // Voyage storage: {voyages:[{id,name,started,ended,entries:[{id,time,type,lat,lon,note,loggedBy,windDir,windForce,seaState,visibility,baro,course,speed}]}], activeId:null}
+  var loadData=function(){try{return JSON.parse(localStorage.getItem("admiralty_voyages")||'{"voyages":[],"activeId":null}');}catch(e){return {voyages:[],activeId:null};}};
+  var dataS=useState(loadData);var voyData=dataS[0];var setVoyData=dataS[1];
+  var save=function(d){try{localStorage.setItem("admiralty_voyages",JSON.stringify(d));}catch(e){}};
+  var update=function(fn){setVoyData(function(prev){var nxt=JSON.parse(JSON.stringify(prev));fn(nxt);save(nxt);return nxt;});};
+
+  var viewS=useState("current");var logView=viewS[0];var setLogView=viewS[1];
+  var reviewIdS=useState(null);var reviewId=reviewIdS[0];var setReviewId=reviewIdS[1];
+
+  // Entry form state
+  var noteS=useState("");var note=noteS[0];var setNote=noteS[1];
+  var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var posS=useState(null);var logPos=posS[0];var setLogPos=posS[1];
+  var typeS=useState("position");var entryType=typeS[0];var setEntryType=typeS[1];
+  var byS=useState(function(){try{return localStorage.getItem("admiralty_logby")||"";}catch(e){return "";}});var loggedBy=byS[0];var setLoggedBy=byS[1];
+  var windDirS=useState("");var windDir=windDirS[0];var setWindDir=windDirS[1];
+  var windForceS=useState("");var windForce=windForceS[0];var setWindForce=windForceS[1];
+  var seaStateS=useState("");var seaState=seaStateS[0];var setSeaState=seaStateS[1];
+  var visS=useState("");var visibility=visS[0];var setVisibility=visS[1];
+  var baroS=useState("");var baro=baroS[0];var setBaro=baroS[1];
+  var courseS=useState("");var course=courseS[0];var setCourse=courseS[1];
+  var spdS=useState("");var logSpeed=spdS[0];var setLogSpeed=spdS[1];
+  var voyNameS=useState("");var voyName=voyNameS[0];var setVoyName=voyNameS[1];
+  var confirmS=useState(null);var confirmAction=confirmS[0];var setConfirmAction=confirmS[1];
+
+  // Track map
+  var mapRef=useRef(null);
+  var mapInstanceRef=useRef(null);
+
+  var activeVoyage=voyData.activeId?voyData.voyages.find(function(v){return v.id===voyData.activeId;}):null;
+  var reviewVoyage=reviewId?voyData.voyages.find(function(v){return v.id===reviewId;}):null;
+  var displayVoyage=logView==="review"?reviewVoyage:activeVoyage;
+
+  var getPos=function(){
+    if(!navigator.geolocation)return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(function(p){
+      setLogPos({lat:p.coords.latitude,lon:p.coords.longitude});setGpsLoading(false);
+    },function(){setGpsLoading(false);},{timeout:10000,maximumAge:30000});
+  };
+
+  var startVoyage=function(){
+    if(!voyName.trim())return;
+    update(function(d){
+      var v={id:Date.now(),name:voyName.trim(),started:new Date().toISOString(),ended:null,entries:[]};
+      d.voyages.unshift(v);d.activeId=v.id;
+    });
+    setVoyName("");
+  };
+
+  var endVoyage=function(){
+    update(function(d){
+      var v=d.voyages.find(function(v2){return v2.id===d.activeId;});
+      if(v)v.ended=new Date().toISOString();
+      d.activeId=null;
+    });
+  };
+
+  var deleteVoyage=function(id){
+    update(function(d){
+      d.voyages=d.voyages.filter(function(v){return v.id!==id;});
+      if(d.activeId===id)d.activeId=null;
+    });
+    if(reviewId===id){setReviewId(null);setLogView("current");}
+    setConfirmAction(null);
+  };
+
+  var addEntry=function(){
+    if(!activeVoyage)return;
+    var entry={id:Date.now(),time:new Date().toISOString(),type:entryType,lat:logPos?logPos.lat:null,lon:logPos?logPos.lon:null,note:note.trim(),loggedBy:loggedBy.trim(),windDir:windDir,windForce:windForce,seaState:seaState,visibility:visibility,baro:baro,course:course,speed:logSpeed};
+    update(function(d){
+      var v=d.voyages.find(function(v2){return v2.id===d.activeId;});
+      if(v)v.entries.unshift(entry);
+    });
+    setNote("");setLogPos(null);setWindDir("");setWindForce("");setSeaState("");setVisibility("");setBaro("");setCourse("");setLogSpeed("");
+    try{localStorage.setItem("admiralty_logby",loggedBy);}catch(e){}
+    try{navigator.vibrate(15);}catch(e){}
+  };
+
+  var removeEntry=function(voyId,entryId){
+    update(function(d){
+      var v=d.voyages.find(function(v2){return v2.id===voyId;});
+      if(v)v.entries=v.entries.filter(function(e){return e.id!==entryId;});
+    });
+  };
+
+  var fmtTime=function(iso){
+    var d=new Date(iso);
+    return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false});
+  };
+
+  var fmtDate=function(iso){return new Date(iso).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});};
+
+  var typeIcon=function(t){
+    var m={position:"\ud83d\udccd",course:"\u21bb",weather:"\u26c5",sail:"\u26f5",watch:"\ud83d\udc41",note:"\u270d\ufe0f"};
+    return m[t]||"\ud83d\udccd";
+  };
+
+  var exportVoyage=function(voy){
+    var lines=["SHIP'S LOG: "+voy.name,"Started: "+fmtDate(voy.started)+(voy.ended?" \u2014 Ended: "+fmtDate(voy.ended):""),"=========",""];
+    voy.entries.slice().reverse().forEach(function(e){
+      var line=fmtTime(e.time)+"  ["+e.type.toUpperCase()+"]";
+      if(e.loggedBy)line+="  ("+e.loggedBy+")";
+      if(e.lat!==null)line+="  "+e.lat.toFixed(5)+"\u00b0, "+e.lon.toFixed(5)+"\u00b0";
+      if(e.course)line+="  Crs: "+e.course+"\u00b0";
+      if(e.speed)line+="  Spd: "+e.speed+"kts";
+      if(e.windDir||e.windForce)line+="  Wind: "+(e.windDir||"?")+" F"+(e.windForce||"?");
+      if(e.seaState)line+="  Sea: "+e.seaState;
+      if(e.visibility)line+="  Vis: "+e.visibility;
+      if(e.baro)line+="  Baro: "+e.baro+"mb";
+      if(e.note)line+="  "+e.note;
+      lines.push(line);
+    });
+    try{navigator.clipboard.writeText(lines.join("\n"));}catch(ex){}
+  };
+
+  var TYPES=[["position","Position"],["course","Course \u0394"],["weather","Weather"],["sail","Sail \u0394"],["watch","Watch \u0394"],["note","Note"]];
+  var WIND_DIRS=["N","NE","E","SE","S","SW","W","NW"];
+  var SEA_STATES=["Calm","Slight","Moderate","Rough","Very rough"];
+  var VIS_OPTS=["Good","Moderate","Poor","Fog"];
+
+  var chipStyle=function(active){return {padding:"6px 10px",cursor:"pointer",border:"1px solid "+(active?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:5,background:active?"rgba(200,168,74,0.1)":NC,color:active?GO:MU,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:500};};
+
+  // Track map
+  var initTrackMap=function(voy){
+    if(mapInstanceRef.current)return;
+    if(!mapRef.current)return;
+    if(!document.getElementById("leaflet-css")){
+      var link=document.createElement("link");link.id="leaflet-css";link.rel="stylesheet";
+      link.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(link);
+    }
+    var doInit=function(){
+      var L=window.L;
+      var pts=voy.entries.filter(function(e){return e.lat!==null;}).reverse();
+      var center=pts.length>0?[pts[pts.length-1].lat,pts[pts.length-1].lon]:[51.4779,-0.0015];
+      var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView(center,10);
+      L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(map);
+      L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{maxZoom:18}).addTo(map);
+      L.control.zoom({position:"topright"}).addTo(map);
+      if(pts.length>=2){
+        var latlngs=pts.map(function(e){return [e.lat,e.lon];});
+        L.polyline(latlngs,{color:"#C8A84A",weight:2.5,opacity:0.9}).addTo(map);
+      }
+      pts.forEach(function(e,idx){
+        var isFirst=idx===0;var isLast=idx===pts.length-1;
+        var col=isLast?"#2E7044":isFirst?"#5A7490":"#C8A84A";
+        var sz=isLast?10:isFirst?8:6;
+        var icon=L.divIcon({className:"",html:'<div style="width:'+sz+'px;height:'+sz+'px;background:'+col+';border:1.5px solid #07101E;border-radius:50%;box-shadow:0 0 0 2px '+col+'44"></div>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+        L.marker([e.lat,e.lon],{icon:icon}).addTo(map).bindPopup('<div style="font-family:Inter,sans-serif;font-size:11px;color:#07101E;min-width:120px"><b>'+fmtTime(e.time)+'</b><br>'+e.lat.toFixed(4)+'\u00b0, '+e.lon.toFixed(4)+'\u00b0'+(e.loggedBy?' \u2014 '+e.loggedBy:'')+(e.note?'<br><i>'+e.note+'</i>':'')+'</div>');
+      });
+      if(pts.length>=2){
+        map.fitBounds(L.latLngBounds(pts.map(function(e){return [e.lat,e.lon];})),{padding:[30,30]});
+      } else if(pts.length===1){map.setView([pts[0].lat,pts[0].lon],13);}
+      mapInstanceRef.current=map;
+      setTimeout(function(){map.invalidateSize();},100);
+    };
+    if(window.L){doInit();return;}
+    var script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.onload=doInit;
+    document.head.appendChild(script);
+  };
+
+  useEffect(function(){
+    if(logView==="track"&&displayVoyage){
+      if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}
+      setTimeout(function(){initTrackMap(displayVoyage);},100);
+    }
+    return function(){if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}};
+  },[logView,reviewId,displayVoyage?displayVoyage.entries.length:0]);
+
+  var tabStyle=function(active){return {flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:active?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:active?"2px solid "+GO:"2px solid transparent"};};
+
+  // Render entry list (shared between current and review)
+  var renderEntries=function(voy,canDelete){
+    if(!voy||!voy.entries.length)return h("div",{style:{textAlign:"center",padding:"24px 16px"}},
+      h("div",{style:{fontSize:28,opacity:0.2,marginBottom:10}},"\ud83d\udcd3"),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU}},"No entries yet.")
+    );
+    return h("div",null,
+      h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6}},voy.entries.length+" entr"+(voy.entries.length===1?"y":"ies")),
+      voy.entries.map(function(e){
+        var details=[];
+        if(e.course)details.push(e.course+"\u00b0");
+        if(e.speed)details.push(e.speed+"kts");
+        if(e.windDir||e.windForce)details.push("Wind "+(e.windDir||"")+" F"+(e.windForce||"?"));
+        if(e.seaState)details.push(e.seaState);
+        if(e.visibility)details.push("Vis: "+e.visibility);
+        if(e.baro)details.push(e.baro+"mb");
+        return h("div",{key:e.id,style:{padding:"8px 0",borderBottom:"1px solid rgba(22,36,56,0.8)"}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:2}},
+            h("div",{style:{fontSize:12}},typeIcon(e.type)),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:GO,fontWeight:600}},fmtTime(e.time)),
+            e.loggedBy&&h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,fontStyle:"italic"}},e.loggedBy),
+            e.lat!==null&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:10,color:MU}},e.lat.toFixed(4)+"\u00b0, "+e.lon.toFixed(4)+"\u00b0"),
+            canDelete&&h("div",{style:{marginLeft:"auto",flexShrink:0}},h("button",{onClick:function(){removeEntry(voy.id,e.id);},style:{background:"none",border:"none",color:"rgba(196,48,48,0.4)",fontSize:13,cursor:"pointer",padding:"2px 4px"}},"\u00d7"))
+          ),
+          details.length>0&&h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU,marginBottom:2,paddingLeft:22}},details.join(" \u00b7 ")),
+          e.note&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,lineHeight:1.4,paddingLeft:22}},e.note)
+        );
+      })
+    );
+  };
+
+  var hasPositions=displayVoyage&&displayVoyage.entries.some(function(e){return e.lat!==null;});
+  var pastVoyages=voyData.voyages.filter(function(v){return v.id!==voyData.activeId;});
+
+  // Confirmation dialog
+  var confirmDialog=confirmAction?h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}},
+    h("div",{style:{background:NM,border:"1px solid rgba(200,168,74,0.2)",borderRadius:10,padding:"20px",maxWidth:300,width:"100%"}},
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,color:WH,marginBottom:6}},confirmAction.title),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,fontStyle:"italic",marginBottom:16,lineHeight:1.5}},confirmAction.message),
+      h("div",{style:{display:"flex",gap:8}},
+        h("button",{onClick:function(){setConfirmAction(null);},style:{flex:1,background:NC,border:"1px solid rgba(22,36,56,1)",borderRadius:6,padding:"10px",cursor:"pointer",color:MU,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}},"Cancel"),
+        h("button",{onClick:function(){confirmAction.onConfirm();},style:{flex:1,background:"rgba(196,48,48,0.12)",border:"1px solid rgba(196,48,48,0.3)",borderRadius:6,padding:"10px",cursor:"pointer",color:"#E08080",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}},confirmAction.confirmLabel||"Delete")
+      )
+    )
+  ):null;
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    confirmDialog,
+    // Tab bar
+    h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+      h("button",{onClick:function(){setLogView("current");setReviewId(null);},style:tabStyle(logView==="current")},"Log"),
+      displayVoyage&&h("button",{onClick:function(){setLogView("track");},style:tabStyle(logView==="track")},hasPositions?"Track":"Track"),
+      h("button",{onClick:function(){setLogView("voyages");},style:tabStyle(logView==="voyages")},"Voyages"+(pastVoyages.length>0?" ("+voyData.voyages.length+")":""))
+    ),
+
+    // TRACK MAP VIEW
+    logView==="track"?h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
+      !hasPositions?h("div",{style:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center"}},
+        h("div",null,
+          h("div",{style:{fontSize:36,opacity:0.2,marginBottom:12}},"\ud83d\uddfa\ufe0f"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:MU}},"No positions logged yet. Add entries with GPS to see your track.")
+        )
+      ):h("div",{ref:mapRef,style:{flex:1,background:"#040C18",minHeight:0}})
+    ):
+
+    // VOYAGES LIST VIEW
+    logView==="voyages"?h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      h(STitle,{noTop:true},"Voyages"),
+      voyData.voyages.length===0?h("div",{style:{textAlign:"center",padding:"32px 16px"}},
+        h("div",{style:{fontSize:28,opacity:0.2,marginBottom:10}},"\u26f5"),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU}},"No voyages yet. Start one from the Log tab.")
+      ):h("div",null,
+        voyData.voyages.map(function(v){
+          var isActive=v.id===voyData.activeId;
+          var nEntries=v.entries.length;
+          var nPos=v.entries.filter(function(e){return e.lat!==null;}).length;
+          return h("div",{key:v.id,style:{background:isActive?"rgba(46,112,68,0.08)":NC,border:"1px solid "+(isActive?"rgba(46,112,68,0.25)":"rgba(200,168,74,0.1)"),borderRadius:8,padding:"12px",marginBottom:8}},
+            h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},v.name),
+              isActive&&h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GR,fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase"}},"ACTIVE")
+            ),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU,marginBottom:8}},
+              fmtDate(v.started)+(v.ended?" \u2014 "+fmtDate(v.ended):"")+" \u00b7 "+nEntries+" entr"+(nEntries===1?"y":"ies")+(nPos>0?" \u00b7 "+nPos+" positions":"")
+            ),
+            h("div",{style:{display:"flex",gap:6}},
+              h("button",{onClick:function(){setReviewId(v.id);setLogView("current");},style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"7px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"View"),
+              nPos>0&&h("button",{onClick:function(){setReviewId(v.id);setLogView("track");},style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"7px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"Track"),
+              h("button",{onClick:function(){exportVoyage(v);},style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"7px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"\ud83d\udccb Copy"),
+              !isActive&&h("button",{onClick:function(){setConfirmAction({title:"Delete voyage?",message:"Delete \""+v.name+"\" and all its entries? This cannot be undone.",confirmLabel:"Delete",onConfirm:function(){deleteVoyage(v.id);}});},style:{background:"rgba(196,48,48,0.06)",border:"1px solid rgba(196,48,48,0.2)",borderRadius:5,padding:"7px 10px",cursor:"pointer",color:"#E08080",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"\u00d7")
+            )
+          );
+        })
+      )
+    ):
+
+    // CURRENT/REVIEW VIEW
+    h("div",{style:{flex:1,overflowY:"auto",padding:16}},
+      // Reviewing a past voyage
+      reviewId&&reviewId!==voyData.activeId?h("div",null,
+        h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:12}},
+          h("button",{onClick:function(){setReviewId(null);setLogView("voyages");},style:{background:"none",border:"none",color:GO,fontSize:22,cursor:"pointer",padding:0}},"\u2039"),
+          h("div",null,
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,fontWeight:600,color:WH}},reviewVoyage?reviewVoyage.name:""),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU}},reviewVoyage?fmtDate(reviewVoyage.started)+(reviewVoyage.ended?" \u2014 "+fmtDate(reviewVoyage.ended):""):"")
+          )
+        ),
+        renderEntries(reviewVoyage,true)
+      ):
+
+      // No active voyage - prompt to start one
+      !activeVoyage?h("div",null,
+        h(STitle,{noTop:true},"Start a Voyage"),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:16,lineHeight:1.6}},"Name your voyage to begin logging. All entries will be grouped under this passage."),
+        h("div",{style:{display:"flex",gap:8,marginBottom:16}},
+          h("input",{type:"text",placeholder:"e.g. Solent to Cherbourg\u2026",value:voyName,onChange:function(ev){setVoyName(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")startVoyage();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:14,fontFamily:"'Crimson Text',Georgia,serif",padding:"10px 12px",outline:"none"}}),
+          h("button",{onClick:startVoyage,disabled:!voyName.trim(),style:{background:"rgba(46,112,68,0.15)",border:"1px solid rgba(46,112,68,0.4)",borderRadius:6,padding:"10px 16px",cursor:"pointer",color:GR,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600,opacity:voyName.trim()?1:0.4}},"\u26f5 Start")
+        ),
+        pastVoyages.length>0&&h("div",null,
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8,marginTop:16}},"Past voyages"),
+          pastVoyages.slice(0,3).map(function(v){
+            return h("div",{key:v.id,onClick:function(){setReviewId(v.id);},style:{padding:"10px",background:NC,border:"1px solid rgba(200,168,74,0.1)",borderRadius:6,marginBottom:6,cursor:"pointer"}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},v.name),
+              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU}},fmtDate(v.started)+" \u00b7 "+v.entries.length+" entries")
+            );
+          })
+        )
+      ):
+
+      // Active voyage - log form + entries
+      h("div",null,
+        h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}},
+          h("div",null,
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,fontWeight:600,color:WH}},activeVoyage.name),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:GR}},"Started "+fmtDate(activeVoyage.started))
+          ),
+          h("button",{onClick:function(){setConfirmAction({title:"End voyage?",message:"End \""+activeVoyage.name+"\"? You can still view it in past voyages.",confirmLabel:"End voyage",onConfirm:function(){endVoyage();setConfirmAction(null);}});},style:{background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,padding:"6px 12px",cursor:"pointer",color:MU,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600}},"End voyage")
+        ),
+        // Entry type
+        h("div",{style:{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}},
+          TYPES.map(function(t){return h("button",{key:t[0],onClick:function(){setEntryType(t[0]);},style:chipStyle(entryType===t[0])},typeIcon(t[0])+" "+t[1]);})
+        ),
+        // GPS + logged by
+        h("div",{style:{display:"flex",gap:8,marginBottom:8}},
+          h("button",{onClick:getPos,disabled:gpsLoading,style:{flex:1,background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600,textAlign:"left"}},gpsLoading?"Getting GPS\u2026":logPos?"\u2713 "+logPos.lat.toFixed(4)+"\u00b0, "+logPos.lon.toFixed(4)+"\u00b0":"\ud83d\udccd Position"),
+          h("input",{type:"text",placeholder:"Logged by\u2026",value:loggedBy,onChange:function(ev){setLoggedBy(ev.target.value);},style:{width:100,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:12,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}})
+        ),
+        // Course & speed
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}},
+          h("input",{type:"number",placeholder:"Course \u00b0",value:course,onChange:function(ev){setCourse(ev.target.value);},style:{background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}}),
+          h("input",{type:"number",placeholder:"Speed kts",value:logSpeed,onChange:function(ev){setLogSpeed(ev.target.value);},step:"0.5",style:{background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}})
+        ),
+        // Conditions
+        h("div",{style:{marginBottom:8}},
+          h("div",{style:{display:"flex",flexWrap:"wrap",gap:4,marginBottom:5}},
+            WIND_DIRS.map(function(d){return h("button",{key:d,onClick:function(){setWindDir(windDir===d?"":d);},style:chipStyle(windDir===d)},d);})
+          ),
+          h("div",{style:{display:"flex",gap:4,marginBottom:5,flexWrap:"wrap"}},
+            [0,1,2,3,4,5,6,7,8].map(function(f){return h("button",{key:f,onClick:function(){setWindForce(windForce===String(f)?"":String(f));},style:chipStyle(windForce===String(f))},"F"+f);})
+          ),
+          h("div",{style:{display:"flex",gap:4,marginBottom:5,flexWrap:"wrap"}},
+            SEA_STATES.map(function(s2){return h("button",{key:s2,onClick:function(){setSeaState(seaState===s2?"":s2);},style:chipStyle(seaState===s2)},s2);})
+          ),
+          h("div",{style:{display:"flex",gap:4,flexWrap:"wrap"}},
+            VIS_OPTS.map(function(v){return h("button",{key:v,onClick:function(){setVisibility(visibility===v?"":v);},style:chipStyle(visibility===v)},v);}),
+            h("input",{type:"number",placeholder:"Baro mb",value:baro,onChange:function(ev){setBaro(ev.target.value);},style:{width:80,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:12,fontFamily:"'Crimson Text',Georgia,serif",padding:"6px 8px",outline:"none"}})
+          )
+        ),
+        // Notes + log button
+        h("div",{style:{display:"flex",gap:8,marginBottom:14}},
+          h("input",{type:"text",placeholder:"Notes\u2026",value:note,onChange:function(ev){setNote(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")addEntry();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 10px",outline:"none"}}),
+          h("button",{onClick:addEntry,style:{background:"rgba(46,112,68,0.15)",border:"1px solid rgba(46,112,68,0.4)",borderRadius:6,padding:"8px 16px",cursor:"pointer",color:GR,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600}},"\u2713 Log")
+        ),
+        // Entries
+        renderEntries(activeVoyage,true)
+      )
+    )
+  );
+}
+
+function RoutePlanner(props){
+  var mapRef=useRef(null);
+  var mapInstanceRef=useRef(null);
+  var wpS=useState([]);var waypoints=wpS[0];var setWaypoints=wpS[1];
+  var markersRef=useRef([]);
+  var lineRef=useRef(null);
+  var spdS=useState(5);var routeSpeed=spdS[0];var setRouteSpeed=spdS[1];
+  var loadingS=useState(true);var mapLoading=loadingS[0];var setMapLoading=loadingS[1];
+  var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
+  var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
+  var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
+  var errS=useState(null);var err=errS[0];var setErr=errS[1];
+  var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var offS=useState(false);var isOffline=offS[0];var setIsOffline=offS[1];
+  var savedRef=useRef(false);
+
+  // Haversine distance in nautical miles
+  var haversine=function(lat1,lon1,lat2,lon2){
+    var R=3440.065;// Earth radius in nm
+    var dLat=(lat2-lat1)*Math.PI/180;
+    var dLon=(lon2-lon1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  };
+  // Initial bearing in degrees
+  var bearing=function(lat1,lon1,lat2,lon2){
+    var dLon=(lon2-lon1)*Math.PI/180;
+    var y=Math.sin(dLon)*Math.cos(lat2*Math.PI/180);
+    var x=Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180)-Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos(dLon);
+    var b=Math.atan2(y,x)*180/Math.PI;
+    return (b+360)%360;
+  };
+
+  // Compass direction from degrees
+  var compassDir=function(deg){
+    var dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    return dirs[Math.round(deg/22.5)%16];
+  };
+
+  // Compute legs from waypoints
+  var legs=[];
+  var totalDist=0;
+  for(var i=1;i<waypoints.length;i++){
+    var d=haversine(waypoints[i-1].lat,waypoints[i-1].lon,waypoints[i].lat,waypoints[i].lon);
+    var b=bearing(waypoints[i-1].lat,waypoints[i-1].lon,waypoints[i].lat,waypoints[i].lon);
+    legs.push({from:i,to:i+1,dist:d,brg:b});
+    totalDist+=d;
+  }
+  var totalHrs=routeSpeed>0?totalDist/routeSpeed:0;
+  var etaH=Math.floor(totalHrs);
+  var etaM=Math.round((totalHrs-etaH)*60);
+
+  // Save to localStorage
+  var saveRoute=function(wps){
+    try{localStorage.setItem("admiralty_route",JSON.stringify({waypoints:wps,speed:routeSpeed}));}catch(e){}
+  };
+
+  // Load from localStorage
+  var loadRoute=function(){
+    try{
+      var s=localStorage.getItem("admiralty_route");
+      if(s){var d=JSON.parse(s);if(d.waypoints&&d.waypoints.length){setWaypoints(d.waypoints);if(d.speed)setRouteSpeed(d.speed);return d.waypoints;}}
+    }catch(e){}
+    return null;
+  };
+
+  // Update markers and line on map
+  var updateMapOverlays=function(wps){
+    if(!mapInstanceRef.current||!window.L)return;
+    var L=window.L;
+    // Remove old markers
+    markersRef.current.forEach(function(m){m.remove();});
+    markersRef.current=[];
+    // Remove old line
+    if(lineRef.current){lineRef.current.remove();lineRef.current=null;}
+    // Add new markers
+    wps.forEach(function(wp,idx){
+      var icon=L.divIcon({className:"",html:'<div style="width:24px;height:24px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:11px;font-weight:700;color:#07101E;box-shadow:0 0 0 3px rgba(200,168,74,0.3)">'+(idx+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+      var m=L.marker([wp.lat,wp.lon],{icon:icon,draggable:true}).addTo(mapInstanceRef.current);
+      m.on("dragend",function(ev){
+        var ll=ev.target.getLatLng();
+        setWaypoints(function(prev){
+          var nw=prev.slice();nw[idx]={lat:ll.lat,lon:ll.lng};
+          saveRoute(nw);
+          return nw;
+        });
+      });
+      m.bindPopup('<div style="font-family:Inter,sans-serif;font-size:12px;color:#07101E"><b>WP '+(idx+1)+'</b><br>'+wp.lat.toFixed(4)+'\u00b0, '+wp.lon.toFixed(4)+'\u00b0</div>');
+      markersRef.current.push(m);
+    });
+    // Draw line
+    if(wps.length>=2){
+      var latlngs=wps.map(function(wp){return [wp.lat,wp.lon];});
+      lineRef.current=L.polyline(latlngs,{color:"#C8A84A",weight:2,opacity:0.8,dashArray:"8,6"}).addTo(mapInstanceRef.current);
+    }
+  };
+
+  // Init map
+  var initMap=function(lat,lon){
+    if(mapInstanceRef.current)return;
+    if(!mapRef.current)return;
+    if(!document.getElementById("leaflet-css")){
+      var link=document.createElement("link");
+      link.id="leaflet-css";link.rel="stylesheet";
+      link.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(link);
+    }
+    var doInit=function(){
+      var L=window.L;
+      var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],10);
+      L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
+      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:1});
+      var tileErrors=0;
+      baseLayer.on("tileerror",function(){tileErrors++;if(tileErrors>=3)setIsOffline(true);});
+      baseLayer.on("tileload",function(){tileErrors=0;setIsOffline(false);});
+      baseLayer.addTo(map);
+      baseLayer.once("tileload",function(){setIsOffline(false);setMapLoading(false);});
+      L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
+      L.control.zoom({position:"topright"}).addTo(map);
+
+      // Tap to add waypoint
+      map.on("click",function(ev){
+        var ll=ev.latlng;
+        setWaypoints(function(prev){
+          var nw=prev.concat([{lat:ll.lat,lon:ll.lng}]);
+          saveRoute(nw);
+          return nw;
+        });
+      });
+
+      mapInstanceRef.current=map;
+      setTimeout(function(){map.invalidateSize();setMapLoading(false);},100);
+
+      // Load saved route
+      var saved=loadRoute();
+      if(saved&&saved.length){
+        savedRef.current=true;
+        setTimeout(function(){
+          updateMapOverlays(saved);
+          if(saved.length>=2){
+            var bounds=L.latLngBounds(saved.map(function(wp){return [wp.lat,wp.lon];}));
+            map.fitBounds(bounds,{padding:[40,40]});
+          } else {
+            map.setView([saved[0].lat,saved[0].lon],12);
+          }
+        },200);
+      }
+    };
+    if(window.L){doInit();return;}
+    var script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.onload=doInit;
+    document.head.appendChild(script);
+  };
+
+  // Effect: update overlays when waypoints change
+  useEffect(function(){
+    if(savedRef.current){savedRef.current=false;return;}
+    updateMapOverlays(waypoints);
+  },[waypoints.length]);
+
+  // Mount map
+  useEffect(function(){
+    setTimeout(function(){initMap(51.4779,-0.0015);},100);
+    return function(){
+      if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}
+    };
+  },[]);
+
+  // Search
+  var doSearch=function(){
+    if(!searchQ.trim())return;
+    setSearching(true);setSearchResults([]);setErr(null);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(searchQ)+"&count=6&language=en&format=json")
+      .then(function(r){return r.json();})
+      .then(function(geo){
+        setSearching(false);
+        if(!geo.results||!geo.results.length){setErr("Location not found.");return;}
+        if(geo.results.length===1){
+          var r=geo.results[0];
+          if(mapInstanceRef.current){mapInstanceRef.current.setView([r.latitude,r.longitude],12);}
+          setSearchResults([]);setSearchQ("");
+        } else {setSearchResults(geo.results);}
+      }).catch(function(){setSearching(false);setErr("Search failed.");});
+  };
+
+  var goToPlace=function(lat,lon){
+    setSearchResults([]);setSearchQ("");
+    if(mapInstanceRef.current){mapInstanceRef.current.setView([lat,lon],12);}
+  };
+
+  var goToPosition=function(){
+    if(!navigator.geolocation){setErr("GPS not available.");return;}
+    setGpsLoading(true);setErr(null);
+    navigator.geolocation.getCurrentPosition(function(p){
+      var lat=p.coords.latitude,lon=p.coords.longitude;
+      setGpsLoading(false);
+      if(mapInstanceRef.current){mapInstanceRef.current.setView([lat,lon],13);}
+    },function(e){
+      setGpsLoading(false);
+      if(e.code===1)setErr("Location access denied.");
+      else setErr("Could not get position.");
+    },{timeout:10000,maximumAge:60000});
+  };
+
+  var removeWaypoint=function(idx){
+    setWaypoints(function(prev){
+      var nw=prev.slice();nw.splice(idx,1);
+      saveRoute(nw);
+      return nw;
+    });
+  };
+
+  var clearRoute=function(){
+    setWaypoints([]);
+    saveRoute([]);
+    if(lineRef.current){lineRef.current.remove();lineRef.current=null;}
+    markersRef.current.forEach(function(m){m.remove();});
+    markersRef.current=[];
+  };
+
+  var tabBtn=function(active){return {padding:"5px 10px",cursor:"pointer",border:"none",background:active?"rgba(200,168,74,0.12)":"transparent",color:active?GO:MU,fontSize:10,fontFamily:"'Inter',sans-serif",fontWeight:600,borderRadius:4,letterSpacing:"0.04em"};};
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    // Search bar
+    h("div",{style:{padding:"6px 8px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
+      h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")doSearch();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:"#EAE4D4",fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"6px 10px",outline:"none"}}),
+      h("button",{onClick:doSearch,disabled:searching||!searchQ.trim(),style:{background:"rgba(200,168,74,0.1)",border:"1px solid rgba(200,168,74,0.3)",borderRadius:5,color:"#C8A84A",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,padding:"6px 10px",cursor:"pointer",opacity:searching||!searchQ.trim()?0.5:1}},searching?"\u2026":"Go"),
+      h("button",{onClick:goToPosition,disabled:gpsLoading,title:"My position",style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:"#C8A84A",fontSize:14,padding:"6px 9px",cursor:"pointer"}},gpsLoading?"\u2026":"\ud83d\udccd")
+    ),
+    // Search results dropdown
+    searchResults.length>0&&h("div",{style:{background:"#0D1C30",borderBottom:"1px solid rgba(22,36,56,0.9)",maxHeight:140,overflowY:"auto",flexShrink:0}},
+      searchResults.map(function(r,i){
+        var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+        return h("div",{key:i,onClick:function(){goToPlace(r.latitude,r.longitude);},style:{padding:"9px 12px",cursor:"pointer",borderBottom:i<searchResults.length-1?"1px solid rgba(22,36,56,0.8)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:"#EAE4D4"}},name),
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:"#5A7490",flexShrink:0}},r.latitude.toFixed(2)+"\u00b0 "+r.longitude.toFixed(2)+"\u00b0")
+        );
+      })
+    ),
+    err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic",flexShrink:0}},err),
+    // Map
+    h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
+      mapLoading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic"}},"Loading chart\u2026")
+      ),
+      isOffline&&h("div",{style:{position:"absolute",top:8,left:8,right:8,zIndex:1000,background:"rgba(196,48,48,0.15)",border:"1px solid rgba(196,48,48,0.3)",borderRadius:6,padding:"8px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:12,color:"#E08080"}},
+        "Offline \u2014 saved waypoints visible, new tiles unavailable"
+      )
+    ),
+    // Route info panel
+    h("div",{style:{background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",flexShrink:0,maxHeight:"40%",overflowY:"auto"}},
+      // Totals bar
+      waypoints.length>=2&&h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:0,borderBottom:"1px solid rgba(22,36,56,0.9)"}},
+        h("div",{style:{padding:"8px 10px",textAlign:"center"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}},"Total"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL}},totalDist.toFixed(1)+" nm")
+        ),
+        h("div",{style:{padding:"8px 10px",textAlign:"center",borderLeft:"1px solid rgba(22,36,56,0.9)",borderRight:"1px solid rgba(22,36,56,0.9)"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}},"ETA at "+routeSpeed+" kts"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL}},etaH+"h "+etaM+"m")
+        ),
+        h("div",{style:{padding:"8px 10px",textAlign:"center"}},
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}},"Legs"),
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:GL}},legs.length)
+        )
+      ),
+      // Speed input
+      waypoints.length>=2&&h("div",{style:{padding:"6px 12px",borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:8}},
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}},"Speed"),
+        h("input",{type:"range",min:1,max:15,step:0.5,value:routeSpeed,onChange:function(ev){var v=Number(ev.target.value);setRouteSpeed(v);try{localStorage.setItem("admiralty_route",JSON.stringify({waypoints:waypoints,speed:v}));}catch(e){}},style:{flex:1}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:GL,minWidth:40,textAlign:"right"}},routeSpeed+" kts")
+      ),
+      // Leg list
+      legs.length>0&&h("div",{style:{borderBottom:"1px solid rgba(22,36,56,0.9)"}},
+        legs.map(function(leg,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"5px 12px",borderBottom:i<legs.length-1?"1px solid rgba(14,22,36,0.8)":"none",gap:8}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GO,fontWeight:700,minWidth:46}},leg.from+"\u2192"+leg.to),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL,flex:1}},leg.dist.toFixed(1)+" nm"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU}},Math.round(leg.brg)+"\u00b0 "+compassDir(leg.brg))
+          );
+        })
+      ),
+      // Waypoint list with remove
+      waypoints.length>0&&h("div",{style:{padding:"6px 12px 2px"}},
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Waypoints"),
+        waypoints.map(function(wp,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"4px 0",gap:6}},
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:GO,fontWeight:700,minWidth:28}},"WP"+(i+1)),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:12,color:WH,flex:1}},wp.lat.toFixed(4)+"\u00b0, "+wp.lon.toFixed(4)+"\u00b0"),
+            h("button",{onClick:function(){removeWaypoint(i);},style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.2)",borderRadius:4,color:"#E08080",fontSize:11,padding:"2px 7px",cursor:"pointer",fontFamily:"'Inter',sans-serif"}},"\u00d7")
+          );
+        })
+      ),
+      // Actions
+      h("div",{style:{padding:"8px 12px",display:"flex",gap:6,flexWrap:"wrap"}},
+        waypoints.length>0&&h("button",{onClick:function(){if(waypoints.length<1)return;setWaypoints(function(prev){var nw=prev.slice(0,-1);saveRoute(nw);return nw;});},style:{flex:"1 0 auto",background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u21a9 Undo"),
+        waypoints.length>=2&&h("button",{onClick:function(){setWaypoints(function(prev){var nw=prev.slice().reverse();saveRoute(nw);return nw;});},style:{flex:"1 0 auto",background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:GO,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u21c4 Reverse"),
+        waypoints.length>0&&h("button",{onClick:clearRoute,style:{flex:"1 0 auto",background:"rgba(196,48,48,0.08)",border:"1px solid rgba(196,48,48,0.2)",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:"#E08080",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u00d7 Clear"),
+        waypoints.length>=2&&props.onUseInCalc&&h("button",{onClick:function(){props.onUseInCalc(Math.round(totalDist*10)/10);},style:{flex:"1 0 100%",background:"rgba(40,96,168,0.12)",border:"1px solid rgba(40,96,168,0.3)",borderRadius:6,padding:"9px 10px",cursor:"pointer",color:"#6A9FD8",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600}},"\u2192 Use "+totalDist.toFixed(1)+" nm in Calculator"),
+        waypoints.length===0&&h("div",{style:{textAlign:"center",width:"100%",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,fontStyle:"italic",padding:"4px 0"}},"Tap the chart to place waypoints")
+      )
+    )
+  );
+}
+
 function PassageTool(){
+  var ptS=useState("route");var passTab=ptS[0];var setPassTab=ptS[1];
   var ds=useState(20);var dist=ds[0];var setDist=ds[1];
   var ss=useState(5);var speed=ss[0];var setSpeed=ss[1];
   var ts=useState(6);var tideHrs=ts[0];var setTideHrs=ts[1];
@@ -5755,12 +7316,26 @@ function PassageTool(){
   var daylight=arrH>=6&&arrH<=20;
   var depFmt=fmt(depHour,0);
   var arrFmt=fmt(arrH,arrM);
-  return h("div",{style:{padding:16}},
+  var tabStyle=function(active){return {flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:active?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:active?"2px solid "+GO:"2px solid transparent"};};
+  var passTabBar=h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+    h("button",{onClick:function(){setPassTab("route");},style:tabStyle(passTab==="route")},"Route"),
+    h("button",{onClick:function(){setPassTab("calc");},style:tabStyle(passTab==="calc")},"Calculator")
+  );
+  if(passTab==="route"){
+    return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+      passTabBar,
+      h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},h(RoutePlanner,{onUseInCalc:function(d){setDist(d);setPassTab("calc");}}))
+    );
+  }
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    passTabBar,
+    h("div",{style:{flex:1,overflowY:"auto"}},
+    h("div",{style:{padding:16}},
     h(STitle,{noTop:true},"Passage Details"),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
       h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Distance (nm)"),
-        h("input",{type:"range",min:1,max:200,step:1,value:dist,onChange:function(ev){setDist(Number(ev.target.value));}}),
+        h("input",{type:"range",min:1,max:500,step:1,value:dist,onChange:function(ev){setDist(Number(ev.target.value));}}),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,color:GL,textAlign:"center",marginTop:4}},dist+" nm")
       ),
       h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
@@ -5780,7 +7355,7 @@ function PassageTool(){
       )
     ),
     h("div",{style:{display:"flex",gap:6,marginBottom:14}},
-      ["with","against"].map(function(d){return h("button",{key:d,onClick:function(){setTideDir(d);},style:{flex:1,background:tideDir===d?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(tideDir===d?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:tideDir===d?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:14}},tideDir===d?"✓ ":"",(d==="with"?"🟢 Tide with you":"🔴 Tide against you"));})),
+      ["with","against"].map(function(d){return h("button",{key:d,onClick:function(){setTideDir(d);},style:{flex:1,background:tideDir===d?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(tideDir===d?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:tideDir===d?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:14}},tideDir===d?"\u2713 ":"",(d==="with"?"\ud83d\udfe2 Tide with you":"\ud83d\udd34 Tide against you"));})),
     h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:12}},
         h("div",null,h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Depart"),h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},depFmt)),
@@ -5793,8 +7368,9 @@ function PassageTool(){
       )
     ),
     !daylight&&h(InfoBox,{type:"warn",title:"Night arrival"},"ETA is after dark or early morning. Ensure nav lights are working, crew are rested, and harbour entry is safe at night."),
-    tideChanges>=1&&h(InfoBox,{type:"tip",title:"Tide will turn en route"},"The passage takes more than 6 hours — the tidal stream will reverse at least once. Check tidal atlas for net effect on your course."),
+    tideChanges>=1&&h(InfoBox,{type:"tip",title:"Tide will turn en route"},"The passage takes more than 6 hours \u2014 the tidal stream will reverse at least once. Check tidal atlas for net effect on your course."),
     h(InfoBox,{type:"tip",title:"Tip"},"These are estimates only. Always use an official tidal atlas and chart for actual passage planning.")
+  ))
   );
 }
 
@@ -7916,6 +9492,19 @@ function App(){
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
   var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
+  var TOOL_ORDER=["compass","weather","chart","wind","passage","anchor","tide","fuel","lights","deviation","units","beaufort"];
+  var swipeRef=useRef({startX:0,startY:0,started:false});
+  var swipeTool=function(dir){
+    var idx=TOOL_ORDER.indexOf(toolTab);if(idx===-1)return;
+    var ni=idx+dir;if(ni<0||ni>=TOOL_ORDER.length)return;
+    setToolTab(TOOL_ORDER[ni]);try{navigator.vibrate(8);}catch(e){}
+  };
+  var onTouchStart=function(ev){var t=ev.touches[0];swipeRef.current={startX:t.clientX,startY:t.clientY,started:true};};
+  var onTouchEnd=function(ev){
+    if(!swipeRef.current.started)return;swipeRef.current.started=false;
+    var t=ev.changedTouches[0];var dx=t.clientX-swipeRef.current.startX;var dy=t.clientY-swipeRef.current.startY;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){swipeTool(dx<0?1:-1);}
+  };
 
   var push=function(v){setStack(function(p){return p.concat([v]);});};
   var goBack=useCallback(function(){setStack(function(p){var n2=p.slice();var pv=n2.pop();setView(pv||"home");return n2;});},[]); 
@@ -7968,7 +9557,7 @@ function App(){
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
-    h("div",{style:{flex:1,overflowY:toolTab==="chart"?"hidden":"auto",overflowX:"hidden"}},
+    h("div",{style:{flex:1,overflowY:(toolTab==="chart"||toolTab==="passage"||view==="log")?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
       searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
@@ -8008,7 +9597,7 @@ function App(){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
-        h("div",{style:{flex:1,overflowY:"auto"}},
+        h("div",{style:{flex:1,overflowY:"auto"},onTouchStart:onTouchStart,onTouchEnd:onTouchEnd},
           toolTab==="compass"&&h(CompassTool),
           toolTab==="wind"&&h(WindAdvisorTool),
           toolTab==="anchor"&&h(AnchorTool),
@@ -8059,11 +9648,12 @@ function App(){
           );})
       ),
       // NELSON
-      view==="nelson"&&h(NelsonView)
+      view==="nelson"&&h(NelsonView),
+      view==="log"&&h(ShipsLog)
     ),
     // BOTTOM NAV
     h("div",{style:{display:"flex",background:NM,borderTop:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-      [["home","⛵","Home"],["tools","🔧","Tools"],["emergency","⚠️","SOS"],["checklists","📋","Lists"],["nelson","⚜️","Nelson"]].map(function(row){
+      [["home","⛵","Home"],["tools","🔧","Tools"],["emergency","⚠️","SOS"],["checklists","📋","Lists"],["log","✏️","Log"]].map(function(row){
         var tab=row[0],icon=row[1],lbl=row[2];
         return h("button",{key:tab,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 2px 10px",cursor:"pointer",border:"none",background:"none",color:tab==="emergency"?RE:activeTab===tab?GO:MU,fontSize:8,letterSpacing:"0.08em",textTransform:"uppercase",gap:3,minHeight:52,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500},onClick:function(){
           setActiveTab(tab);setSearchQ("");setStack([]);
@@ -8071,7 +9661,7 @@ function App(){
           else if(tab==="tools")setView("tools");
           else if(tab==="emergency"){push("home");setView("emergency");}
           else if(tab==="checklists"){setView("checklist");}
-          else if(tab==="nelson")setView("nelson");
+          else if(tab==="log")setView("log");
         }},h("span",{style:{fontSize:18}},icon),lbl);
       })
     )
