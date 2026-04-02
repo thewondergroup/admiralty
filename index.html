@@ -1942,6 +1942,130 @@ function DeviationTool(){
   );
 }
 
+// ── Chart Tool ────────────────────────────────────────────────────────
+function ChartTool(){
+  var mapRef=useRef(null);
+  var mapInstanceRef=useRef(null);
+  var posS=useState(null);var pos=posS[0];var setPos=posS[1];
+  var errS=useState(null);var err=errS[0];var setErr=errS[1];
+  var loadingS=useState(true);var loading=loadingS[0];var setLoading=loadingS[1];
+  var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var markerRef=useRef(null);
+  var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
+  var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
+  var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
+
+  var initMap=function(lat,lon){
+    if(mapInstanceRef.current)return;
+    if(!mapRef.current)return;
+    if(!document.getElementById("leaflet-css")){
+      var link=document.createElement("link");
+      link.id="leaflet-css";link.rel="stylesheet";
+      link.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(link);
+    }
+    var doInit=function(){
+      var L=window.L;
+      var map=L.map(mapRef.current,{zoomControl:false}).setView([lat,lon],13);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85}).addTo(map);
+      L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
+      L.control.zoom({position:"topright"}).addTo(map);
+      if(lat&&lon){
+        var icon=L.divIcon({className:"",html:'<div style="width:14px;height:14px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;box-shadow:0 0 0 3px rgba(200,168,74,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+        markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(map).bindPopup("You are here");
+      }
+      mapInstanceRef.current=map;
+      setLoading(false);
+    };
+    if(window.L){doInit();return;}
+    var script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.onload=doInit;
+    document.head.appendChild(script);
+  };
+
+  var goToPlace=function(lat,lon,name){
+    setSearchResults([]);setSearchQ("");
+    if(mapInstanceRef.current){
+      mapInstanceRef.current.setView([lat,lon],12);
+      var L=window.L;
+      if(markerRef.current){markerRef.current.remove();}
+      var icon=L.divIcon({className:"",html:'<div style="width:14px;height:14px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;box-shadow:0 0 0 3px rgba(200,168,74,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+      markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(mapInstanceRef.current).bindPopup(name);
+      setPos({lat:lat,lon:lon});
+    }
+  };
+
+  var doSearch=function(){
+    if(!searchQ.trim())return;
+    setSearching(true);setSearchResults([]);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(searchQ)+"&count=6&language=en&format=json")
+      .then(function(r){return r.json();})
+      .then(function(geo){
+        setSearching(false);
+        if(!geo.results||!geo.results.length){setErr("Location not found.");return;}
+        if(geo.results.length===1){
+          var r=geo.results[0];
+          goToPlace(r.latitude,r.longitude,r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:""));
+        } else {setSearchResults(geo.results);}
+      }).catch(function(){setSearching(false);setErr("Search failed. Check your connection.");});
+  };
+
+  var goToPosition=function(){
+    if(!navigator.geolocation){setErr("GPS not available on this device.");return;}
+    setGpsLoading(true);setErr(null);
+    navigator.geolocation.getCurrentPosition(function(p){
+      var lat=p.coords.latitude,lon=p.coords.longitude;
+      setPos({lat:lat,lon:lon});setGpsLoading(false);
+      if(mapInstanceRef.current){
+        mapInstanceRef.current.setView([lat,lon],13);
+        if(markerRef.current){markerRef.current.setLatLng([lat,lon]);}
+        else{
+          var L=window.L;
+          var icon=L.divIcon({className:"",html:'<div style="width:14px;height:14px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;box-shadow:0 0 0 3px rgba(200,168,74,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+          markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(mapInstanceRef.current).bindPopup("You are here");
+        }
+      } else {initMap(lat,lon);}
+    },function(){setGpsLoading(false);setErr("GPS permission denied.");});
+  };
+
+  useEffect(function(){
+    setTimeout(function(){initMap(51.4779,-0.0015);},100);
+    return function(){
+      if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}
+    };
+  },[]);
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    h("div",{style:{padding:"8px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
+      h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,
+        onChange:function(ev){setSearchQ(ev.target.value);},
+        onKeyDown:function(ev){if(ev.key==="Enter")doSearch();},
+        style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"7px 10px",outline:"none"}}),
+      h("button",{onClick:doSearch,disabled:searching||!searchQ.trim(),style:{background:"rgba(200,168,74,0.1)",border:"1px solid rgba(200,168,74,0.3)",borderRadius:5,color:GO,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,padding:"7px 10px",cursor:"pointer",letterSpacing:"0.04em",opacity:searching||!searchQ.trim()?0.5:1}},searching?"\u2026":"Go"),
+      h("button",{onClick:goToPosition,disabled:gpsLoading,title:"My position",style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:GO,fontSize:14,padding:"7px 9px",cursor:"pointer"}},gpsLoading?"\u2026":"\ud83d\udccd")
+    ),
+    searchResults.length>0&&h("div",{style:{background:NC,borderBottom:"1px solid rgba(22,36,56,0.9)",maxHeight:180,overflowY:"auto"}},
+      searchResults.map(function(r,i){
+        var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+        return h("div",{key:i,onClick:function(){goToPlace(r.latitude,r.longitude,name);},style:{padding:"9px 12px",cursor:"pointer",borderBottom:i<searchResults.length-1?"1px solid rgba(22,36,56,0.8)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},name),
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,flexShrink:0}},r.latitude.toFixed(2)+"\u00b0 "+r.longitude.toFixed(2)+"\u00b0")
+        );
+      })
+    ),
+    err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
+    !navigator.onLine&&h("div",{style:{background:"rgba(192,120,40,0.1)",borderBottom:"1px solid rgba(192,120,40,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:AM,fontStyle:"italic"}},"Offline \u2014 chart tiles unavailable. Use paper charts or Navionics."),
+    h("div",{ref:mapRef,style:{flex:1,background:"#0A1628",position:"relative"}},
+      loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
+      )
+    ),
+    h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
+  );
+}
+
 // ── Marine Weather Tool ───────────────────────────────────────────────
 function MarineWeatherTool(){
   var ls=useState("");var loc=ls[0];var setLoc=ls[1];
@@ -1951,6 +2075,7 @@ function MarineWeatherTool(){
   var fs=useState(false);var fetching=fs[0];var setFetching=fs[1];
   var ps=useState(null);var position=ps[0];var setPosition=ps[1];
   var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var rsS=useState([]);var results=rsS[0];var setResults=rsS[1];
 
   var bft=function(kph){
     var kts=kph/1.852;
@@ -2048,23 +2173,32 @@ function MarineWeatherTool(){
 
   var searchLocation=function(){
     if(!query.trim())return;
-    setFetching(true);setErr(null);
-    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(query)+"&count=1&language=en&format=json")
+    setFetching(true);setErr(null);setResults([]);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(query)+"&count=8&language=en&format=json")
       .then(function(r){return r.json();})
       .then(function(geo){
+        setFetching(false);
         if(!geo.results||!geo.results.length){
           setErr("Location not found. Try a different name or nearby coastal town.");
-          setFetching(false);return;
+          return;
         }
-        var r=geo.results[0];
-        var name=r.name+(r.country?", "+r.country:"");
-        setLoc(name);
-        setPosition({lat:r.latitude,lon:r.longitude});
-        fetchWeather(r.latitude,r.longitude,name);
+        if(geo.results.length===1){
+          var r=geo.results[0];
+          var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+          setLoc(name);setResults([]);
+          fetchWeather(r.latitude,r.longitude,name);
+        } else {
+          setResults(geo.results);
+        }
       }).catch(function(){
         setErr("Geocoding failed. Check your connection.");
         setFetching(false);
       });
+  };
+  var pickResult=function(r){
+    var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+    setLoc(name);setResults([]);setQuery(name);
+    fetchWeather(r.latitude,r.longitude,name);
   };
 
   var useGPS=function(){
@@ -2104,7 +2238,7 @@ function MarineWeatherTool(){
     h("div",{style:{marginBottom:12}},
       h("div",{style:{background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.15)",borderLeft:"3px solid rgba(200,168,74,0.4)",borderRadius:"0 6px 6px 0",padding:"9px 12px",marginBottom:10}},
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:600,color:GO,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:3}},"Live data — requires internet"),
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:TX,lineHeight:1.5}},"Download the file and open it in your browser for live weather. The preview inside Claude cannot make external API calls.")
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:TX,lineHeight:1.5}},"Search any coastal location for live wind, wave and swell data.")
       ),
       h("div",{style:{display:"flex",gap:6,marginBottom:8}},
         h("input",{type:"text",placeholder:"Enter location — e.g. Plymouth, Falmouth, Cowes…",value:query,
@@ -2126,6 +2260,21 @@ function MarineWeatherTool(){
         gpsLoading?"Getting GPS position…":"📍 Use my current position")
     ),
 
+    // RESULTS DROPDOWN
+    results.length>0&&h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.2)",borderRadius:7,marginBottom:10,overflow:"hidden"}},
+      h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",padding:"8px 12px 4px"}},"Select location"),
+      results.map(function(r,i){
+        var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+        return h("div",{key:i,onClick:function(){pickResult(r);},style:{
+          padding:"10px 12px",cursor:"pointer",
+          borderTop:i>0?"1px solid rgba(22,36,56,0.8)":"none",
+          display:"flex",justifyContent:"space-between",alignItems:"center"
+        }},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH}},name),
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU}},r.latitude.toFixed(1)+"° "+r.longitude.toFixed(1)+"°")
+        );
+      })
+    ),
     // ERROR
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.25)",
       borderRadius:7,padding:"10px 14px",fontFamily:"'Crimson Text',Georgia,serif",
@@ -2251,7 +2400,56 @@ function MarineWeatherTool(){
     // ATTRIBUTION
     h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:"rgba(90,116,144,0.5)",
       textAlign:"center",marginTop:16,letterSpacing:"0.06em"}},
-      "Weather data: Open-Meteo.com · CC BY 4.0 · Non-commercial use")
+      "Weather data: Open-Meteo.com · CC BY 4.0 · Non-commercial use"),
+
+    // CONDITION ASSESSMENT
+    h("div",{style:{padding:"0 16px 16px"}},
+      h(STitle,null,"Conditions Assessment"),
+      (function(){
+        var qs=[
+          {q:"Current Beaufort force?",opts:[["F0–3","light"],["F4–5","moderate"],["F6–7","strong"],["F8+","severe"]]},
+          {q:"Vessel situation?",opts:[["In harbour / sheltered","harbour"],["At sea, making passage","passage"],["At anchor","anchor"]]},
+          {q:"Forecast trend — next 3 hours?",opts:[["Improving / steady","steady"],["Deteriorating","deteriorating"],["Rapidly deteriorating","rapid"]]},
+        ];
+        var as=useState([]);var answers=as[0];var setAnswers=as[1];
+        var advice=function(){
+          if(answers.length<3)return null;
+          var f=answers[0],sit=answers[1],trend=answers[2];
+          if(f==="severe")return{level:"critical",icon:"⛈️",title:"Severe conditions",lines:["Activate storm tactics immediately","Heave-to if sea room allows","Make Mayday ready — ensure all crew briefed","If near shore: get into harbour now at all costs"]};
+          if(f==="strong"&&trend==="rapid")return{level:"warn",icon:"🌧️",title:"Conditions deteriorating rapidly",lines:["Put in 2nd reef now, before you need it","Change to storm jib","Inform Coastguard of your passage plan","Identify nearest safe harbour"]};
+          if(f==="strong"&&sit==="passage")return{level:"warn",icon:"💨",title:"Strong wind — take action",lines:["Put in 1st reef if not already done","2nd reef at F7","Keep crew clipped on","Review ETA — can you reach harbour before dark?"]};
+          if(f==="moderate"&&trend==="rapid")return{level:"warn",icon:"⚠️",title:"Moderate but worsening fast",lines:["Consider 1st reef preemptively","Batten down and stow loose gear","Check forecast on VHF Ch 67","Have crew put on harnesses now"]};
+          if(f==="moderate"&&trend==="deteriorating")return{level:"note",icon:"🌬️",title:"Moderate — monitor closely",lines:["Good sailing conditions now — remain alert","Consider 1st reef if heading offshore","Check forecast every hour on VHF Ch 67"]};
+          if(sit==="harbour"&&(trend==="deteriorating"||trend==="rapid"))return{level:"note",icon:"⚓",title:"Stay in harbour",lines:["Conditions outside are worsening — do not depart","Check forecast for window of improvement","Double up mooring lines if forecast is severe"]};
+          return{level:"ok",icon:"✅",title:"Conditions acceptable",lines:["Conditions manageable — proceed with normal care","Keep a regular weather watch on VHF Ch 67","Monitor barometer — rapid fall means deterioration coming","Reef before you need to"]};
+        };
+        var result=advice();
+        var ls={critical:{bg:"rgba(196,48,48,0.1)",border:"rgba(196,48,48,0.3)",tc:"#E08080"},warn:{bg:"rgba(192,120,40,0.1)",border:"rgba(192,120,40,0.3)",tc:AM},note:{bg:"rgba(40,96,168,0.1)",border:"rgba(40,96,168,0.3)",tc:"#7AB0D8"},ok:{bg:"rgba(46,112,68,0.1)",border:"rgba(46,112,68,0.3)",tc:GR}};
+        return h("div",null,
+          qs.map(function(q,qi){
+            if(qi>0&&answers.length<qi)return null;
+            var answered=answers[qi];
+            return h("div",{key:qi,style:{marginBottom:10}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:answered?MU:WH,marginBottom:5,lineHeight:1.4}},q.q),
+              h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}},
+                q.opts.map(function(opt){
+                  var sel=answered===opt[1];
+                  return h("button",{key:opt[1],onClick:function(){var na=answers.slice(0,qi);na[qi]=opt[1];setAnswers(na);},style:{background:sel?"rgba(200,168,74,0.12)":NC,border:"1px solid "+(sel?"rgba(200,168,74,0.4)":"rgba(22,36,56,1)"),borderRadius:6,padding:"7px 10px",cursor:"pointer",color:sel?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,textAlign:"left",lineHeight:1.3}},opt[0]);
+                })
+              )
+            );
+          }),
+          result&&h("div",{style:{background:ls[result.level].bg,border:"1px solid "+ls[result.level].border,borderRadius:10,padding:"12px",marginTop:8}},
+            h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:8}},
+              h("span",{style:{fontSize:20}},result.icon),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:ls[result.level].tc}},result.title)
+            ),
+            result.lines.map(function(line,i){return h("div",{key:i,style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,padding:"4px 0 4px 12px",position:"relative",borderBottom:i<result.lines.length-1?"1px solid rgba(22,36,56,0.6)":"none",lineHeight:1.4}},h("span",{style:{position:"absolute",left:0,color:ls[result.level].tc}},"›"),line);})
+          ),
+          answers.length>0&&h("button",{onClick:function(){setAnswers([]);},style:{background:"none",border:"1px solid rgba(200,168,74,0.2)",color:MU,fontFamily:"'Inter',sans-serif",fontSize:11,padding:"6px 14px",borderRadius:4,cursor:"pointer",marginTop:10,letterSpacing:"0.06em"}},"Reset")
+        );
+      })()
+    )
   );
 }
 
@@ -3311,12 +3509,11 @@ var SEARCH_IDX=[];
 for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SEARCH_IDX.push({id:t.id,title:t.name,section:sec.title,preview:t.preview,type:"content"});});}
 // Add tools to search index
 [
-  {id:"marine",title:"Live Marine Weather",section:"Tools",preview:"Real wind, waves & swell — search any coastal location"},
+  {id:"weather",title:"Weather",section:"Tools",preview:"Live wind, waves, swell & conditions assessment"},
   {id:"lights",title:"Light Identification",section:"Tools",preview:"Flash patterns, Fl, Q, Oc, cardinal marks, colours"},
   {id:"deviation",title:"Deviation Card",section:"Tools",preview:"Compass error by heading — magnetic and true conversion"},
   {id:"tide",title:"Tide Height Calculator",section:"Tools",preview:"Rule of twelfths — current depth from HW/LW"},
   {id:"units",title:"Units Converter",section:"Tools",preview:"Knots, metres, nautical miles, temperature"},
-  {id:"weather",title:"Weather Decision Tool",section:"Tools",preview:"Conditions assessment — what to do now"},
   {id:"passage",title:"Passage Planner",section:"Tools",preview:"ETA, tidal effect, departure time"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
@@ -3527,7 +3724,7 @@ function App(){
   var saved=svS[0];var setSaved=svS[1];
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
-  var ttS=useState("marine");var toolTab=ttS[0];var setToolTab=ttS[1];
+  var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
 
   var push=function(v){setStack(function(p){return p.concat([v]);});};
   var goBack=useCallback(function(){setStack(function(p){var n2=p.slice();var pv=n2.pop();setView(pv||"home");return n2;});},[]); 
@@ -3616,7 +3813,7 @@ function App(){
       // TOOLS
       view==="tools"&&h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
         h("div",{style:{display:"flex",flexWrap:"wrap",background:NM,borderBottom:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-          [["compass","🧭","Compass"],["wind","🌬️","Wind"],["anchor","⚓","Anchor"],["beaufort","🌊","Beaufort"],["tide","🌙","Tides"],["units","⚖️","Units"],["weather","⛅","Weather"],["passage","⛵","Passage"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["marine","📡","Live Wx"]].map(function(row){
+          [["compass","🧭","Compass"],["wind","🌬️","Wind"],["anchor","⚓","Anchor"],["beaufort","🌊","Beaufort"],["tide","🌙","Tides"],["units","⚖️","Units"],["passage","⛵","Passage"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["weather","⛅","Weather"],["chart","🗺️","Chart"]].map(function(row){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
@@ -3627,12 +3824,12 @@ function App(){
           toolTab==="beaufort"&&h(BeaufortTool),
           toolTab==="tide"&&h(TideTool),
           toolTab==="units"&&h(UnitsTool),
-          toolTab==="weather"&&h(WeatherDecisionTool),
+          toolTab==="weather"&&h(MarineWeatherTool),
           toolTab==="passage"&&h(PassageTool),
           toolTab==="fuel"&&h(FuelTool),
           toolTab==="lights"&&h(LightsTool),
           toolTab==="deviation"&&h(DeviationTool),
-          toolTab==="marine"&&h(MarineWeatherTool)
+          toolTab==="chart"&&h(ChartTool)
         )
       ),
       // CHECKLIST
@@ -5647,6 +5844,130 @@ function DeviationTool(){
   );
 }
 
+// ── Chart Tool ────────────────────────────────────────────────────────
+function ChartTool(){
+  var mapRef=useRef(null);
+  var mapInstanceRef=useRef(null);
+  var posS=useState(null);var pos=posS[0];var setPos=posS[1];
+  var errS=useState(null);var err=errS[0];var setErr=errS[1];
+  var loadingS=useState(true);var loading=loadingS[0];var setLoading=loadingS[1];
+  var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var markerRef=useRef(null);
+  var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
+  var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
+  var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
+
+  var initMap=function(lat,lon){
+    if(mapInstanceRef.current)return;
+    if(!mapRef.current)return;
+    if(!document.getElementById("leaflet-css")){
+      var link=document.createElement("link");
+      link.id="leaflet-css";link.rel="stylesheet";
+      link.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(link);
+    }
+    var doInit=function(){
+      var L=window.L;
+      var map=L.map(mapRef.current,{zoomControl:false}).setView([lat,lon],13);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85}).addTo(map);
+      L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
+      L.control.zoom({position:"topright"}).addTo(map);
+      if(lat&&lon){
+        var icon=L.divIcon({className:"",html:'<div style="width:14px;height:14px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;box-shadow:0 0 0 3px rgba(200,168,74,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+        markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(map).bindPopup("You are here");
+      }
+      mapInstanceRef.current=map;
+      setLoading(false);
+    };
+    if(window.L){doInit();return;}
+    var script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.onload=doInit;
+    document.head.appendChild(script);
+  };
+
+  var goToPlace=function(lat,lon,name){
+    setSearchResults([]);setSearchQ("");
+    if(mapInstanceRef.current){
+      mapInstanceRef.current.setView([lat,lon],12);
+      var L=window.L;
+      if(markerRef.current){markerRef.current.remove();}
+      var icon=L.divIcon({className:"",html:'<div style="width:14px;height:14px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;box-shadow:0 0 0 3px rgba(200,168,74,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+      markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(mapInstanceRef.current).bindPopup(name);
+      setPos({lat:lat,lon:lon});
+    }
+  };
+
+  var doSearch=function(){
+    if(!searchQ.trim())return;
+    setSearching(true);setSearchResults([]);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(searchQ)+"&count=6&language=en&format=json")
+      .then(function(r){return r.json();})
+      .then(function(geo){
+        setSearching(false);
+        if(!geo.results||!geo.results.length){setErr("Location not found.");return;}
+        if(geo.results.length===1){
+          var r=geo.results[0];
+          goToPlace(r.latitude,r.longitude,r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:""));
+        } else {setSearchResults(geo.results);}
+      }).catch(function(){setSearching(false);setErr("Search failed. Check your connection.");});
+  };
+
+  var goToPosition=function(){
+    if(!navigator.geolocation){setErr("GPS not available on this device.");return;}
+    setGpsLoading(true);setErr(null);
+    navigator.geolocation.getCurrentPosition(function(p){
+      var lat=p.coords.latitude,lon=p.coords.longitude;
+      setPos({lat:lat,lon:lon});setGpsLoading(false);
+      if(mapInstanceRef.current){
+        mapInstanceRef.current.setView([lat,lon],13);
+        if(markerRef.current){markerRef.current.setLatLng([lat,lon]);}
+        else{
+          var L=window.L;
+          var icon=L.divIcon({className:"",html:'<div style="width:14px;height:14px;background:#C8A84A;border:2px solid #07101E;border-radius:50%;box-shadow:0 0 0 3px rgba(200,168,74,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+          markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(mapInstanceRef.current).bindPopup("You are here");
+        }
+      } else {initMap(lat,lon);}
+    },function(){setGpsLoading(false);setErr("GPS permission denied.");});
+  };
+
+  useEffect(function(){
+    setTimeout(function(){initMap(51.4779,-0.0015);},100);
+    return function(){
+      if(mapInstanceRef.current){mapInstanceRef.current.remove();mapInstanceRef.current=null;}
+    };
+  },[]);
+
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    h("div",{style:{padding:"8px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
+      h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,
+        onChange:function(ev){setSearchQ(ev.target.value);},
+        onKeyDown:function(ev){if(ev.key==="Enter")doSearch();},
+        style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"7px 10px",outline:"none"}}),
+      h("button",{onClick:doSearch,disabled:searching||!searchQ.trim(),style:{background:"rgba(200,168,74,0.1)",border:"1px solid rgba(200,168,74,0.3)",borderRadius:5,color:GO,fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,padding:"7px 10px",cursor:"pointer",letterSpacing:"0.04em",opacity:searching||!searchQ.trim()?0.5:1}},searching?"\u2026":"Go"),
+      h("button",{onClick:goToPosition,disabled:gpsLoading,title:"My position",style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:GO,fontSize:14,padding:"7px 9px",cursor:"pointer"}},gpsLoading?"\u2026":"\ud83d\udccd")
+    ),
+    searchResults.length>0&&h("div",{style:{background:NC,borderBottom:"1px solid rgba(22,36,56,0.9)",maxHeight:180,overflowY:"auto"}},
+      searchResults.map(function(r,i){
+        var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+        return h("div",{key:i,onClick:function(){goToPlace(r.latitude,r.longitude,name);},style:{padding:"9px 12px",cursor:"pointer",borderBottom:i<searchResults.length-1?"1px solid rgba(22,36,56,0.8)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},name),
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,flexShrink:0}},r.latitude.toFixed(2)+"\u00b0 "+r.longitude.toFixed(2)+"\u00b0")
+        );
+      })
+    ),
+    err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
+    !navigator.onLine&&h("div",{style:{background:"rgba(192,120,40,0.1)",borderBottom:"1px solid rgba(192,120,40,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:AM,fontStyle:"italic"}},"Offline \u2014 chart tiles unavailable. Use paper charts or Navionics."),
+    h("div",{ref:mapRef,style:{flex:1,background:"#0A1628",position:"relative"}},
+      loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
+      )
+    ),
+    h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
+  );
+}
+
 // ── Marine Weather Tool ───────────────────────────────────────────────
 function MarineWeatherTool(){
   var ls=useState("");var loc=ls[0];var setLoc=ls[1];
@@ -5656,6 +5977,7 @@ function MarineWeatherTool(){
   var fs=useState(false);var fetching=fs[0];var setFetching=fs[1];
   var ps=useState(null);var position=ps[0];var setPosition=ps[1];
   var gpsS=useState(false);var gpsLoading=gpsS[0];var setGpsLoading=gpsS[1];
+  var rsS=useState([]);var results=rsS[0];var setResults=rsS[1];
 
   var bft=function(kph){
     var kts=kph/1.852;
@@ -5753,23 +6075,32 @@ function MarineWeatherTool(){
 
   var searchLocation=function(){
     if(!query.trim())return;
-    setFetching(true);setErr(null);
-    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(query)+"&count=1&language=en&format=json")
+    setFetching(true);setErr(null);setResults([]);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(query)+"&count=8&language=en&format=json")
       .then(function(r){return r.json();})
       .then(function(geo){
+        setFetching(false);
         if(!geo.results||!geo.results.length){
           setErr("Location not found. Try a different name or nearby coastal town.");
-          setFetching(false);return;
+          return;
         }
-        var r=geo.results[0];
-        var name=r.name+(r.country?", "+r.country:"");
-        setLoc(name);
-        setPosition({lat:r.latitude,lon:r.longitude});
-        fetchWeather(r.latitude,r.longitude,name);
+        if(geo.results.length===1){
+          var r=geo.results[0];
+          var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+          setLoc(name);setResults([]);
+          fetchWeather(r.latitude,r.longitude,name);
+        } else {
+          setResults(geo.results);
+        }
       }).catch(function(){
         setErr("Geocoding failed. Check your connection.");
         setFetching(false);
       });
+  };
+  var pickResult=function(r){
+    var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+    setLoc(name);setResults([]);setQuery(name);
+    fetchWeather(r.latitude,r.longitude,name);
   };
 
   var useGPS=function(){
@@ -5809,7 +6140,7 @@ function MarineWeatherTool(){
     h("div",{style:{marginBottom:12}},
       h("div",{style:{background:"rgba(200,168,74,0.06)",border:"1px solid rgba(200,168,74,0.15)",borderLeft:"3px solid rgba(200,168,74,0.4)",borderRadius:"0 6px 6px 0",padding:"9px 12px",marginBottom:10}},
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:600,color:GO,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:3}},"Live data — requires internet"),
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:TX,lineHeight:1.5}},"Download the file and open it in your browser for live weather. The preview inside Claude cannot make external API calls.")
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:TX,lineHeight:1.5}},"Search any coastal location for live wind, wave and swell data.")
       ),
       h("div",{style:{display:"flex",gap:6,marginBottom:8}},
         h("input",{type:"text",placeholder:"Enter location — e.g. Plymouth, Falmouth, Cowes…",value:query,
@@ -5831,6 +6162,21 @@ function MarineWeatherTool(){
         gpsLoading?"Getting GPS position…":"📍 Use my current position")
     ),
 
+    // RESULTS DROPDOWN
+    results.length>0&&h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.2)",borderRadius:7,marginBottom:10,overflow:"hidden"}},
+      h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",padding:"8px 12px 4px"}},"Select location"),
+      results.map(function(r,i){
+        var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+        return h("div",{key:i,onClick:function(){pickResult(r);},style:{
+          padding:"10px 12px",cursor:"pointer",
+          borderTop:i>0?"1px solid rgba(22,36,56,0.8)":"none",
+          display:"flex",justifyContent:"space-between",alignItems:"center"
+        }},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH}},name),
+          h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU}},r.latitude.toFixed(1)+"° "+r.longitude.toFixed(1)+"°")
+        );
+      })
+    ),
     // ERROR
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",border:"1px solid rgba(196,48,48,0.25)",
       borderRadius:7,padding:"10px 14px",fontFamily:"'Crimson Text',Georgia,serif",
@@ -5956,7 +6302,56 @@ function MarineWeatherTool(){
     // ATTRIBUTION
     h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:"rgba(90,116,144,0.5)",
       textAlign:"center",marginTop:16,letterSpacing:"0.06em"}},
-      "Weather data: Open-Meteo.com · CC BY 4.0 · Non-commercial use")
+      "Weather data: Open-Meteo.com · CC BY 4.0 · Non-commercial use"),
+
+    // CONDITION ASSESSMENT
+    h("div",{style:{padding:"0 16px 16px"}},
+      h(STitle,null,"Conditions Assessment"),
+      (function(){
+        var qs=[
+          {q:"Current Beaufort force?",opts:[["F0–3","light"],["F4–5","moderate"],["F6–7","strong"],["F8+","severe"]]},
+          {q:"Vessel situation?",opts:[["In harbour / sheltered","harbour"],["At sea, making passage","passage"],["At anchor","anchor"]]},
+          {q:"Forecast trend — next 3 hours?",opts:[["Improving / steady","steady"],["Deteriorating","deteriorating"],["Rapidly deteriorating","rapid"]]},
+        ];
+        var as=useState([]);var answers=as[0];var setAnswers=as[1];
+        var advice=function(){
+          if(answers.length<3)return null;
+          var f=answers[0],sit=answers[1],trend=answers[2];
+          if(f==="severe")return{level:"critical",icon:"⛈️",title:"Severe conditions",lines:["Activate storm tactics immediately","Heave-to if sea room allows","Make Mayday ready — ensure all crew briefed","If near shore: get into harbour now at all costs"]};
+          if(f==="strong"&&trend==="rapid")return{level:"warn",icon:"🌧️",title:"Conditions deteriorating rapidly",lines:["Put in 2nd reef now, before you need it","Change to storm jib","Inform Coastguard of your passage plan","Identify nearest safe harbour"]};
+          if(f==="strong"&&sit==="passage")return{level:"warn",icon:"💨",title:"Strong wind — take action",lines:["Put in 1st reef if not already done","2nd reef at F7","Keep crew clipped on","Review ETA — can you reach harbour before dark?"]};
+          if(f==="moderate"&&trend==="rapid")return{level:"warn",icon:"⚠️",title:"Moderate but worsening fast",lines:["Consider 1st reef preemptively","Batten down and stow loose gear","Check forecast on VHF Ch 67","Have crew put on harnesses now"]};
+          if(f==="moderate"&&trend==="deteriorating")return{level:"note",icon:"🌬️",title:"Moderate — monitor closely",lines:["Good sailing conditions now — remain alert","Consider 1st reef if heading offshore","Check forecast every hour on VHF Ch 67"]};
+          if(sit==="harbour"&&(trend==="deteriorating"||trend==="rapid"))return{level:"note",icon:"⚓",title:"Stay in harbour",lines:["Conditions outside are worsening — do not depart","Check forecast for window of improvement","Double up mooring lines if forecast is severe"]};
+          return{level:"ok",icon:"✅",title:"Conditions acceptable",lines:["Conditions manageable — proceed with normal care","Keep a regular weather watch on VHF Ch 67","Monitor barometer — rapid fall means deterioration coming","Reef before you need to"]};
+        };
+        var result=advice();
+        var ls={critical:{bg:"rgba(196,48,48,0.1)",border:"rgba(196,48,48,0.3)",tc:"#E08080"},warn:{bg:"rgba(192,120,40,0.1)",border:"rgba(192,120,40,0.3)",tc:AM},note:{bg:"rgba(40,96,168,0.1)",border:"rgba(40,96,168,0.3)",tc:"#7AB0D8"},ok:{bg:"rgba(46,112,68,0.1)",border:"rgba(46,112,68,0.3)",tc:GR}};
+        return h("div",null,
+          qs.map(function(q,qi){
+            if(qi>0&&answers.length<qi)return null;
+            var answered=answers[qi];
+            return h("div",{key:qi,style:{marginBottom:10}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:answered?MU:WH,marginBottom:5,lineHeight:1.4}},q.q),
+              h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}},
+                q.opts.map(function(opt){
+                  var sel=answered===opt[1];
+                  return h("button",{key:opt[1],onClick:function(){var na=answers.slice(0,qi);na[qi]=opt[1];setAnswers(na);},style:{background:sel?"rgba(200,168,74,0.12)":NC,border:"1px solid "+(sel?"rgba(200,168,74,0.4)":"rgba(22,36,56,1)"),borderRadius:6,padding:"7px 10px",cursor:"pointer",color:sel?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,textAlign:"left",lineHeight:1.3}},opt[0]);
+                })
+              )
+            );
+          }),
+          result&&h("div",{style:{background:ls[result.level].bg,border:"1px solid "+ls[result.level].border,borderRadius:10,padding:"12px",marginTop:8}},
+            h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:8}},
+              h("span",{style:{fontSize:20}},result.icon),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:ls[result.level].tc}},result.title)
+            ),
+            result.lines.map(function(line,i){return h("div",{key:i,style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,padding:"4px 0 4px 12px",position:"relative",borderBottom:i<result.lines.length-1?"1px solid rgba(22,36,56,0.6)":"none",lineHeight:1.4}},h("span",{style:{position:"absolute",left:0,color:ls[result.level].tc}},"›"),line);})
+          ),
+          answers.length>0&&h("button",{onClick:function(){setAnswers([]);},style:{background:"none",border:"1px solid rgba(200,168,74,0.2)",color:MU,fontFamily:"'Inter',sans-serif",fontSize:11,padding:"6px 14px",borderRadius:4,cursor:"pointer",marginTop:10,letterSpacing:"0.06em"}},"Reset")
+        );
+      })()
+    )
   );
 }
 
@@ -7016,12 +7411,11 @@ var SEARCH_IDX=[];
 for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SEARCH_IDX.push({id:t.id,title:t.name,section:sec.title,preview:t.preview,type:"content"});});}
 // Add tools to search index
 [
-  {id:"marine",title:"Live Marine Weather",section:"Tools",preview:"Real wind, waves & swell — search any coastal location"},
+  {id:"weather",title:"Weather",section:"Tools",preview:"Live wind, waves, swell & conditions assessment"},
   {id:"lights",title:"Light Identification",section:"Tools",preview:"Flash patterns, Fl, Q, Oc, cardinal marks, colours"},
   {id:"deviation",title:"Deviation Card",section:"Tools",preview:"Compass error by heading — magnetic and true conversion"},
   {id:"tide",title:"Tide Height Calculator",section:"Tools",preview:"Rule of twelfths — current depth from HW/LW"},
   {id:"units",title:"Units Converter",section:"Tools",preview:"Knots, metres, nautical miles, temperature"},
-  {id:"weather",title:"Weather Decision Tool",section:"Tools",preview:"Conditions assessment — what to do now"},
   {id:"passage",title:"Passage Planner",section:"Tools",preview:"ETA, tidal effect, departure time"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
@@ -7232,7 +7626,7 @@ function App(){
   var saved=svS[0];var setSaved=svS[1];
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
-  var ttS=useState("marine");var toolTab=ttS[0];var setToolTab=ttS[1];
+  var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
 
   var push=function(v){setStack(function(p){return p.concat([v]);});};
   var goBack=useCallback(function(){setStack(function(p){var n2=p.slice();var pv=n2.pop();setView(pv||"home");return n2;});},[]); 
@@ -7321,7 +7715,7 @@ function App(){
       // TOOLS
       view==="tools"&&h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
         h("div",{style:{display:"flex",flexWrap:"wrap",background:NM,borderBottom:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-          [["compass","🧭","Compass"],["wind","🌬️","Wind"],["anchor","⚓","Anchor"],["beaufort","🌊","Beaufort"],["tide","🌙","Tides"],["units","⚖️","Units"],["weather","⛅","Weather"],["passage","⛵","Passage"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["marine","📡","Live Wx"]].map(function(row){
+          [["compass","🧭","Compass"],["wind","🌬️","Wind"],["anchor","⚓","Anchor"],["beaufort","🌊","Beaufort"],["tide","🌙","Tides"],["units","⚖️","Units"],["passage","⛵","Passage"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["weather","⛅","Weather"],["chart","🗺️","Chart"]].map(function(row){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
@@ -7332,12 +7726,12 @@ function App(){
           toolTab==="beaufort"&&h(BeaufortTool),
           toolTab==="tide"&&h(TideTool),
           toolTab==="units"&&h(UnitsTool),
-          toolTab==="weather"&&h(WeatherDecisionTool),
+          toolTab==="weather"&&h(MarineWeatherTool),
           toolTab==="passage"&&h(PassageTool),
           toolTab==="fuel"&&h(FuelTool),
           toolTab==="lights"&&h(LightsTool),
           toolTab==="deviation"&&h(DeviationTool),
-          toolTab==="marine"&&h(MarineWeatherTool)
+          toolTab==="chart"&&h(ChartTool)
         )
       ),
       // CHECKLIST
