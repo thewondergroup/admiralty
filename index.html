@@ -2097,6 +2097,18 @@ function ChartTool(){
       }).catch(function(){setSearching(false);setErr("Search failed. Check your connection.");});
   };
 
+  var doWindySearch=function(){
+    if(!searchQ.trim())return;
+    setSearching(true);setSearchResults([]);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(searchQ)+"&count=6&language=en&format=json")
+      .then(function(r){return r.json();})
+      .then(function(geo){
+        setSearching(false);
+        if(!geo.results||!geo.results.length){setErr("Location not found.");return;}
+        if(geo.results.length===1){var r=geo.results[0];setWindyPos({lat:parseFloat(r.latitude.toFixed(4)),lon:parseFloat(r.longitude.toFixed(4))});setSearchResults([]);setSearchQ("");}
+        else{setSearchResults(geo.results);}
+      }).catch(function(){setSearching(false);setErr("Search failed.");});
+  };
   var goToPosition=function(){
     if(!navigator.geolocation){setErr("GPS not available on this device.");return;}
     setGpsLoading(true);setErr(null);
@@ -2112,7 +2124,12 @@ function ChartTool(){
           markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(mapInstanceRef.current).bindPopup("You are here");
         }
       } else {initMap(lat,lon);}
-    },function(){setGpsLoading(false);setErr("GPS permission denied.");});
+    },function(e){
+      setGpsLoading(false);
+      if(e.code===1)setErr("Location access denied. Check your browser settings.");
+      else if(e.code===3)setErr("Location timed out. Try again.");
+      else setErr("Could not get your position. Try again.");
+    },{timeout:10000,maximumAge:60000});
   };
 
   useEffect(function(){
@@ -2129,12 +2146,19 @@ function ChartTool(){
       h("button",{onClick:function(){setMode("wind");},style:{flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:mode==="wind"?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:mode==="wind"?"2px solid "+GO:"2px solid transparent"}},"Wind & Weather")
     ),
     mode==="wind"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
-      h("div",{style:{padding:"6px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:8,flexShrink:0}},
-        h("button",{onClick:function(){
-          if(!navigator.geolocation)return;
-          navigator.geolocation.getCurrentPosition(function(p){setWindyPos({lat:p.coords.latitude,lon:p.coords.longitude});});
-        },style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:GO,fontSize:13,padding:"5px 9px",cursor:"pointer"}},"My position"),
-        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,flex:1,textAlign:"right"}},windyPos.lat.toFixed(2)+"° "+windyPos.lon.toFixed(2)+"°")
+      h("div",{style:{padding:"6px 8px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
+        h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")doWindySearch();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:"#EAE4D4",fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"6px 10px",outline:"none"}}),
+        h("button",{onClick:doWindySearch,disabled:searching||!searchQ.trim(),style:{background:"rgba(200,168,74,0.1)",border:"1px solid rgba(200,168,74,0.3)",borderRadius:5,color:"#C8A84A",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,padding:"6px 10px",cursor:"pointer",opacity:searching||!searchQ.trim()?0.5:1}},searching?"\u2026":"Go"),
+        h("button",{onClick:function(){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){setWindyPos({lat:parseFloat(p.coords.latitude.toFixed(4)),lon:parseFloat(p.coords.longitude.toFixed(4))});setSearchResults([]);});},title:"My position",style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:"#C8A84A",fontSize:14,padding:"6px 9px",cursor:"pointer"}},"\ud83d\udccd")
+      ),
+      searchResults.length>0&&mode==="wind"&&h("div",{style:{background:"#0D1C30",borderBottom:"1px solid rgba(22,36,56,0.9)",maxHeight:160,overflowY:"auto"}},
+        searchResults.map(function(r,i){
+          var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+          return h("div",{key:i,onClick:function(){setWindyPos({lat:parseFloat(r.latitude.toFixed(4)),lon:parseFloat(r.longitude.toFixed(4))});setSearchResults([]);setSearchQ("");},style:{padding:"9px 12px",cursor:"pointer",borderBottom:i<searchResults.length-1?"1px solid rgba(22,36,56,0.8)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:"#EAE4D4"}},name),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:"#5A7490",flexShrink:0}},r.latitude.toFixed(2)+"\u00b0 "+r.longitude.toFixed(2)+"\u00b0")
+          );
+        })
       ),
       !navigator.onLine
         ?h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center",background:"#040C18"}},
@@ -6122,6 +6146,18 @@ function ChartTool(){
       }).catch(function(){setSearching(false);setErr("Search failed. Check your connection.");});
   };
 
+  var doWindySearch=function(){
+    if(!searchQ.trim())return;
+    setSearching(true);setSearchResults([]);
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(searchQ)+"&count=6&language=en&format=json")
+      .then(function(r){return r.json();})
+      .then(function(geo){
+        setSearching(false);
+        if(!geo.results||!geo.results.length){setErr("Location not found.");return;}
+        if(geo.results.length===1){var r=geo.results[0];setWindyPos({lat:parseFloat(r.latitude.toFixed(4)),lon:parseFloat(r.longitude.toFixed(4))});setSearchResults([]);setSearchQ("");}
+        else{setSearchResults(geo.results);}
+      }).catch(function(){setSearching(false);setErr("Search failed.");});
+  };
   var goToPosition=function(){
     if(!navigator.geolocation){setErr("GPS not available on this device.");return;}
     setGpsLoading(true);setErr(null);
@@ -6137,7 +6173,12 @@ function ChartTool(){
           markerRef.current=L.marker([lat,lon],{icon:icon}).addTo(mapInstanceRef.current).bindPopup("You are here");
         }
       } else {initMap(lat,lon);}
-    },function(){setGpsLoading(false);setErr("GPS permission denied.");});
+    },function(e){
+      setGpsLoading(false);
+      if(e.code===1)setErr("Location access denied. Check your browser settings.");
+      else if(e.code===3)setErr("Location timed out. Try again.");
+      else setErr("Could not get your position. Try again.");
+    },{timeout:10000,maximumAge:60000});
   };
 
   useEffect(function(){
@@ -6154,12 +6195,19 @@ function ChartTool(){
       h("button",{onClick:function(){setMode("wind");},style:{flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:mode==="wind"?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:mode==="wind"?"2px solid "+GO:"2px solid transparent"}},"Wind & Weather")
     ),
     mode==="wind"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
-      h("div",{style:{padding:"6px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:8,flexShrink:0}},
-        h("button",{onClick:function(){
-          if(!navigator.geolocation)return;
-          navigator.geolocation.getCurrentPosition(function(p){setWindyPos({lat:p.coords.latitude,lon:p.coords.longitude});});
-        },style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:GO,fontSize:13,padding:"5px 9px",cursor:"pointer"}},"My position"),
-        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,flex:1,textAlign:"right"}},windyPos.lat.toFixed(2)+"° "+windyPos.lon.toFixed(2)+"°")
+      h("div",{style:{padding:"6px 8px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
+        h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);},onKeyDown:function(ev){if(ev.key==="Enter")doWindySearch();},style:{flex:1,background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:5,color:"#EAE4D4",fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"6px 10px",outline:"none"}}),
+        h("button",{onClick:doWindySearch,disabled:searching||!searchQ.trim(),style:{background:"rgba(200,168,74,0.1)",border:"1px solid rgba(200,168,74,0.3)",borderRadius:5,color:"#C8A84A",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,padding:"6px 10px",cursor:"pointer",opacity:searching||!searchQ.trim()?0.5:1}},searching?"\u2026":"Go"),
+        h("button",{onClick:function(){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){setWindyPos({lat:parseFloat(p.coords.latitude.toFixed(4)),lon:parseFloat(p.coords.longitude.toFixed(4))});setSearchResults([]);});},title:"My position",style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:"#C8A84A",fontSize:14,padding:"6px 9px",cursor:"pointer"}},"\ud83d\udccd")
+      ),
+      searchResults.length>0&&mode==="wind"&&h("div",{style:{background:"#0D1C30",borderBottom:"1px solid rgba(22,36,56,0.9)",maxHeight:160,overflowY:"auto"}},
+        searchResults.map(function(r,i){
+          var name=r.name+(r.admin1?", "+r.admin1:"")+(r.country?", "+r.country:"");
+          return h("div",{key:i,onClick:function(){setWindyPos({lat:parseFloat(r.latitude.toFixed(4)),lon:parseFloat(r.longitude.toFixed(4))});setSearchResults([]);setSearchQ("");},style:{padding:"9px 12px",cursor:"pointer",borderBottom:i<searchResults.length-1?"1px solid rgba(22,36,56,0.8)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:"#EAE4D4"}},name),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:"#5A7490",flexShrink:0}},r.latitude.toFixed(2)+"\u00b0 "+r.longitude.toFixed(2)+"\u00b0")
+          );
+        })
       ),
       !navigator.onLine
         ?h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center",background:"#040C18"}},
