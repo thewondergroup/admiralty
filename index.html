@@ -1954,6 +1954,7 @@ function ChartTool(){
   var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
   var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
   var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
+  var offlineS=useState(false);var isOffline=offlineS[0];var setIsOffline=offlineS[1];
 
   var initMap=function(lat,lon){
     if(mapInstanceRef.current)return;
@@ -1967,7 +1968,12 @@ function ChartTool(){
     var doInit=function(){
       var L=window.L;
       var map=L.map(mapRef.current,{zoomControl:false}).setView([lat,lon],13);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85}).addTo(map);
+      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85});
+      baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
+      baseLayer.addTo(map);
+      // Timeout fallback — if no tiles load within 8s, assume offline
+      var tileTimeout=setTimeout(function(){if(loading)setIsOffline(true);},8000);
+      baseLayer.once("tileload",function(){clearTimeout(tileTimeout);setIsOffline(false);});
       L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
       L.control.zoom({position:"topright"}).addTo(map);
       if(lat&&lon){
@@ -2057,7 +2063,7 @@ function ChartTool(){
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{style:{flex:1,position:"relative",display:"flex",flexDirection:"column"}},
       h("div",{ref:mapRef,style:{position:"absolute",inset:0,background:"#040C18"}}),
-      !navigator.onLine
+      isOffline
         ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:32,textAlign:"center"}},
             h("svg",{width:120,height:120,viewBox:"0 0 120 120"},
               h("circle",{cx:60,cy:60,r:58,fill:"none",stroke:"rgba(200,168,74,0.08)",strokeWidth:1}),
@@ -5878,6 +5884,7 @@ function ChartTool(){
   var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
   var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
   var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
+  var offlineS=useState(false);var isOffline=offlineS[0];var setIsOffline=offlineS[1];
 
   var initMap=function(lat,lon){
     if(mapInstanceRef.current)return;
@@ -5891,7 +5898,12 @@ function ChartTool(){
     var doInit=function(){
       var L=window.L;
       var map=L.map(mapRef.current,{zoomControl:false}).setView([lat,lon],13);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85}).addTo(map);
+      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:0.85});
+      baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
+      baseLayer.addTo(map);
+      // Timeout fallback — if no tiles load within 8s, assume offline
+      var tileTimeout=setTimeout(function(){if(loading)setIsOffline(true);},8000);
+      baseLayer.once("tileload",function(){clearTimeout(tileTimeout);setIsOffline(false);});
       L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1}).addTo(map);
       L.control.zoom({position:"topright"}).addTo(map);
       if(lat&&lon){
@@ -5981,7 +5993,7 @@ function ChartTool(){
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{style:{flex:1,position:"relative",display:"flex",flexDirection:"column"}},
       h("div",{ref:mapRef,style:{position:"absolute",inset:0,background:"#040C18"}}),
-      !navigator.onLine
+      isOffline
         ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:32,textAlign:"center"}},
             h("svg",{width:120,height:120,viewBox:"0 0 120 120"},
               h("circle",{cx:60,cy:60,r:58,fill:"none",stroke:"rgba(200,168,74,0.08)",strokeWidth:1}),
