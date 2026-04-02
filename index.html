@@ -1425,7 +1425,7 @@ function HomeScreen(props){
   var QA=[
     {id:"compass",icon:"🧭",label:"Compass",sub:"Live bearing",action:function(){props.onTool("compass");}},
     {id:"weather",icon:"⛅",label:"Weather",sub:"Live conditions",action:function(){props.onTool("weather");}},
-    {id:"chart",icon:"🗺️",label:"Chart",sub:"OpenSeaMap",action:function(){props.onTool("chart");}},
+    {id:"chart",icon:"🗺️",label:"Charts",sub:"Live charts & wind",action:function(){props.onTool("chart");}},
     {id:"passage",icon:"⛵",label:"Passage",sub:"Plan your route",action:function(){props.onTool("passage");}},
     {id:"wind",icon:"🌬️",label:"Points of Sail",sub:"Sail advice by angle",action:function(){props.onTool("wind");}},
     {id:"nelson",icon:"⚜️",label:"Ask Nelson",sub:"What would he do?",action:function(){props.onNelson();}}
@@ -2032,6 +2032,8 @@ function ChartTool(){
   var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
   var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
   var offlineS=useState(false);var isOffline=offlineS[0];var setIsOffline=offlineS[1];
+  var modeS=useState("chart");var mode=modeS[0];var setMode=modeS[1];
+  var windyPosS=useState({lat:51.4779,lon:-0.0015});var windyPos=windyPosS[0];var setWindyPos=windyPosS[1];
 
   var initMap=function(lat,lon){
     if(mapInstanceRef.current)return;
@@ -2120,7 +2122,28 @@ function ChartTool(){
     };
   },[]);
 
+  var windyUrl="https://embed.windy.com/embed2.html?lat="+windyPos.lat+"&lon="+windyPos.lon+"&detailLat="+windyPos.lat+"&detailLon="+windyPos.lon+"&width=650&height=450&zoom=9&level=surface&overlay=wind&product=ecmwf"+"&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates"+"&detail=&metricWind=kn&metricTemp=%C2%B0C&radarRange=-1";
   return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+      h("button",{onClick:function(){setMode("chart");},style:{flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:mode==="chart"?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:mode==="chart"?"2px solid "+GO:"2px solid transparent"}},"Nautical Chart"),
+      h("button",{onClick:function(){setMode("wind");},style:{flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:mode==="wind"?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:mode==="wind"?"2px solid "+GO:"2px solid transparent"}},"Wind & Weather")
+    ),
+    mode==="wind"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
+      h("div",{style:{padding:"6px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:8,flexShrink:0}},
+        h("button",{onClick:function(){
+          if(!navigator.geolocation)return;
+          navigator.geolocation.getCurrentPosition(function(p){setWindyPos({lat:p.coords.latitude,lon:p.coords.longitude});});
+        },style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:GO,fontSize:13,padding:"5px 9px",cursor:"pointer"}},"My position"),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,flex:1,textAlign:"right"}},windyPos.lat.toFixed(2)+"° "+windyPos.lon.toFixed(2)+"°")
+      ),
+      !navigator.onLine
+        ?h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center",background:"#040C18"}},
+           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"#DFC070",marginBottom:12}},"No connection"),
+           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:"#5A7490",lineHeight:1.7}},"Wind & weather data requires an internet connection.")
+         )
+        :h("iframe",{key:windyPos.lat+","+windyPos.lon,src:windyUrl,style:{flex:1,border:"none",width:"100%",minHeight:0},allowFullScreen:true})
+    ),
+    mode==="chart"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
     h("div",{style:{padding:"8px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
       h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,
         onChange:function(ev){setSearchQ(ev.target.value);},
@@ -2164,7 +2187,8 @@ function ChartTool(){
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
       )
     ),
-    h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
+    ),
+    mode==="chart"&&h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
   );
 }
 
@@ -3915,7 +3939,7 @@ function App(){
       // TOOLS
       view==="tools"&&h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
         h("div",{style:{display:"flex",flexWrap:"wrap",background:NM,borderBottom:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-          [["compass","🧭","Compass"],["weather","⛅","Weather"],["chart","🗺️","Chart"],["wind","🌬️","Sail"],["passage","⛵","Passage"],["anchor","⚓","Anchor"],["tide","🌙","Tides"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["units","⚖️","Units"],["beaufort","🌊","Beaufort"]].map(function(row){
+          [["compass","🧭","Compass"],["weather","⛅","Weather"],["chart","🗺️","Charts"],["wind","🌬️","Sail"],["passage","⛵","Passage"],["anchor","⚓","Anchor"],["tide","🌙","Tides"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["units","⚖️","Units"],["beaufort","🌊","Beaufort"]].map(function(row){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
@@ -5426,7 +5450,7 @@ function HomeScreen(props){
   var QA=[
     {id:"compass",icon:"🧭",label:"Compass",sub:"Live bearing",action:function(){props.onTool("compass");}},
     {id:"weather",icon:"⛅",label:"Weather",sub:"Live conditions",action:function(){props.onTool("weather");}},
-    {id:"chart",icon:"🗺️",label:"Chart",sub:"OpenSeaMap",action:function(){props.onTool("chart");}},
+    {id:"chart",icon:"🗺️",label:"Charts",sub:"Live charts & wind",action:function(){props.onTool("chart");}},
     {id:"passage",icon:"⛵",label:"Passage",sub:"Plan your route",action:function(){props.onTool("passage");}},
     {id:"wind",icon:"🌬️",label:"Points of Sail",sub:"Sail advice by angle",action:function(){props.onTool("wind");}},
     {id:"nelson",icon:"⚜️",label:"Ask Nelson",sub:"What would he do?",action:function(){props.onNelson();}}
@@ -6033,6 +6057,8 @@ function ChartTool(){
   var srS=useState([]);var searchResults=srS[0];var setSearchResults=srS[1];
   var searchingS=useState(false);var searching=searchingS[0];var setSearching=searchingS[1];
   var offlineS=useState(false);var isOffline=offlineS[0];var setIsOffline=offlineS[1];
+  var modeS=useState("chart");var mode=modeS[0];var setMode=modeS[1];
+  var windyPosS=useState({lat:51.4779,lon:-0.0015});var windyPos=windyPosS[0];var setWindyPos=windyPosS[1];
 
   var initMap=function(lat,lon){
     if(mapInstanceRef.current)return;
@@ -6121,7 +6147,28 @@ function ChartTool(){
     };
   },[]);
 
+  var windyUrl="https://embed.windy.com/embed2.html?lat="+windyPos.lat+"&lon="+windyPos.lon+"&detailLat="+windyPos.lat+"&detailLon="+windyPos.lon+"&width=650&height=450&zoom=9&level=surface&overlay=wind&product=ecmwf"+"&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates"+"&detail=&metricWind=kn&metricTemp=%C2%B0C&radarRange=-1";
   return h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
+    h("div",{style:{display:"flex",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+      h("button",{onClick:function(){setMode("chart");},style:{flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:mode==="chart"?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:mode==="chart"?"2px solid "+GO:"2px solid transparent"}},"Nautical Chart"),
+      h("button",{onClick:function(){setMode("wind");},style:{flex:1,padding:"9px 4px",cursor:"pointer",border:"none",background:"none",color:mode==="wind"?GO:MU,fontSize:11,fontFamily:"'Inter',sans-serif",fontWeight:600,letterSpacing:"0.04em",borderBottom:mode==="wind"?"2px solid "+GO:"2px solid transparent"}},"Wind & Weather")
+    ),
+    mode==="wind"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
+      h("div",{style:{padding:"6px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:8,flexShrink:0}},
+        h("button",{onClick:function(){
+          if(!navigator.geolocation)return;
+          navigator.geolocation.getCurrentPosition(function(p){setWindyPos({lat:p.coords.latitude,lon:p.coords.longitude});});
+        },style:{background:"rgba(200,168,74,0.08)",border:"1px solid rgba(200,168,74,0.2)",borderRadius:5,color:GO,fontSize:13,padding:"5px 9px",cursor:"pointer"}},"My position"),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:MU,flex:1,textAlign:"right"}},windyPos.lat.toFixed(2)+"° "+windyPos.lon.toFixed(2)+"°")
+      ),
+      !navigator.onLine
+        ?h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center",background:"#040C18"}},
+           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"#DFC070",marginBottom:12}},"No connection"),
+           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:"#5A7490",lineHeight:1.7}},"Wind & weather data requires an internet connection.")
+         )
+        :h("iframe",{key:windyPos.lat+","+windyPos.lon,src:windyUrl,style:{flex:1,border:"none",width:"100%",minHeight:0},allowFullScreen:true})
+    ),
+    mode==="chart"&&h("div",{style:{flex:1,display:"flex",flexDirection:"column",minHeight:0}},
     h("div",{style:{padding:"8px 10px",background:NM,borderBottom:"1px solid rgba(22,36,56,0.9)",display:"flex",alignItems:"center",gap:6,flexShrink:0}},
       h("input",{type:"text",placeholder:"Search location\u2026",value:searchQ,
         onChange:function(ev){setSearchQ(ev.target.value);},
@@ -6165,7 +6212,8 @@ function ChartTool(){
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
       )
     ),
-    h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
+    ),
+    mode==="chart"&&h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
   );
 }
 
@@ -7916,7 +7964,7 @@ function App(){
       // TOOLS
       view==="tools"&&h("div",{style:{display:"flex",flexDirection:"column",height:"100%"}},
         h("div",{style:{display:"flex",flexWrap:"wrap",background:NM,borderBottom:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-          [["compass","🧭","Compass"],["weather","⛅","Weather"],["chart","🗺️","Chart"],["wind","🌬️","Sail"],["passage","⛵","Passage"],["anchor","⚓","Anchor"],["tide","🌙","Tides"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["units","⚖️","Units"],["beaufort","🌊","Beaufort"]].map(function(row){
+          [["compass","🧭","Compass"],["weather","⛅","Weather"],["chart","🗺️","Charts"],["wind","🌬️","Sail"],["passage","⛵","Passage"],["anchor","⚓","Anchor"],["tide","🌙","Tides"],["fuel","⛽","Fuel"],["lights","💡","Lights"],["deviation","🧲","Deviation"],["units","⚖️","Units"],["beaufort","🌊","Beaufort"]].map(function(row){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
