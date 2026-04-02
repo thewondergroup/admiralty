@@ -76,6 +76,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .leaflet-control-attribution a{color:rgba(90,116,144,0.75)!important}
 .leaflet-container{touch-action:pan-x pan-y!important}
 </style>
+
 </head>
 <body>
 <div id="root" style="height:100dvh;overflow:hidden;"></div>
@@ -4652,19 +4653,6 @@ function App(){
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
   var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
-  var TOOL_ORDER=["compass","weather","chart","wind","passage","anchor","tide","fuel","lights","deviation","units","beaufort"];
-  var swipeRef=useRef({startX:0,startY:0,started:false});
-  var swipeTool=function(dir){
-    var idx=TOOL_ORDER.indexOf(toolTab);if(idx===-1)return;
-    var ni=idx+dir;if(ni<0||ni>=TOOL_ORDER.length)return;
-    setToolTab(TOOL_ORDER[ni]);try{navigator.vibrate(8);}catch(e){}
-  };
-  var onTouchStart=function(ev){var t=ev.touches[0];swipeRef.current={startX:t.clientX,startY:t.clientY,started:true};};
-  var onTouchEnd=function(ev){
-    if(!swipeRef.current.started)return;swipeRef.current.started=false;
-    var t=ev.changedTouches[0];var dx=t.clientX-swipeRef.current.startX;var dy=t.clientY-swipeRef.current.startY;
-    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){swipeTool(dx<0?1:-1);}
-  };
 
   var push=function(v){setStack(function(p){return p.concat([v]);});};
   var goBack=useCallback(function(){setStack(function(p){var n2=p.slice();var pv=n2.pop();setView(pv||"home");return n2;});},[]); 
@@ -4757,7 +4745,7 @@ function App(){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
-        h("div",{style:{flex:1,overflowY:"auto"},onTouchStart:onTouchStart,onTouchEnd:onTouchEnd},
+        h("div",{style:{flex:1,overflowY:"auto"}},
           toolTab==="compass"&&h(CompassTool),
           toolTab==="wind"&&h(WindAdvisorTool),
           toolTab==="anchor"&&h(AnchorTool),
@@ -9492,19 +9480,6 @@ function App(){
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
   var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
-  var TOOL_ORDER=["compass","weather","chart","wind","passage","anchor","tide","fuel","lights","deviation","units","beaufort"];
-  var swipeRef=useRef({startX:0,startY:0,started:false});
-  var swipeTool=function(dir){
-    var idx=TOOL_ORDER.indexOf(toolTab);if(idx===-1)return;
-    var ni=idx+dir;if(ni<0||ni>=TOOL_ORDER.length)return;
-    setToolTab(TOOL_ORDER[ni]);try{navigator.vibrate(8);}catch(e){}
-  };
-  var onTouchStart=function(ev){var t=ev.touches[0];swipeRef.current={startX:t.clientX,startY:t.clientY,started:true};};
-  var onTouchEnd=function(ev){
-    if(!swipeRef.current.started)return;swipeRef.current.started=false;
-    var t=ev.changedTouches[0];var dx=t.clientX-swipeRef.current.startX;var dy=t.clientY-swipeRef.current.startY;
-    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){swipeTool(dx<0?1:-1);}
-  };
 
   var push=function(v){setStack(function(p){return p.concat([v]);});};
   var goBack=useCallback(function(){setStack(function(p){var n2=p.slice();var pv=n2.pop();setView(pv||"home");return n2;});},[]); 
@@ -9597,7 +9572,7 @@ function App(){
             return h("button",{key:row[0],onClick:function(){setToolTab(row[0]);},style:{flex:"1 0 25%",display:"flex",flexDirection:"column",alignItems:"center",padding:"8px 2px 9px",cursor:"pointer",border:"none",background:"none",color:toolTab===row[0]?GO:MU,fontSize:8,letterSpacing:"0.05em",textTransform:"uppercase",gap:2,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500,borderBottom:toolTab===row[0]?"1px solid "+GO:"1px solid transparent"}},h("span",{style:{fontSize:16}},row[1]),row[2]);
           })
         ),
-        h("div",{style:{flex:1,overflowY:"auto"},onTouchStart:onTouchStart,onTouchEnd:onTouchEnd},
+        h("div",{style:{flex:1,overflowY:"auto"}},
           toolTab==="compass"&&h(CompassTool),
           toolTab==="wind"&&h(WindAdvisorTool),
           toolTab==="anchor"&&h(AnchorTool),
