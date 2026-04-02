@@ -1350,6 +1350,7 @@ function HomeScreen(props){
     {id:"nelson",icon:"⚜️",label:"Ask Nelson",sub:"What would he do?",action:function(){props.onNelson();}}
   ];
   var sectionsNav=[
+    {id:"knowyourboat",icon:"🚢",label:"Know Your Boat",desc:"Anatomy · Parts of a sail · Port & starboard"},
     {id:"navigation",icon:"🧭",label:"Navigation",desc:"COLREGs · Buoyage · VHF · Tides · Fog"},
     {id:"weather",icon:"🌬️",label:"Weather & Wind",desc:"Fronts · Storm tactics · Barometer"},
     {id:"sailing",icon:"⛵",label:"Sail Handling",desc:"Reefing · Tacking · Sail trim · Jibing"},
@@ -1433,13 +1434,19 @@ function HomeScreen(props){
     ),
     h("div",{style:{padding:"10px 16px 8px",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:GD,letterSpacing:"0.06em",borderBottom:"1px solid rgba(22,36,56,0.9)"}},"The Library"),
     sectionsNav.map(function(s){
-      return h("div",{key:s.id,style:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",borderBottom:"1px solid rgba(22,36,56,0.9)"},onClick:function(){props.onNav(s.id);}},
+      var isDivider=s.id==="cocktails";
+      return h("div",{key:s.id},
+        isDivider&&h("div",{style:{padding:"10px 16px 2px"}},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:GD,letterSpacing:"0.06em"}},"Make & Mend")
+        ),
+        h("div",{style:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",borderBottom:"1px solid rgba(22,36,56,0.9)"},onClick:function(){props.onNav(s.id);}},
         h("div",{style:{width:34,height:34,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0,background:"rgba(200,168,74,0.07)",border:"1px solid rgba(200,168,74,0.15)"}},s.icon),
         h("div",{style:{flex:1}},
           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},s.label),
           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU,marginTop:1}},s.desc)
         ),
         h("div",{style:{color:"rgba(200,168,74,0.3)",fontSize:20}},"›")
+      )
       );
     })
   );
@@ -2418,6 +2425,122 @@ function KnotGuide(){
 
 // ── Content definitions ────────────────────────────────────────────────
 var CONTENT={
+  boatanatomy:{title:"Boat Anatomy",badge:"reference",render:function(){
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"Know Your Boat"),
+      h(STitle,{noTop:true},"Deck Plan — Top View"),
+      h("svg",{width:"100%",viewBox:"0 0 300 330",style:{display:"block",borderRadius:8,border:"1px solid "+NB,marginBottom:16}},
+        h("rect",{width:300,height:330,fill:"#050D18"}),
+        h("rect",{width:300,height:330,fill:"rgba(6,16,44,0.95)"}),
+        h("path",{d:"M150,22 Q188,22 202,52 L212,200 Q212,238 150,256 Q88,238 88,200 L98,52 Q112,22 150,22 Z",fill:"#0D1C30",stroke:GO,strokeWidth:1.5}),
+        h("line",{x1:150,y1:22,x2:150,y2:256,stroke:"rgba(200,168,74,0.12)",strokeWidth:1,strokeDasharray:"6 4"}),
+        h("circle",{cx:150,cy:92,r:5,fill:GO,stroke:"#050D18",strokeWidth:1}),
+        h("text",{x:164,y:96,fill:GO,fontSize:7.5,fontFamily:"system-ui",fontWeight:600},"MAST"),
+        h("ellipse",{cx:150,cy:208,rx:30,ry:20,fill:"#081420",stroke:"rgba(200,168,74,0.25)",strokeWidth:1}),
+        h("text",{x:150,y:212,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"COCKPIT"),
+        h("rect",{x:139,y:178,width:22,height:12,rx:3,fill:"#081420",stroke:"rgba(200,168,74,0.2)",strokeWidth:1}),
+        h("text",{x:150,y:174,fill:MU,fontSize:6,textAnchor:"middle",fontFamily:"system-ui"},"COMPANIONWAY"),
+        h("circle",{cx:124,cy:196,r:4,fill:NC,stroke:MU,strokeWidth:1}),
+        h("circle",{cx:176,cy:196,r:4,fill:NC,stroke:MU,strokeWidth:1}),
+        h("text",{x:106,y:194,fill:MU,fontSize:6,textAnchor:"end",fontFamily:"system-ui"},"WINCH"),
+        h("text",{x:194,y:194,fill:MU,fontSize:6,fontFamily:"system-ui"},"WINCH"),
+        h("path",{d:"M116,244 Q150,256 184,244",fill:"none",stroke:MU,strokeWidth:1.5}),
+        h("text",{x:150,y:268,fill:MU,fontSize:6.5,textAnchor:"middle",fontFamily:"system-ui"},"PUSHPIT"),
+        h("path",{d:"M120,38 Q150,28 180,38",fill:"none",stroke:MU,strokeWidth:1.5}),
+        h("text",{x:150,y:18,fill:MU,fontSize:6.5,textAnchor:"middle",fontFamily:"system-ui"},"PULPIT"),
+        h("text",{x:150,y:9,fill:GL,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"BOW"),
+        h("text",{x:150,y:278,fill:GL,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"STERN"),
+        h("text",{x:52,y:144,fill:"#40B0B0",fontSize:8,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"PORT"),
+        h("text",{x:52,y:154,fill:"#40B0B0",fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"(left)"),
+        h("text",{x:248,y:144,fill:GR,fontSize:8,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"STBD"),
+        h("text",{x:248,y:154,fill:GR,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"(right)"),
+        h("line",{x1:70,y1:149,x2:86,y2:149,stroke:"#40B0B0",strokeWidth:1.5}),
+        h("polygon",{points:"86,149 80,146 80,152",fill:"#40B0B0"}),
+        h("line",{x1:230,y1:149,x2:214,y2:149,stroke:GR,strokeWidth:1.5}),
+        h("polygon",{points:"214,149 220,146 220,152",fill:GR}),
+        h("circle",{cx:98,cy:110,r:3,fill:MU}),
+        h("circle",{cx:202,cy:110,r:3,fill:MU}),
+        h("text",{x:72,y:108,fill:MU,fontSize:6,textAnchor:"middle",fontFamily:"system-ui"},"SHROUD"),
+        h("line",{x1:84,y1:108,x2:95,y2:110,stroke:MU,strokeWidth:0.8}),
+        h("text",{x:150,y:320,fill:GD,fontSize:7,textAnchor:"middle",fontFamily:"system-ui",fontStyle:"italic"},"Beam = widest point of the hull")
+      ),
+      h(STitle,null,"Side Profile"),
+      h("svg",{width:"100%",viewBox:"0 0 340 210",style:{display:"block",borderRadius:8,border:"1px solid "+NB,marginBottom:16}},
+        h("rect",{width:340,height:210,fill:"#050D18"}),
+        h("rect",{x:0,y:142,width:340,height:68,fill:"rgba(6,16,44,0.8)"}),
+        h("line",{x1:0,y1:142,x2:340,y2:142,stroke:BL,strokeWidth:1.5,opacity:0.6}),
+        h("text",{x:150,y:152,fill:BL,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"— WATERLINE —"),
+        h("path",{d:"M44,142 Q48,122 64,112 L252,112 Q280,112 284,134 Q286,142 284,142 Z",fill:"#0D1C30",stroke:GO,strokeWidth:1.5}),
+        h("path",{d:"M128,142 Q148,184 168,184 Q188,184 193,142",fill:"#0A1628",stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("text",{x:160,y:200,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"KEEL"),
+        h("line",{x1:138,y1:112,x2:138,y2:18,stroke:GL,strokeWidth:2}),
+        h("text",{x:126,y:26,fill:GL,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"MAST"),
+        h("line",{x1:138,y1:104,x2:228,y2:114,stroke:GO,strokeWidth:2}),
+        h("text",{x:192,y:130,fill:GO,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"BOOM"),
+        h("line",{x1:138,y1:20,x2:66,y2:114,stroke:MU,strokeWidth:1,strokeDasharray:"4 3"}),
+        h("text",{x:76,y:60,fill:MU,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"FORESTAY"),
+        h("line",{x1:138,y1:20,x2:270,y2:114,stroke:MU,strokeWidth:1,strokeDasharray:"4 3"}),
+        h("text",{x:230,y:60,fill:MU,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"BACKSTAY"),
+        h("line",{x1:118,y1:64,x2:158,y2:64,stroke:MU,strokeWidth:1.5}),
+        h("text",{x:178,y:68,fill:MU,fontSize:7,fontFamily:"system-ui"},"SPREADER"),
+        h("line",{x1:300,y1:112,x2:300,y2:142,stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("line",{x1:296,y1:112,x2:304,y2:112,stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("line",{x1:296,y1:142,x2:304,y2:142,stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("text",{x:320,y:130,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"FREE-"),
+        h("text",{x:320,y:139,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"BOARD"),
+        h("text",{x:48,y:108,fill:GL,fontSize:7.5,fontFamily:"system-ui",fontWeight:700},"BOW"),
+        h("text",{x:272,y:108,fill:GL,fontSize:7.5,fontFamily:"system-ui",fontWeight:700,textAnchor:"middle"},"STERN")
+      ),
+      h(InfoBox,{type:"tip",title:"Port vs Starboard"},"Port is always left when facing the bow. Starboard is always right. Memory aid: port and left both have four letters. Port navigation lights are red, starboard are green.")
+    );
+  }},
+  sailnames:{title:"The Sails",badge:"reference",render:function(){
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"Know Your Boat"),
+      h(STitle,{noTop:true},"Sails & Their Parts"),
+      h("svg",{width:"100%",viewBox:"0 0 320 310",style:{display:"block",borderRadius:8,border:"1px solid "+NB,marginBottom:16}},
+        h("rect",{width:320,height:310,fill:"#050D18"}),
+        h("rect",{width:320,height:310,fill:"rgba(6,16,44,0.95)"}),
+        h("rect",{x:0,y:248,width:320,height:62,fill:"rgba(6,16,44,0.6)"}),
+        h("line",{x1:0,y1:248,x2:320,y2:248,stroke:BL,strokeWidth:1,opacity:0.5}),
+        h("path",{d:"M80,248 Q84,232 96,224 L210,224 Q230,232 234,248 Z",fill:"#0D1C30",stroke:GO,strokeWidth:1.2}),
+        h("path",{d:"M136,248 Q148,282 160,282 Q172,282 170,248",fill:"#0A1628",stroke:"rgba(200,168,74,0.3)",strokeWidth:1}),
+        h("text",{x:155,y:300,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"KEEL"),
+        h("line",{x1:148,y1:224,x2:148,y2:18,stroke:GL,strokeWidth:2.5}),
+        h("line",{x1:148,y1:210,x2:244,y2:220,stroke:GO,strokeWidth:2}),
+        h("path",{d:"M148,26 L148,210 L244,220 Z",fill:"rgba(200,168,74,0.12)",stroke:GO,strokeWidth:1.5}),
+        h("text",{x:210,y:145,fill:GO,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"MAINSAIL"),
+        h("line",{x1:148,y1:46,x2:84,y2:222,stroke:MU,strokeWidth:1,strokeDasharray:"4 3",opacity:0.4}),
+        h("path",{d:"M148,46 L84,222 L148,210 Z",fill:"rgba(40,96,168,0.14)",stroke:BL,strokeWidth:1.5}),
+        h("text",{x:108,y:158,fill:BL,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"JIB"),
+        h("line",{x1:148,y1:26,x2:186,y2:14,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:194,y:13,fill:GD,fontSize:7,fontFamily:"system-ui"},"HEAD"),
+        h("line",{x1:148,y1:124,x2:104,y2:118,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:58,y:122,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"LUFF"),
+        h("line",{x1:208,y1:112,x2:240,y2:100,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:270,y:104,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"LEECH"),
+        h("text",{x:194,y:242,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"FOOT"),
+        h("circle",{cx:244,cy:220,r:3,fill:GD}),
+        h("line",{x1:244,y1:220,x2:272,y2:226,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:296,y:228,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"CLEW"),
+        h("circle",{cx:148,cy:210,r:3,fill:GD}),
+        h("line",{x1:146,y1:212,x2:120,y2:236,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:108,y:244,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"TACK"),
+        h("text",{x:160,y:308,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui",fontStyle:"italic"},"A genoa is a large jib that overlaps past the mast")
+      ),
+      h(STitle,null,"Types of Sail"),
+      h(RTable,{headers:["Sail","When used"],rows:[
+        ["Mainsail","Primary sail — always up when sailing"],
+        ["Jib","Headsail that does not overlap the mast"],
+        ["Genoa","Large headsail overlapping past the mast — more power in light winds"],
+        ["Spinnaker","Large balloon sail for downwind sailing"],
+        ["Cruising chute","Asymmetric spinnaker — easier to handle"],
+        ["Storm jib","Tiny heavy headsail for severe weather"],
+        ["Trysail","Small heavy mainsail replacement in storm conditions"],
+      ]}),
+      h(InfoBox,{type:"tip",title:"Sail anatomy"},"Every sail has three corners: the head (top), tack (forward bottom) and clew (aft bottom). The luff is the leading edge, the leech is the trailing edge, and the foot runs along the bottom.")
+    );
+  }},
   mob:{title:"Man Overboard",badge:"critical",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"critical"},"CRITICAL — LIFE THREAT"),h(MOBDiagram),h(STitle,{noTop:true},"Immediate Actions"),h(Steps,{red:true,items:['<strong>SHOUT "MAN OVERBOARD"</strong> — alert all crew',"Throw the lifebuoy — aim it close to the person","<strong>Post a dedicated lookout</strong> — eyes on them at ALL times","<strong>Press MOB on GPS</strong> — marks the position","Start the engine — leave in neutral"]}),h(STitle,null,"Crash Stop (Preferred)"),h(Steps,{items:["Push tiller <strong>hard to leeward</strong> — boat turns into wind and stops","Leave <strong>jib sheet cleated</strong> — boat heaves-to, drifts toward person","Manoeuvre alongside under engine from <strong>downwind/downtide</strong>","Stop to windward of person, throw a line or boarding ladder","Get them aboard — use halyard or tackle if exhausted"]}),h(InfoBox,{type:"alert",title:"⚠ Critical"},"Never lose sight of the person. Issue a Mayday if not recovered quickly."),h(InfoBox,{type:"tip",title:"After Recovery"},"Treat for hypothermia. Check for injuries. Log the incident."));}},
   mayday:{title:"Send a Mayday",badge:"critical",render:function(){
     var lines=[
@@ -3171,6 +3294,7 @@ var CONTENT={
   }},
 };
 var SECTIONS={
+  knowyourboat:{title:"Know Your Boat",icon:"🚢",topics:[{id:"boatanatomy",name:"Boat Anatomy",preview:"Deck, hull and rigging terms"},{id:"sailnames",name:"The Sails",preview:"Mainsail, jib, spinnaker and more"}]},
   emergency:{title:"Emergency Procedures",icon:"🆘",topics:[{id:"mob",name:"Man Overboard",preview:"Immediate recovery"},{id:"mayday",name:"Mayday Call",preview:"VHF Ch 16 script"},{id:"fire",name:"Fire on Board",preview:"By type — actions"},{id:"flood",name:"Taking on Water",preview:"Plug & pump"},{id:"abandon",name:"Abandon Ship",preview:"Life raft procedure"},{id:"aground",name:"Running Aground",preview:"Assess & free"},{id:"enginefail",name:"Engine Failure",preview:"Diagnose & sail home"}]},
   navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"}]},
   weather:{title:"Weather & Wind",icon:"🌬️",topics:[{id:"stormtactics",name:"Storm Tactics",preview:"Heave-to, lie a-hull"},{id:"fronts",name:"Weather Fronts",preview:"Warm, cold, squall prep"},{id:"barometer",name:"Barometer & Pressure",preview:"Tendency, readings, what they mean"}]},
@@ -4931,6 +5055,7 @@ function HomeScreen(props){
     {id:"nelson",icon:"⚜️",label:"Ask Nelson",sub:"What would he do?",action:function(){props.onNelson();}}
   ];
   var sectionsNav=[
+    {id:"knowyourboat",icon:"🚢",label:"Know Your Boat",desc:"Anatomy · Parts of a sail · Port & starboard"},
     {id:"navigation",icon:"🧭",label:"Navigation",desc:"COLREGs · Buoyage · VHF · Tides · Fog"},
     {id:"weather",icon:"🌬️",label:"Weather & Wind",desc:"Fronts · Storm tactics · Barometer"},
     {id:"sailing",icon:"⛵",label:"Sail Handling",desc:"Reefing · Tacking · Sail trim · Jibing"},
@@ -5014,13 +5139,19 @@ function HomeScreen(props){
     ),
     h("div",{style:{padding:"10px 16px 8px",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:GD,letterSpacing:"0.06em",borderBottom:"1px solid rgba(22,36,56,0.9)"}},"The Library"),
     sectionsNav.map(function(s){
-      return h("div",{key:s.id,style:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",borderBottom:"1px solid rgba(22,36,56,0.9)"},onClick:function(){props.onNav(s.id);}},
+      var isDivider=s.id==="cocktails";
+      return h("div",{key:s.id},
+        isDivider&&h("div",{style:{padding:"10px 16px 2px"}},
+          h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:GD,letterSpacing:"0.06em"}},"Make & Mend")
+        ),
+        h("div",{style:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",borderBottom:"1px solid rgba(22,36,56,0.9)"},onClick:function(){props.onNav(s.id);}},
         h("div",{style:{width:34,height:34,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0,background:"rgba(200,168,74,0.07)",border:"1px solid rgba(200,168,74,0.15)"}},s.icon),
         h("div",{style:{flex:1}},
           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},s.label),
           h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU,marginTop:1}},s.desc)
         ),
         h("div",{style:{color:"rgba(200,168,74,0.3)",fontSize:20}},"›")
+      )
       );
     })
   );
@@ -5999,6 +6130,122 @@ function KnotGuide(){
 
 // ── Content definitions ────────────────────────────────────────────────
 var CONTENT={
+  boatanatomy:{title:"Boat Anatomy",badge:"reference",render:function(){
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"Know Your Boat"),
+      h(STitle,{noTop:true},"Deck Plan — Top View"),
+      h("svg",{width:"100%",viewBox:"0 0 300 330",style:{display:"block",borderRadius:8,border:"1px solid "+NB,marginBottom:16}},
+        h("rect",{width:300,height:330,fill:"#050D18"}),
+        h("rect",{width:300,height:330,fill:"rgba(6,16,44,0.95)"}),
+        h("path",{d:"M150,22 Q188,22 202,52 L212,200 Q212,238 150,256 Q88,238 88,200 L98,52 Q112,22 150,22 Z",fill:"#0D1C30",stroke:GO,strokeWidth:1.5}),
+        h("line",{x1:150,y1:22,x2:150,y2:256,stroke:"rgba(200,168,74,0.12)",strokeWidth:1,strokeDasharray:"6 4"}),
+        h("circle",{cx:150,cy:92,r:5,fill:GO,stroke:"#050D18",strokeWidth:1}),
+        h("text",{x:164,y:96,fill:GO,fontSize:7.5,fontFamily:"system-ui",fontWeight:600},"MAST"),
+        h("ellipse",{cx:150,cy:208,rx:30,ry:20,fill:"#081420",stroke:"rgba(200,168,74,0.25)",strokeWidth:1}),
+        h("text",{x:150,y:212,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"COCKPIT"),
+        h("rect",{x:139,y:178,width:22,height:12,rx:3,fill:"#081420",stroke:"rgba(200,168,74,0.2)",strokeWidth:1}),
+        h("text",{x:150,y:174,fill:MU,fontSize:6,textAnchor:"middle",fontFamily:"system-ui"},"COMPANIONWAY"),
+        h("circle",{cx:124,cy:196,r:4,fill:NC,stroke:MU,strokeWidth:1}),
+        h("circle",{cx:176,cy:196,r:4,fill:NC,stroke:MU,strokeWidth:1}),
+        h("text",{x:106,y:194,fill:MU,fontSize:6,textAnchor:"end",fontFamily:"system-ui"},"WINCH"),
+        h("text",{x:194,y:194,fill:MU,fontSize:6,fontFamily:"system-ui"},"WINCH"),
+        h("path",{d:"M116,244 Q150,256 184,244",fill:"none",stroke:MU,strokeWidth:1.5}),
+        h("text",{x:150,y:268,fill:MU,fontSize:6.5,textAnchor:"middle",fontFamily:"system-ui"},"PUSHPIT"),
+        h("path",{d:"M120,38 Q150,28 180,38",fill:"none",stroke:MU,strokeWidth:1.5}),
+        h("text",{x:150,y:18,fill:MU,fontSize:6.5,textAnchor:"middle",fontFamily:"system-ui"},"PULPIT"),
+        h("text",{x:150,y:9,fill:GL,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"BOW"),
+        h("text",{x:150,y:278,fill:GL,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"STERN"),
+        h("text",{x:52,y:144,fill:"#40B0B0",fontSize:8,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"PORT"),
+        h("text",{x:52,y:154,fill:"#40B0B0",fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"(left)"),
+        h("text",{x:248,y:144,fill:GR,fontSize:8,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"STBD"),
+        h("text",{x:248,y:154,fill:GR,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"(right)"),
+        h("line",{x1:70,y1:149,x2:86,y2:149,stroke:"#40B0B0",strokeWidth:1.5}),
+        h("polygon",{points:"86,149 80,146 80,152",fill:"#40B0B0"}),
+        h("line",{x1:230,y1:149,x2:214,y2:149,stroke:GR,strokeWidth:1.5}),
+        h("polygon",{points:"214,149 220,146 220,152",fill:GR}),
+        h("circle",{cx:98,cy:110,r:3,fill:MU}),
+        h("circle",{cx:202,cy:110,r:3,fill:MU}),
+        h("text",{x:72,y:108,fill:MU,fontSize:6,textAnchor:"middle",fontFamily:"system-ui"},"SHROUD"),
+        h("line",{x1:84,y1:108,x2:95,y2:110,stroke:MU,strokeWidth:0.8}),
+        h("text",{x:150,y:320,fill:GD,fontSize:7,textAnchor:"middle",fontFamily:"system-ui",fontStyle:"italic"},"Beam = widest point of the hull")
+      ),
+      h(STitle,null,"Side Profile"),
+      h("svg",{width:"100%",viewBox:"0 0 340 210",style:{display:"block",borderRadius:8,border:"1px solid "+NB,marginBottom:16}},
+        h("rect",{width:340,height:210,fill:"#050D18"}),
+        h("rect",{x:0,y:142,width:340,height:68,fill:"rgba(6,16,44,0.8)"}),
+        h("line",{x1:0,y1:142,x2:340,y2:142,stroke:BL,strokeWidth:1.5,opacity:0.6}),
+        h("text",{x:150,y:152,fill:BL,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"— WATERLINE —"),
+        h("path",{d:"M44,142 Q48,122 64,112 L252,112 Q280,112 284,134 Q286,142 284,142 Z",fill:"#0D1C30",stroke:GO,strokeWidth:1.5}),
+        h("path",{d:"M128,142 Q148,184 168,184 Q188,184 193,142",fill:"#0A1628",stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("text",{x:160,y:200,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"KEEL"),
+        h("line",{x1:138,y1:112,x2:138,y2:18,stroke:GL,strokeWidth:2}),
+        h("text",{x:126,y:26,fill:GL,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"MAST"),
+        h("line",{x1:138,y1:104,x2:228,y2:114,stroke:GO,strokeWidth:2}),
+        h("text",{x:192,y:130,fill:GO,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"BOOM"),
+        h("line",{x1:138,y1:20,x2:66,y2:114,stroke:MU,strokeWidth:1,strokeDasharray:"4 3"}),
+        h("text",{x:76,y:60,fill:MU,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"FORESTAY"),
+        h("line",{x1:138,y1:20,x2:270,y2:114,stroke:MU,strokeWidth:1,strokeDasharray:"4 3"}),
+        h("text",{x:230,y:60,fill:MU,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"BACKSTAY"),
+        h("line",{x1:118,y1:64,x2:158,y2:64,stroke:MU,strokeWidth:1.5}),
+        h("text",{x:178,y:68,fill:MU,fontSize:7,fontFamily:"system-ui"},"SPREADER"),
+        h("line",{x1:300,y1:112,x2:300,y2:142,stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("line",{x1:296,y1:112,x2:304,y2:112,stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("line",{x1:296,y1:142,x2:304,y2:142,stroke:"rgba(200,168,74,0.4)",strokeWidth:1}),
+        h("text",{x:320,y:130,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"FREE-"),
+        h("text",{x:320,y:139,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"BOARD"),
+        h("text",{x:48,y:108,fill:GL,fontSize:7.5,fontFamily:"system-ui",fontWeight:700},"BOW"),
+        h("text",{x:272,y:108,fill:GL,fontSize:7.5,fontFamily:"system-ui",fontWeight:700,textAnchor:"middle"},"STERN")
+      ),
+      h(InfoBox,{type:"tip",title:"Port vs Starboard"},"Port is always left when facing the bow. Starboard is always right. Memory aid: port and left both have four letters. Port navigation lights are red, starboard are green.")
+    );
+  }},
+  sailnames:{title:"The Sails",badge:"reference",render:function(){
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"Know Your Boat"),
+      h(STitle,{noTop:true},"Sails & Their Parts"),
+      h("svg",{width:"100%",viewBox:"0 0 320 310",style:{display:"block",borderRadius:8,border:"1px solid "+NB,marginBottom:16}},
+        h("rect",{width:320,height:310,fill:"#050D18"}),
+        h("rect",{width:320,height:310,fill:"rgba(6,16,44,0.95)"}),
+        h("rect",{x:0,y:248,width:320,height:62,fill:"rgba(6,16,44,0.6)"}),
+        h("line",{x1:0,y1:248,x2:320,y2:248,stroke:BL,strokeWidth:1,opacity:0.5}),
+        h("path",{d:"M80,248 Q84,232 96,224 L210,224 Q230,232 234,248 Z",fill:"#0D1C30",stroke:GO,strokeWidth:1.2}),
+        h("path",{d:"M136,248 Q148,282 160,282 Q172,282 170,248",fill:"#0A1628",stroke:"rgba(200,168,74,0.3)",strokeWidth:1}),
+        h("text",{x:155,y:300,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui"},"KEEL"),
+        h("line",{x1:148,y1:224,x2:148,y2:18,stroke:GL,strokeWidth:2.5}),
+        h("line",{x1:148,y1:210,x2:244,y2:220,stroke:GO,strokeWidth:2}),
+        h("path",{d:"M148,26 L148,210 L244,220 Z",fill:"rgba(200,168,74,0.12)",stroke:GO,strokeWidth:1.5}),
+        h("text",{x:210,y:145,fill:GO,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"MAINSAIL"),
+        h("line",{x1:148,y1:46,x2:84,y2:222,stroke:MU,strokeWidth:1,strokeDasharray:"4 3",opacity:0.4}),
+        h("path",{d:"M148,46 L84,222 L148,210 Z",fill:"rgba(40,96,168,0.14)",stroke:BL,strokeWidth:1.5}),
+        h("text",{x:108,y:158,fill:BL,fontSize:9,textAnchor:"middle",fontFamily:"system-ui",fontWeight:700},"JIB"),
+        h("line",{x1:148,y1:26,x2:186,y2:14,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:194,y:13,fill:GD,fontSize:7,fontFamily:"system-ui"},"HEAD"),
+        h("line",{x1:148,y1:124,x2:104,y2:118,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:58,y:122,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"LUFF"),
+        h("line",{x1:208,y1:112,x2:240,y2:100,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:270,y:104,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"LEECH"),
+        h("text",{x:194,y:242,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"FOOT"),
+        h("circle",{cx:244,cy:220,r:3,fill:GD}),
+        h("line",{x1:244,y1:220,x2:272,y2:226,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:296,y:228,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"CLEW"),
+        h("circle",{cx:148,cy:210,r:3,fill:GD}),
+        h("line",{x1:146,y1:212,x2:120,y2:236,stroke:"rgba(200,168,74,0.3)",strokeWidth:0.8}),
+        h("text",{x:108,y:244,fill:GD,fontSize:7,fontFamily:"system-ui",textAnchor:"middle"},"TACK"),
+        h("text",{x:160,y:308,fill:MU,fontSize:7,textAnchor:"middle",fontFamily:"system-ui",fontStyle:"italic"},"A genoa is a large jib that overlaps past the mast")
+      ),
+      h(STitle,null,"Types of Sail"),
+      h(RTable,{headers:["Sail","When used"],rows:[
+        ["Mainsail","Primary sail — always up when sailing"],
+        ["Jib","Headsail that does not overlap the mast"],
+        ["Genoa","Large headsail overlapping past the mast — more power in light winds"],
+        ["Spinnaker","Large balloon sail for downwind sailing"],
+        ["Cruising chute","Asymmetric spinnaker — easier to handle"],
+        ["Storm jib","Tiny heavy headsail for severe weather"],
+        ["Trysail","Small heavy mainsail replacement in storm conditions"],
+      ]}),
+      h(InfoBox,{type:"tip",title:"Sail anatomy"},"Every sail has three corners: the head (top), tack (forward bottom) and clew (aft bottom). The luff is the leading edge, the leech is the trailing edge, and the foot runs along the bottom.")
+    );
+  }},
   mob:{title:"Man Overboard",badge:"critical",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"critical"},"CRITICAL — LIFE THREAT"),h(MOBDiagram),h(STitle,{noTop:true},"Immediate Actions"),h(Steps,{red:true,items:['<strong>SHOUT "MAN OVERBOARD"</strong> — alert all crew',"Throw the lifebuoy — aim it close to the person","<strong>Post a dedicated lookout</strong> — eyes on them at ALL times","<strong>Press MOB on GPS</strong> — marks the position","Start the engine — leave in neutral"]}),h(STitle,null,"Crash Stop (Preferred)"),h(Steps,{items:["Push tiller <strong>hard to leeward</strong> — boat turns into wind and stops","Leave <strong>jib sheet cleated</strong> — boat heaves-to, drifts toward person","Manoeuvre alongside under engine from <strong>downwind/downtide</strong>","Stop to windward of person, throw a line or boarding ladder","Get them aboard — use halyard or tackle if exhausted"]}),h(InfoBox,{type:"alert",title:"⚠ Critical"},"Never lose sight of the person. Issue a Mayday if not recovered quickly."),h(InfoBox,{type:"tip",title:"After Recovery"},"Treat for hypothermia. Check for injuries. Log the incident."));}},
   mayday:{title:"Send a Mayday",badge:"critical",render:function(){
     var lines=[
@@ -6752,6 +6999,7 @@ var CONTENT={
   }},
 };
 var SECTIONS={
+  knowyourboat:{title:"Know Your Boat",icon:"🚢",topics:[{id:"boatanatomy",name:"Boat Anatomy",preview:"Deck, hull and rigging terms"},{id:"sailnames",name:"The Sails",preview:"Mainsail, jib, spinnaker and more"}]},
   emergency:{title:"Emergency Procedures",icon:"🆘",topics:[{id:"mob",name:"Man Overboard",preview:"Immediate recovery"},{id:"mayday",name:"Mayday Call",preview:"VHF Ch 16 script"},{id:"fire",name:"Fire on Board",preview:"By type — actions"},{id:"flood",name:"Taking on Water",preview:"Plug & pump"},{id:"abandon",name:"Abandon Ship",preview:"Life raft procedure"},{id:"aground",name:"Running Aground",preview:"Assess & free"},{id:"enginefail",name:"Engine Failure",preview:"Diagnose & sail home"}]},
   navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"}]},
   weather:{title:"Weather & Wind",icon:"🌬️",topics:[{id:"stormtactics",name:"Storm Tactics",preview:"Heave-to, lie a-hull"},{id:"fronts",name:"Weather Fronts",preview:"Warm, cold, squall prep"},{id:"barometer",name:"Barometer & Pressure",preview:"Tendency, readings, what they mean"}]},
