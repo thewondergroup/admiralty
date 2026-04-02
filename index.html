@@ -2061,37 +2061,30 @@ function ChartTool(){
       })
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
-    h("div",{style:{flex:1,position:"relative",minHeight:0,overflow:"hidden"}},
-      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18"}}),
-      isOffline
-        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
-            h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"🗺️"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
-            h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
-              h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),h("br"),h("br"),h("span",{style:{color:GD}},"Fair winds and following seas.")
-            ),
-            h("div",{style:{display:"flex",flexDirection:"column",gap:0,width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
-              [{icon:"🗺️",name:"Navionics",desc:"Offline charts & tidal data"},
-               {icon:"⚓",name:"iSailor",desc:"Downloadable chart regions"},
-               {icon:"📋",name:"UKHO Admiralty",desc:"Official paper charts"}
-              ].map(function(item,i){
-                return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none",display:"flex",alignItems:"center",gap:10}},
-                  h("span",{style:{fontSize:16}}),
-                  h("div",null,
-                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
-                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
-                  )
-                );
-              })
-            )
-          )
-        : h("div",{style:{position:"absolute",inset:0}},
-            loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000,background:"#040C18"}},
-              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
-              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
-            )
-          )
+    h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
+      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+        h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"\ud83d\uddfa\ufe0f"),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
+        h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
+          h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),
+          h("br"),h("br"),
+          h("span",{style:{color:GD}},"Fair winds and following seas.")
+        ),
+        h("div",{style:{display:"flex",flexDirection:"column",width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
+          [{name:"Navionics",desc:"Offline charts & tidal data"},{name:"iSailor",desc:"Downloadable chart regions"},{name:"UKHO Admiralty",desc:"Official paper charts"}]
+          .map(function(item,i){
+            return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none"}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
+            );
+          })
+        )
+      ),
+      !isOffline&&loading&&h("div",{style:{position:"absolute",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,background:"#040C18"}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
+      )
     ),
     h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
   );
@@ -5991,37 +5984,30 @@ function ChartTool(){
       })
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
-    h("div",{style:{flex:1,position:"relative",minHeight:0,overflow:"hidden"}},
-      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18"}}),
-      isOffline
-        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
-            h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"🗺️"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
-            h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
-              h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),h("br"),h("br"),h("span",{style:{color:GD}},"Fair winds and following seas.")
-            ),
-            h("div",{style:{display:"flex",flexDirection:"column",gap:0,width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
-              [{icon:"🗺️",name:"Navionics",desc:"Offline charts & tidal data"},
-               {icon:"⚓",name:"iSailor",desc:"Downloadable chart regions"},
-               {icon:"📋",name:"UKHO Admiralty",desc:"Official paper charts"}
-              ].map(function(item,i){
-                return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none",display:"flex",alignItems:"center",gap:10}},
-                  h("span",{style:{fontSize:16}}),
-                  h("div",null,
-                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
-                    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
-                  )
-                );
-              })
-            )
-          )
-        : h("div",{style:{position:"absolute",inset:0}},
-            loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000,background:"#040C18"}},
-              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
-              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
-            )
-          )
+    h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
+      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+        h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"\ud83d\uddfa\ufe0f"),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
+        h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
+          h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),
+          h("br"),h("br"),
+          h("span",{style:{color:GD}},"Fair winds and following seas.")
+        ),
+        h("div",{style:{display:"flex",flexDirection:"column",width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
+          [{name:"Navionics",desc:"Offline charts & tidal data"},{name:"iSailor",desc:"Downloadable chart regions"},{name:"UKHO Admiralty",desc:"Official paper charts"}]
+          .map(function(item,i){
+            return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none"}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
+            );
+          })
+        )
+      ),
+      !isOffline&&loading&&h("div",{style:{position:"absolute",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,background:"#040C18"}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
+      )
     ),
     h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
   );
