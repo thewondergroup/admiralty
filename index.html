@@ -74,6 +74,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 ::-webkit-scrollbar-thumb{background:rgba(200,168,74,0.2);border-radius:2px}
 .leaflet-control-attribution{background:rgba(4,12,26,0.75)!important;color:rgba(90,116,144,0.55)!important;font-size:9px!important;padding:2px 6px!important;border-radius:3px 0 0 0!important;box-shadow:none!important}
 .leaflet-control-attribution a{color:rgba(90,116,144,0.75)!important}
+.leaflet-container{touch-action:pan-x pan-y!important}
 </style>
 </head>
 <body>
@@ -1967,7 +1968,7 @@ function ChartTool(){
       var L=window.L;
       var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],13);
       L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
-      var baseLayer=L.tileLayer("https://tiles.openseamap.org/base/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1});
+      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:1});
       baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
       baseLayer.addTo(map);
       // Timeout fallback — if no tiles load within 8s, assume offline
@@ -2061,7 +2062,7 @@ function ChartTool(){
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{style:{flex:1,position:"relative",minHeight:0,overflow:"hidden"}},
-      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18",touchAction:"none"}}),
+      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18"}}),
       isOffline
         ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
             h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"🗺️"),
@@ -3807,7 +3808,7 @@ function App(){
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
-    h("div",{style:{flex:1,overflowY:"auto",overflowX:"hidden"}},
+    h("div",{style:{flex:1,overflowY:toolTab==="chart"?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
       searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
@@ -5897,7 +5898,7 @@ function ChartTool(){
       var L=window.L;
       var map=L.map(mapRef.current,{zoomControl:false,attributionControl:false}).setView([lat,lon],13);
       L.control.attribution({prefix:false,position:"bottomleft"}).addAttribution("\u00a9 <a href='https://www.openstreetmap.org/copyright'>OSM</a> \u00b7 <a href='https://www.openseamap.org'>OpenSeaMap</a>").addTo(map);
-      var baseLayer=L.tileLayer("https://tiles.openseamap.org/base/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenSeaMap",maxZoom:18,opacity:1});
+      var baseLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00a9 OpenStreetMap",maxZoom:19,opacity:1});
       baseLayer.on("tileerror",function(){setIsOffline(true);setLoading(false);});
       baseLayer.addTo(map);
       // Timeout fallback — if no tiles load within 8s, assume offline
@@ -5991,7 +5992,7 @@ function ChartTool(){
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{style:{flex:1,position:"relative",minHeight:0,overflow:"hidden"}},
-      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18",touchAction:"none"}}),
+      h("div",{ref:mapRef,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"#040C18"}}),
       isOffline
         ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
             h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"🗺️"),
@@ -7737,7 +7738,7 @@ function App(){
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
-    h("div",{style:{flex:1,overflowY:"auto",overflowX:"hidden"}},
+    h("div",{style:{flex:1,overflowY:toolTab==="chart"?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
       searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
