@@ -2055,12 +2055,34 @@ function ChartTool(){
       })
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
-    !navigator.onLine&&h("div",{style:{background:"rgba(192,120,40,0.1)",borderBottom:"1px solid rgba(192,120,40,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:AM,fontStyle:"italic"}},"Offline \u2014 chart tiles unavailable. Use paper charts or Navionics."),
-    h("div",{ref:mapRef,style:{flex:1,background:"#0A1628",position:"relative"}},
-      loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000}},
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
-        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
-      )
+    h("div",{style:{flex:1,position:"relative",display:"flex",flexDirection:"column"}},
+      h("div",{ref:mapRef,style:{position:"absolute",inset:0,background:"#040C18"}}),
+      !navigator.onLine
+        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:32,textAlign:"center"}},
+            h("svg",{width:120,height:120,viewBox:"0 0 120 120"},
+              h("circle",{cx:60,cy:60,r:58,fill:"none",stroke:"rgba(200,168,74,0.08)",strokeWidth:1}),
+              h("circle",{cx:60,cy:60,r:40,fill:"none",stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
+              h("line",{x1:60,y1:2,x2:60,y2:118,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
+              h("line",{x1:2,y1:60,x2:118,y2:60,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
+              h("line",{x1:18,y1:18,x2:102,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
+              h("line",{x1:102,y1:18,x2:18,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
+              h("polygon",{points:"60,4 57,20 63,20",fill:"rgba(200,168,74,0.3)"}),
+              h("polygon",{points:"60,116 57,100 63,100",fill:"rgba(122,98,40,0.3)"}),
+              h("text",{x:60,y:64,fill:"rgba(200,168,74,0.15)",fontSize:28,textAnchor:"middle",fontFamily:"Georgia,serif"},"N")
+            ),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"rgba(200,168,74,0.4)",letterSpacing:"0.04em"}},"No Chart Available Offline"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:MU,lineHeight:1.7,maxWidth:260}},"Chart tiles require an internet connection. At sea without signal, use your paper charts or a dedicated app such as Navionics."),
+            h("div",{style:{marginTop:8,display:"flex",flexDirection:"column",gap:6}},
+              [{icon:"🗺️",text:"Navionics — offline charts & tidal data"},{icon:"📄",text:"UKHO Admiralty paper charts"},{icon:"⚓",text:"iSailor — downloadable chart regions"}]
+              .map(function(item,i){return h("div",{key:i,style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"rgba(90,116,144,0.7)"}},item.icon+" "+item.text);})
+            )
+          )
+        : h("div",{style:{position:"absolute",inset:0}},
+            loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000,background:"#040C18"}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
+              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
+            )
+          )
     ),
     h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
   );
@@ -5957,12 +5979,34 @@ function ChartTool(){
       })
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
-    !navigator.onLine&&h("div",{style:{background:"rgba(192,120,40,0.1)",borderBottom:"1px solid rgba(192,120,40,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:AM,fontStyle:"italic"}},"Offline \u2014 chart tiles unavailable. Use paper charts or Navionics."),
-    h("div",{ref:mapRef,style:{flex:1,background:"#0A1628",position:"relative"}},
-      loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000}},
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
-        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
-      )
+    h("div",{style:{flex:1,position:"relative",display:"flex",flexDirection:"column"}},
+      h("div",{ref:mapRef,style:{position:"absolute",inset:0,background:"#040C18"}}),
+      !navigator.onLine
+        ? h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:32,textAlign:"center"}},
+            h("svg",{width:120,height:120,viewBox:"0 0 120 120"},
+              h("circle",{cx:60,cy:60,r:58,fill:"none",stroke:"rgba(200,168,74,0.08)",strokeWidth:1}),
+              h("circle",{cx:60,cy:60,r:40,fill:"none",stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
+              h("line",{x1:60,y1:2,x2:60,y2:118,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
+              h("line",{x1:2,y1:60,x2:118,y2:60,stroke:"rgba(200,168,74,0.06)",strokeWidth:1}),
+              h("line",{x1:18,y1:18,x2:102,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
+              h("line",{x1:102,y1:18,x2:18,y2:102,stroke:"rgba(200,168,74,0.04)",strokeWidth:1}),
+              h("polygon",{points:"60,4 57,20 63,20",fill:"rgba(200,168,74,0.3)"}),
+              h("polygon",{points:"60,116 57,100 63,100",fill:"rgba(122,98,40,0.3)"}),
+              h("text",{x:60,y:64,fill:"rgba(200,168,74,0.15)",fontSize:28,textAnchor:"middle",fontFamily:"Georgia,serif"},"N")
+            ),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:20,fontWeight:600,color:"rgba(200,168,74,0.4)",letterSpacing:"0.04em"}},"No Chart Available Offline"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:14,color:MU,lineHeight:1.7,maxWidth:260}},"Chart tiles require an internet connection. At sea without signal, use your paper charts or a dedicated app such as Navionics."),
+            h("div",{style:{marginTop:8,display:"flex",flexDirection:"column",gap:6}},
+              [{icon:"🗺️",text:"Navionics — offline charts & tidal data"},{icon:"📄",text:"UKHO Admiralty paper charts"},{icon:"⚓",text:"iSailor — downloadable chart regions"}]
+              .map(function(item,i){return h("div",{key:i,style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"rgba(90,116,144,0.7)"}},item.icon+" "+item.text);})
+            )
+          )
+        : h("div",{style:{position:"absolute",inset:0}},
+            loading&&h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,zIndex:1000,background:"#040C18"}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU}},"Loading chart\u2026"),
+              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GD,letterSpacing:"0.08em"}},"OPENSTREETMAP + OPENSEAMAP")
+            )
+          )
     ),
     h("div",{style:{padding:"4px 10px",background:NM,borderTop:"1px solid rgba(22,36,56,0.9)",fontFamily:"'Inter',sans-serif",fontSize:7,color:"rgba(90,116,144,0.5)",letterSpacing:"0.05em"}},"Chart data: \u00a9 OpenStreetMap contributors \u00b7 Nautical marks: \u00a9 OpenSeaMap \u00b7 Not for navigation \u2014 always carry official charts")
   );
