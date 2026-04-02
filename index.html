@@ -1897,8 +1897,8 @@ function ShipsLog(){
 
 
   var exportVoyage=function(voy){
-    var bar="\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550";
-    var thin="\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500";
+    var bar="==========================================";
+    var thin="------------------------------------------";
     var lines=[bar,"  SHIP'S LOG: "+voy.name,"  "+fmtDate(voy.started)+(voy.ended?" \u2014 "+fmtDate(voy.ended):""),bar,""];
     var entries=voy.entries.slice().reverse();
     var nPos=entries.filter(function(e){return e.lat!==null;}).length;
@@ -6770,8 +6770,8 @@ function ShipsLog(){
 
 
   var exportVoyage=function(voy){
-    var bar="\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550";
-    var thin="\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500";
+    var bar="==========================================";
+    var thin="------------------------------------------";
     var lines=[bar,"  SHIP'S LOG: "+voy.name,"  "+fmtDate(voy.started)+(voy.ended?" \u2014 "+fmtDate(voy.ended):""),bar,""];
     var entries=voy.entries.slice().reverse();
     var nPos=entries.filter(function(e){return e.lat!==null;}).length;
