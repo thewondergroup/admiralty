@@ -3854,7 +3854,35 @@ var CONTENT={
   tides:{title:"Tides & Tidal Streams",badge:"reference",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"reference"},"Reference"),h(BList,{items:["<strong>Springs</strong> — largest tidal range (new + full moon). Strongest streams.","<strong>Neaps</strong> — smallest range (half moon). Weakest streams.","<strong>Set</strong> — direction the tidal stream is flowing","<strong>Drift</strong> — speed of the tidal stream in knots"]}),h(STitle,null,"Rule of Twelfths — Tidal Rise/Fall per Hour"),h(RTable,{headers:["Hour","Rise/Fall"],rows:[["1","1/12 of range"],["2","2/12 of range"],["3","3/12 (fastest)"],["4","3/12 (fastest)"],["5","2/12 of range"],["6","1/12 of range"]]}),h(InfoBox,{type:"tip",title:"Navigating with Tidal Streams"},"Always allow for tidal set when shaping a course."));}},
   fogsailing:{title:"Sailing in Fog",badge:"critical",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"critical"},"HIGH COLLISION RISK"),h(Steps,{red:true,items:["<strong>Reduce speed</strong> — must stop in half the visible distance","<strong>Sound signals</strong> — one long blast every 2 mins (power), two (sail)","Post a <strong>dedicated lookout</strong> — listening as well as watching","Switch on <strong>navigation lights</strong> and radar if fitted","<strong>Update position</strong> regularly","If possible — <strong>anchor</strong> clear of shipping lanes and wait"]}),h(InfoBox,{type:"warn",title:"Shipping Risk"},"A large ship cannot stop in less than several miles. Stay out of shipping lanes. Radar reflector essential."));}},
   nightsailing:{title:"Night Sailing",badge:"important",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"important"},"Preparation is Everything"),h(STitle,{noTop:true},"Before Dark"),h(BList,{items:["Navigation lights on and verified from deck","All crew briefed on watch system","Shipping lanes and hazards plotted","Reefed down — conservative sail plan","Hot food and flasks prepared","Harnesses and jackstays rigged"]}),h(STitle,null,"Watch Keeping"),h(BList,{items:["2-hour watches minimum","Check full 360° horizon every 5–10 minutes","Log position, course, and wind hourly","Alert skipper immediately for any lights ahead"]}),h(InfoBox,{type:"tip",title:"Night Vision"},"Eyes take 20–30 minutes to fully adapt. Use red light below decks."));}},
-  fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+  celestial:{title:"Celestial Navigation",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"Reference"),
+    h(STitle,{noTop:true},"The Principle"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:16}},"Celestial navigation finds your position by measuring the angle between a celestial body (sun, moon, star, planet) and the horizon using a sextant. That angle, combined with the exact time, tells you your distance from the point on Earth directly beneath that body. Two or more sights give you a fix."),
+    h(InfoBox,{type:"tip",title:"When you need it"},"GPS failure, electronics loss, or as a backup position check on ocean passages. Every offshore skipper should understand the noon sight at minimum."),
+    h(STitle,null,"The Noon Sight"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The simplest and most useful celestial technique. At local noon, the sun reaches its highest point (meridian passage). Measuring this altitude gives you your latitude directly."),
+    h(Steps,{items:["Track the sun with the sextant as it approaches its highest point","When it stops rising and begins to dip, note the <strong>maximum altitude</strong>","Note the <strong>exact time</strong> (UTC) from a reliable clock","<strong>Zenith distance</strong> = 90\u00b0 minus the observed altitude","Apply corrections: index error, dip (height of eye), refraction","Look up the sun\u2019s <strong>declination</strong> for that date and time from the Nautical Almanac","<strong>Latitude</strong> = zenith distance \u00b1 declination (same name: add if zenith is towards the pole; opposite name: subtract)"]}),
+    h(InfoBox,{type:"tip",title:"Accuracy"},"A careful noon sight can give latitude to within 1\u20132 nautical miles. It does not give longitude \u2014 for that you need timed sights and sight reduction tables."),
+    h(STitle,null,"Polaris for Latitude"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"In the Northern Hemisphere, Polaris (the North Star) sits almost directly above the North Pole. Its altitude above the horizon is approximately equal to your latitude."),
+    h(Steps,{items:["Find Polaris \u2014 follow the two \u201cpointer stars\u201d at the end of the Plough (Big Dipper) upward","Measure its altitude with a sextant, or estimate by hand (fist at arm\u2019s length \u2248 10\u00b0)","Apply a small correction from the Nautical Almanac (Polaris is 0.7\u00b0 from true north)","The corrected altitude is your latitude"]}),
+    h(InfoBox,{type:"warn",title:"Southern Hemisphere"},"Polaris is not visible south of the equator. Use the Southern Cross method instead (below)."),
+    h(STitle,null,"Finding North Without a Compass"),
+    h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GO,letterSpacing:"0.1em",textTransform:"uppercase",marginTop:16,marginBottom:8}},"By the stars"),
+    h(BList,{items:["<strong>Northern Hemisphere</strong> \u2014 Polaris marks north. Find it via the Plough\u2019s pointer stars","<strong>Southern Hemisphere</strong> \u2014 Extend the long axis of the Southern Cross 4.5 times its length toward the horizon. That point is roughly south","<strong>Orion</strong> \u2014 Orion\u2019s belt rises due east and sets due west, visible from both hemispheres"]}),
+    h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GO,letterSpacing:"0.1em",textTransform:"uppercase",marginTop:16,marginBottom:8}},"By the sun"),
+    h(BList,{items:["The sun rises approximately east, sets approximately west","At local noon it bears due south (Northern Hemisphere) or due north (Southern Hemisphere)","<strong>Watch method</strong> \u2014 point the hour hand at the sun. Bisect the angle between the hour hand and 12 o\u2019clock. That line points roughly south (north in the Southern Hemisphere). Less reliable at high latitudes"]}),
+    h(STitle,null,"What You Need"),
+    h(RTable,{headers:["Item","Purpose"],rows:[
+      ["Sextant","Measures angle between celestial body and horizon"],
+      ["Accurate clock (UTC)","Time of sight \u2014 4 seconds error = 1 nm position error"],
+      ["Nautical Almanac","Declination and GHA of sun, moon, stars, planets"],
+      ["Sight reduction tables (AP3270 or HO-249)","Convert sights to position lines"],
+      ["Plotting sheet","Plot position lines to find fix"]
+    ]}),
+    h(InfoBox,{type:"tip",title:"Practice"},"Celestial navigation is a skill that requires practice. Take sights in good conditions alongside GPS to build confidence before relying on it. A sextant is only as good as the person using it.")
+  );}},
+    fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
     h(Badge,{type:"reference"},"Reference"),
     h(WeatherFrontsDiagram),
     h(RTable,{headers:["Front","Approach Signs","On Arrival","After"],rows:[
@@ -4539,7 +4567,7 @@ var CONTENT={
 var SECTIONS={
   knowyourboat:{title:"Know Your Boat",icon:"🚢",topics:[{id:"boatanatomy",name:"Boat Anatomy",preview:"Deck, hull and rigging terms"},{id:"sailnames",name:"The Sails",preview:"Mainsail, jib, spinnaker and more"}]},
   emergency:{title:"Emergency Procedures",icon:"🆘",topics:[{id:"mob",name:"Man Overboard",preview:"Immediate recovery"},{id:"mayday",name:"Mayday Call",preview:"VHF Ch 16 script"},{id:"fire",name:"Fire on Board",preview:"By type — actions"},{id:"flood",name:"Taking on Water",preview:"Plug & pump"},{id:"abandon",name:"Abandon Ship",preview:"Life raft procedure"},{id:"aground",name:"Running Aground",preview:"Assess & free"},{id:"enginefail",name:"Engine Failure",preview:"Diagnose & sail home"}]},
-  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"}]},
+  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"},{id:"celestial",name:"Celestial Navigation",preview:"Sun, stars & finding your position"}]},
   weather:{title:"Weather & Wind",icon:"🌬️",topics:[{id:"stormtactics",name:"Storm Tactics",preview:"Heave-to, lie a-hull"},{id:"fronts",name:"Weather Fronts",preview:"Warm, cold, squall prep"},{id:"barometer",name:"Barometer & Pressure",preview:"Tendency, readings, what they mean"}]},
   sailing:{title:"Sail Handling",icon:"⛵",topics:[{id:"reef",name:"Reefing",preview:"When & how"},{id:"tacking",name:"Tacking",preview:"Helm & crew actions"},{id:"sailtrim",name:"Sail Trim",preview:"Points of sail, telltales, controls"},{id:"heaveto",name:"Heaving-To",preview:"Stop the boat safely"},{id:"jibing",name:"Jibing",preview:"Controlled gybe"}]},
   seamanship:{title:"Seamanship",icon:"⚓",topics:[{id:"anchoring",name:"Anchoring",preview:"Scope, holding, procedure"},{id:"berthing",name:"Coming Alongside",preview:"Approach, lines, med moor"}]},
@@ -4560,6 +4588,7 @@ for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SE
   {id:"tide",title:"Tide Height Calculator",section:"Tools",preview:"Rule of twelfths — current depth from HW/LW"},
   {id:"units",title:"Units Converter",section:"Tools",preview:"Knots, metres, nautical miles, temperature"},
   {id:"passage",title:"Passage Planner",section:"Tools",preview:"ETA, tidal effect, departure time"},
+  {id:"celestial",title:"Celestial Navigation",section:"Navigation",preview:"Sun, stars, noon sight, Polaris",type:"content"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
   {id:"anchor",title:"Anchor Calculator",section:"Tools",preview:"Scope and chain calculator"},
@@ -4582,6 +4611,7 @@ var RELATED={
   barometer:["fronts","stormtactics","weather"],
   firstaid:["hypothermia","mob","harness"],
   tides:["anchoring","passage","fronts"],
+  celestial:["nightsailing","fogsailing","colregs"],
   sailtrim:["tacking","reef","heaveto"],
 };
 
@@ -4765,8 +4795,7 @@ function App(){
   var secS=useState(null);var secId=secS[0];var setSecId=secS[1];
   var ctS=useState(null);var contId=ctS[0];var setContId=ctS[1];
   var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
-  var svS=useState(function(){try{return JSON.parse(localStorage.getItem("ahsaved")||"[]");}catch(e){return[];}});
-  var saved=svS[0];var setSaved=svS[1];
+
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
   var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
@@ -4778,11 +4807,7 @@ function App(){
   var openTool=function(t){setToolTab(t);setActiveTab("tools");setStack([]);setView("tools");};
   var openCL=function(k){setClKey(k);setActiveTab("checklists");setStack([]);setView("checklist");};
   var openNelson=function(){setActiveTab("nelson");setStack([]);setView("nelson");};
-  var toggleSaved=function(){
-    if(!contId)return;
-    var n2=saved.includes(contId)?saved.filter(function(x){return x!==contId;}):[contId].concat(saved);
-    setSaved(n2);try{localStorage.setItem("ahsaved",JSON.stringify(n2));}catch(e){}
-  };
+
 
   var secData=secId?SECTIONS[secId]:null;
   var cont=contId?CONTENT[contId]:null;
@@ -4851,7 +4876,7 @@ function App(){
       ),
       // CONTENT
       view==="content"&&cont&&h("div",null,
-        backHeader(cont.title,h("button",{onClick:toggleSaved,style:{background:"none",border:"none",cursor:"pointer",fontSize:20,color:saved.includes(contId)?GO:"rgba(200,168,74,0.3)",padding:0}},saved.includes(contId)?"★":"☆")),
+        backHeader(cont.title),
         h("div",{style:{paddingBottom:8}},h(cont.render)),
         h(SeeAlso,{contentId:contId,onOpen:openContent})
       ),
@@ -4903,15 +4928,6 @@ function App(){
         )
       ),
       // SAVED
-      view==="saved"&&h("div",null,
-        h("div",{style:{padding:"12px 16px 10px",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:GD,letterSpacing:"0.06em",borderBottom:"1px solid rgba(22,36,56,0.9)"}},"Saved items"),
-        saved.length===0
-          ?h("div",{style:{padding:"48px 16px",textAlign:"center"}},h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:36,color:"rgba(200,168,74,0.2)",marginBottom:12}},"☆"),h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",color:MU,fontSize:15}},"No saved items yet. Tap ☆ in any article."))
-          :saved.map(function(id){var ct=CONTENT[id];if(!ct)return null;return h("div",{key:id,style:{padding:"13px 16px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:10},onClick:function(){openContent(id);}},
-            h("span",{style:{color:GO,fontSize:14}},"★"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},ct.title)
-          );})
-      ),
       // NELSON
       view==="nelson"&&h(NelsonView),
       view==="log"&&h(ShipsLog)
@@ -8798,7 +8814,35 @@ var CONTENT={
   tides:{title:"Tides & Tidal Streams",badge:"reference",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"reference"},"Reference"),h(BList,{items:["<strong>Springs</strong> — largest tidal range (new + full moon). Strongest streams.","<strong>Neaps</strong> — smallest range (half moon). Weakest streams.","<strong>Set</strong> — direction the tidal stream is flowing","<strong>Drift</strong> — speed of the tidal stream in knots"]}),h(STitle,null,"Rule of Twelfths — Tidal Rise/Fall per Hour"),h(RTable,{headers:["Hour","Rise/Fall"],rows:[["1","1/12 of range"],["2","2/12 of range"],["3","3/12 (fastest)"],["4","3/12 (fastest)"],["5","2/12 of range"],["6","1/12 of range"]]}),h(InfoBox,{type:"tip",title:"Navigating with Tidal Streams"},"Always allow for tidal set when shaping a course."));}},
   fogsailing:{title:"Sailing in Fog",badge:"critical",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"critical"},"HIGH COLLISION RISK"),h(Steps,{red:true,items:["<strong>Reduce speed</strong> — must stop in half the visible distance","<strong>Sound signals</strong> — one long blast every 2 mins (power), two (sail)","Post a <strong>dedicated lookout</strong> — listening as well as watching","Switch on <strong>navigation lights</strong> and radar if fitted","<strong>Update position</strong> regularly","If possible — <strong>anchor</strong> clear of shipping lanes and wait"]}),h(InfoBox,{type:"warn",title:"Shipping Risk"},"A large ship cannot stop in less than several miles. Stay out of shipping lanes. Radar reflector essential."));}},
   nightsailing:{title:"Night Sailing",badge:"important",render:function(){return h("div",{style:{padding:16}},h(Badge,{type:"important"},"Preparation is Everything"),h(STitle,{noTop:true},"Before Dark"),h(BList,{items:["Navigation lights on and verified from deck","All crew briefed on watch system","Shipping lanes and hazards plotted","Reefed down — conservative sail plan","Hot food and flasks prepared","Harnesses and jackstays rigged"]}),h(STitle,null,"Watch Keeping"),h(BList,{items:["2-hour watches minimum","Check full 360° horizon every 5–10 minutes","Log position, course, and wind hourly","Alert skipper immediately for any lights ahead"]}),h(InfoBox,{type:"tip",title:"Night Vision"},"Eyes take 20–30 minutes to fully adapt. Use red light below decks."));}},
-  fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+  celestial:{title:"Celestial Navigation",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"Reference"),
+    h(STitle,{noTop:true},"The Principle"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:16}},"Celestial navigation finds your position by measuring the angle between a celestial body (sun, moon, star, planet) and the horizon using a sextant. That angle, combined with the exact time, tells you your distance from the point on Earth directly beneath that body. Two or more sights give you a fix."),
+    h(InfoBox,{type:"tip",title:"When you need it"},"GPS failure, electronics loss, or as a backup position check on ocean passages. Every offshore skipper should understand the noon sight at minimum."),
+    h(STitle,null,"The Noon Sight"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The simplest and most useful celestial technique. At local noon, the sun reaches its highest point (meridian passage). Measuring this altitude gives you your latitude directly."),
+    h(Steps,{items:["Track the sun with the sextant as it approaches its highest point","When it stops rising and begins to dip, note the <strong>maximum altitude</strong>","Note the <strong>exact time</strong> (UTC) from a reliable clock","<strong>Zenith distance</strong> = 90\u00b0 minus the observed altitude","Apply corrections: index error, dip (height of eye), refraction","Look up the sun\u2019s <strong>declination</strong> for that date and time from the Nautical Almanac","<strong>Latitude</strong> = zenith distance \u00b1 declination (same name: add if zenith is towards the pole; opposite name: subtract)"]}),
+    h(InfoBox,{type:"tip",title:"Accuracy"},"A careful noon sight can give latitude to within 1\u20132 nautical miles. It does not give longitude \u2014 for that you need timed sights and sight reduction tables."),
+    h(STitle,null,"Polaris for Latitude"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"In the Northern Hemisphere, Polaris (the North Star) sits almost directly above the North Pole. Its altitude above the horizon is approximately equal to your latitude."),
+    h(Steps,{items:["Find Polaris \u2014 follow the two \u201cpointer stars\u201d at the end of the Plough (Big Dipper) upward","Measure its altitude with a sextant, or estimate by hand (fist at arm\u2019s length \u2248 10\u00b0)","Apply a small correction from the Nautical Almanac (Polaris is 0.7\u00b0 from true north)","The corrected altitude is your latitude"]}),
+    h(InfoBox,{type:"warn",title:"Southern Hemisphere"},"Polaris is not visible south of the equator. Use the Southern Cross method instead (below)."),
+    h(STitle,null,"Finding North Without a Compass"),
+    h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GO,letterSpacing:"0.1em",textTransform:"uppercase",marginTop:16,marginBottom:8}},"By the stars"),
+    h(BList,{items:["<strong>Northern Hemisphere</strong> \u2014 Polaris marks north. Find it via the Plough\u2019s pointer stars","<strong>Southern Hemisphere</strong> \u2014 Extend the long axis of the Southern Cross 4.5 times its length toward the horizon. That point is roughly south","<strong>Orion</strong> \u2014 Orion\u2019s belt rises due east and sets due west, visible from both hemispheres"]}),
+    h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:GO,letterSpacing:"0.1em",textTransform:"uppercase",marginTop:16,marginBottom:8}},"By the sun"),
+    h(BList,{items:["The sun rises approximately east, sets approximately west","At local noon it bears due south (Northern Hemisphere) or due north (Southern Hemisphere)","<strong>Watch method</strong> \u2014 point the hour hand at the sun. Bisect the angle between the hour hand and 12 o\u2019clock. That line points roughly south (north in the Southern Hemisphere). Less reliable at high latitudes"]}),
+    h(STitle,null,"What You Need"),
+    h(RTable,{headers:["Item","Purpose"],rows:[
+      ["Sextant","Measures angle between celestial body and horizon"],
+      ["Accurate clock (UTC)","Time of sight \u2014 4 seconds error = 1 nm position error"],
+      ["Nautical Almanac","Declination and GHA of sun, moon, stars, planets"],
+      ["Sight reduction tables (AP3270 or HO-249)","Convert sights to position lines"],
+      ["Plotting sheet","Plot position lines to find fix"]
+    ]}),
+    h(InfoBox,{type:"tip",title:"Practice"},"Celestial navigation is a skill that requires practice. Take sights in good conditions alongside GPS to build confidence before relying on it. A sextant is only as good as the person using it.")
+  );}},
+    fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
     h(Badge,{type:"reference"},"Reference"),
     h(WeatherFrontsDiagram),
     h(RTable,{headers:["Front","Approach Signs","On Arrival","After"],rows:[
@@ -9483,7 +9527,7 @@ var CONTENT={
 var SECTIONS={
   knowyourboat:{title:"Know Your Boat",icon:"🚢",topics:[{id:"boatanatomy",name:"Boat Anatomy",preview:"Deck, hull and rigging terms"},{id:"sailnames",name:"The Sails",preview:"Mainsail, jib, spinnaker and more"}]},
   emergency:{title:"Emergency Procedures",icon:"🆘",topics:[{id:"mob",name:"Man Overboard",preview:"Immediate recovery"},{id:"mayday",name:"Mayday Call",preview:"VHF Ch 16 script"},{id:"fire",name:"Fire on Board",preview:"By type — actions"},{id:"flood",name:"Taking on Water",preview:"Plug & pump"},{id:"abandon",name:"Abandon Ship",preview:"Life raft procedure"},{id:"aground",name:"Running Aground",preview:"Assess & free"},{id:"enginefail",name:"Engine Failure",preview:"Diagnose & sail home"}]},
-  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"}]},
+  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"},{id:"celestial",name:"Celestial Navigation",preview:"Sun, stars & finding your position"}]},
   weather:{title:"Weather & Wind",icon:"🌬️",topics:[{id:"stormtactics",name:"Storm Tactics",preview:"Heave-to, lie a-hull"},{id:"fronts",name:"Weather Fronts",preview:"Warm, cold, squall prep"},{id:"barometer",name:"Barometer & Pressure",preview:"Tendency, readings, what they mean"}]},
   sailing:{title:"Sail Handling",icon:"⛵",topics:[{id:"reef",name:"Reefing",preview:"When & how"},{id:"tacking",name:"Tacking",preview:"Helm & crew actions"},{id:"sailtrim",name:"Sail Trim",preview:"Points of sail, telltales, controls"},{id:"heaveto",name:"Heaving-To",preview:"Stop the boat safely"},{id:"jibing",name:"Jibing",preview:"Controlled gybe"}]},
   seamanship:{title:"Seamanship",icon:"⚓",topics:[{id:"anchoring",name:"Anchoring",preview:"Scope, holding, procedure"},{id:"berthing",name:"Coming Alongside",preview:"Approach, lines, med moor"}]},
@@ -9504,6 +9548,7 @@ for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SE
   {id:"tide",title:"Tide Height Calculator",section:"Tools",preview:"Rule of twelfths — current depth from HW/LW"},
   {id:"units",title:"Units Converter",section:"Tools",preview:"Knots, metres, nautical miles, temperature"},
   {id:"passage",title:"Passage Planner",section:"Tools",preview:"ETA, tidal effect, departure time"},
+  {id:"celestial",title:"Celestial Navigation",section:"Navigation",preview:"Sun, stars, noon sight, Polaris",type:"content"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
   {id:"anchor",title:"Anchor Calculator",section:"Tools",preview:"Scope and chain calculator"},
@@ -9526,6 +9571,7 @@ var RELATED={
   barometer:["fronts","stormtactics","weather"],
   firstaid:["hypothermia","mob","harness"],
   tides:["anchoring","passage","fronts"],
+  celestial:["nightsailing","fogsailing","colregs"],
   sailtrim:["tacking","reef","heaveto"],
 };
 
@@ -9709,8 +9755,7 @@ function App(){
   var secS=useState(null);var secId=secS[0];var setSecId=secS[1];
   var ctS=useState(null);var contId=ctS[0];var setContId=ctS[1];
   var sqS=useState("");var searchQ=sqS[0];var setSearchQ=sqS[1];
-  var svS=useState(function(){try{return JSON.parse(localStorage.getItem("ahsaved")||"[]");}catch(e){return[];}});
-  var saved=svS[0];var setSaved=svS[1];
+
   var atS=useState("home");var activeTab=atS[0];var setActiveTab=atS[1];
   var clkS=useState("predep");var clKey=clkS[0];var setClKey=clkS[1];
   var ttS=useState("weather");var toolTab=ttS[0];var setToolTab=ttS[1];
@@ -9722,11 +9767,7 @@ function App(){
   var openTool=function(t){setToolTab(t);setActiveTab("tools");setStack([]);setView("tools");};
   var openCL=function(k){setClKey(k);setActiveTab("checklists");setStack([]);setView("checklist");};
   var openNelson=function(){setActiveTab("nelson");setStack([]);setView("nelson");};
-  var toggleSaved=function(){
-    if(!contId)return;
-    var n2=saved.includes(contId)?saved.filter(function(x){return x!==contId;}):[contId].concat(saved);
-    setSaved(n2);try{localStorage.setItem("ahsaved",JSON.stringify(n2));}catch(e){}
-  };
+
 
   var secData=secId?SECTIONS[secId]:null;
   var cont=contId?CONTENT[contId]:null;
@@ -9795,7 +9836,7 @@ function App(){
       ),
       // CONTENT
       view==="content"&&cont&&h("div",null,
-        backHeader(cont.title,h("button",{onClick:toggleSaved,style:{background:"none",border:"none",cursor:"pointer",fontSize:20,color:saved.includes(contId)?GO:"rgba(200,168,74,0.3)",padding:0}},saved.includes(contId)?"★":"☆")),
+        backHeader(cont.title),
         h("div",{style:{paddingBottom:8}},h(cont.render)),
         h(SeeAlso,{contentId:contId,onOpen:openContent})
       ),
@@ -9847,15 +9888,6 @@ function App(){
         )
       ),
       // SAVED
-      view==="saved"&&h("div",null,
-        h("div",{style:{padding:"12px 16px 10px",fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:GD,letterSpacing:"0.06em",borderBottom:"1px solid rgba(22,36,56,0.9)"}},"Saved items"),
-        saved.length===0
-          ?h("div",{style:{padding:"48px 16px",textAlign:"center"}},h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:36,color:"rgba(200,168,74,0.2)",marginBottom:12}},"☆"),h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",color:MU,fontSize:15}},"No saved items yet. Tap ☆ in any article."))
-          :saved.map(function(id){var ct=CONTENT[id];if(!ct)return null;return h("div",{key:id,style:{padding:"13px 16px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:10},onClick:function(){openContent(id);}},
-            h("span",{style:{color:GO,fontSize:14}},"★"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},ct.title)
-          );})
-      ),
       // NELSON
       view==="nelson"&&h(NelsonView),
       view==="log"&&h(ShipsLog)
