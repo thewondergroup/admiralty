@@ -1221,10 +1221,79 @@ function AnchorTool(){
         h("input",{type:"range",min:1,max:15,step:1,value:chain,onChange:function(ev){setChain(Number(ev.target.value));},style:{width:"100%"}}),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL,textAlign:"center",marginTop:4}},chain+" m")
       ),
+      // Scope diagram
+      h("div",{style:{marginBottom:14,background:"rgba(10,22,40,0.5)",borderRadius:8,padding:"10px 6px 6px",border:"1px solid rgba(40,96,168,0.15)"}},
+        (function(){
+          var svgW=300,svgH=140,waterY=32,bedY=118,boatX=260,boatY=waterY;
+          var depthPx=bedY-waterY;
+          // Calculate how much chain lies on the seabed
+          // Chain on bottom = total rode - hypotenuse needed to reach surface
+          var hyp=Math.sqrt(depth*depth+depth*depth);// minimum rode to go straight
+          var chainOnBed=rodeType==="chain"?Math.max(0,recChain-depth*Math.sqrt(1+scope*scope)/scope)*0.7:rodeType==="mixed"?Math.max(0,chain-depth)*0.8:0;
+          var bedChainPx=Math.min(chainOnBed/Math.max(recChain,1)*180,120);
+          // Anchor position with chain on bed
+          var anchorX=boatX-scope*depthPx*0.7;
+          if(anchorX<40+bedChainPx)anchorX=40+bedChainPx;
+          if(anchorX<40)anchorX=40;
+          var chainEndX=anchorX-bedChainPx;
+          if(chainEndX<30)chainEndX=30;
+          // Catenary from boat down to where chain lifts off seabed
+          var liftX=anchorX;
+          var curve=[];
+          for(var ci=0;ci<=20;ci++){
+            var t=ci/20;
+            var cx=boatX+t*(liftX-boatX);
+            var sag=Math.sin(t*Math.PI)*depthPx*0.15*(1-1/Math.max(scope,1.5));
+            var cy=boatY+t*(bedY-boatY)-sag;
+            curve.push(cx+","+cy);
+          }
+          // Split curve for mixed rode (warp=dashed near boat, chain=solid near anchor)
+          var curvePts=curve.join(" ");
+          var warpPts="";
+          if(rodeType==="mixed"&&recChain>0){
+            var warpLen=recChain-chain;
+            var warpFrac=Math.min(warpLen/recChain,1);
+            var splitIdx=Math.round(warpFrac*20);
+            warpPts=curve.slice(0,splitIdx+1).join(" ");
+            curvePts=curve.slice(splitIdx).join(" ");
+          }
+          var rodeLabel=rodeType==="mixed"?"Let out "+chain+"m chain + "+(recChain-chain)+"m warp":"Let out "+recChain+"m "+(rodeType==="chain"?"chain":"warp");
+          return h("svg",{viewBox:"0 0 "+svgW+" "+svgH,style:{width:"100%",height:"auto",display:"block"}},
+            h("line",{x1:0,y1:waterY,x2:svgW,y2:waterY,stroke:"#2860A8",strokeWidth:1,strokeDasharray:"4,3",opacity:0.5}),
+            h("text",{x:8,y:waterY-6,fill:"#2860A8",fontSize:8,fontFamily:"Inter,sans-serif",opacity:0.6},"surface"),
+            h("rect",{x:0,y:bedY,width:svgW,height:svgH-bedY,fill:"rgba(90,116,144,0.08)"}),
+            h("line",{x1:0,y1:bedY,x2:svgW,y2:bedY,stroke:"#5A7490",strokeWidth:1,opacity:0.3}),
+            [40,80,120,160,200,240].map(function(dx,di){return h("circle",{key:"s"+di,cx:dx+(di%2)*10,cy:bedY+8+di%3*3,r:1,fill:"#5A7490",opacity:0.2});}),
+            // Depth arrow
+            h("line",{x1:20,y1:waterY+4,x2:20,y2:bedY-4,stroke:"#5A7490",strokeWidth:0.7,opacity:0.5}),
+            h("polygon",{points:"20,"+(waterY+4)+" 17,"+(waterY+10)+" 23,"+(waterY+10),fill:"#5A7490",opacity:0.5}),
+            h("polygon",{points:"20,"+(bedY-4)+" 17,"+(bedY-10)+" 23,"+(bedY-10),fill:"#5A7490",opacity:0.5}),
+            h("text",{x:10,y:(waterY+bedY)/2+3,fill:"#5A7490",fontSize:8,fontFamily:"Inter,sans-serif",textAnchor:"middle",opacity:0.6},depth+"m"),
+            // Chain on seabed (flat line from chain end to anchor)
+            bedChainPx>2&&h("line",{x1:chainEndX,y1:bedY-1,x2:anchorX,y2:bedY-1,stroke:holdingCol,strokeWidth:2,opacity:0.9}),
+            // Rode curve from boat to lift-off point
+            h("polyline",{points:curvePts,fill:"none",stroke:holdingCol,strokeWidth:1.8,opacity:0.9}),
+            // Warp portion (dashed) for mixed
+            warpPts&&h("polyline",{points:warpPts,fill:"none",stroke:holdingCol,strokeWidth:1.2,opacity:0.6,strokeDasharray:"4,3"}),
+            // Anchor (at end of chain on seabed)
+            h("text",{x:bedChainPx>2?chainEndX:anchorX,y:bedY-4,fill:"#C8A84A",fontSize:14,textAnchor:"middle"},"\u2693"),
+            // Boat
+            h("g",{transform:"translate("+boatX+","+(boatY-2)+")"},
+              h("path",{d:"M-18,4 L-14,-2 L14,-2 L18,4 L-18,4 Z",fill:"#162438",stroke:"#C8A84A",strokeWidth:0.8}),
+              h("line",{x1:0,y1:-2,x2:0,y2:-22,stroke:"#C8A84A",strokeWidth:0.8}),
+              h("path",{d:"M1,-20 L1,-6 L10,-8 Z",fill:"rgba(200,168,74,0.15)",stroke:"#C8A84A",strokeWidth:0.5})
+            ),
+            // Labels
+            h("text",{x:(boatX+anchorX)/2,y:(waterY+bedY)/2-10,fill:holdingCol,fontSize:9,fontFamily:"'Crimson Text',Georgia,serif",textAnchor:"middle",fontWeight:600},scope+":1"),
+            h("text",{x:(boatX+anchorX)/2,y:(waterY+bedY)/2+4,fill:"#5A7490",fontSize:8,fontFamily:"Inter,sans-serif",textAnchor:"middle"},rodeLabel),
+            bedChainPx>10&&h("text",{x:(chainEndX+anchorX)/2,y:bedY+14,fill:"#5A7490",fontSize:7,fontFamily:"Inter,sans-serif",textAnchor:"middle"},"chain on bed")
+          );
+        })()
+      ),
       h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
         h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
           h("div",null,
-            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Total rode"),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Let out"),
             h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},recChain+" m")
           ),
           h("div",null,
@@ -1232,7 +1301,7 @@ function AnchorTool(){
             h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:holdingCol}},holdingDesc)
           )
         ),
-        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},rode)
+        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},chain+" m chain then "+(recChain-chain)+" m warp")
       ),
       scope<minScope&&h(InfoBox,{type:"warn",title:"Insufficient scope"},"Minimum safe scope for "+rodeType+" is "+minScope+":1. Increase your rode or find shallower water."),
       h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/warp: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
@@ -4316,7 +4385,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "If you can keep your head when all about you\n   Are losing theirs and blaming it on you,\nIf you can trust yourself when all men doubt you,\n   But make allowance for their doubting too;\nIf you can wait and not be tired by waiting,\n   Or being lied about, don't deal in lies,\nOr being hated, don't give way to hating,\n   And yet don't look too good, nor talk too wise:\n\nIf you can dream — and not make dreams your master;\n   If you can think — and not make thoughts your aim;\nIf you can meet with Triumph and Disaster\n   And treat those two impostors just the same;\nIf you can bear to hear the truth you've spoken\n   Twisted by knaves to make a trap for fools,\nOr watch the things you gave your life to, broken,\n   And stoop and build 'em up with worn-out tools:\n\nIf you can make one heap of all your winnings\n   And risk it on one turn of pitch-and-toss,\nAnd lose, and start again at your beginnings\n   And never breathe a word about your loss;\nIf you can force your heart and nerve and sinew\n   To serve your turn long after they are gone,\nAnd so hold on when there is nothing in you\n   Except the Will which says to them: 'Hold on!'\n\nIf you can talk with crowds and keep your virtue,\n   Or walk with Kings — nor lose the common touch,\nIf neither foes nor loving friends can hurt you,\n   If all men count with you, but none too much;\nIf you can fill the unforgiving minute\n   With sixty seconds' worth of distance run,\nYours is the Earth and everything that's in it,\n   And — which is more — you'll be a Man, my son!"
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written as advice from a father to a son. Nelson would have recognised every line.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written as advice from a father to a son.")
     );
   }},
   drakesdrum:{title:"Drake's Drum",badge:"reference",render:function(){
@@ -4334,7 +4403,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "The sea is calm tonight.\nThe tide is full, the moon lies fair\nUpon the straits; on the French coast the light\nGleams and is gone; the cliffs of England stand,\nGlimmering and vast, out in the tranquil bay.\nCome to the window, sweet is the night-air!\nOnly, from the long line of spray\nWhere the sea meets the moon-blanched land,\nListen! you hear the grating roar\nOf pebbles which the waves draw back, and fling,\nAt their return, up the high strand,\nBegin, and cease, and then again begin,\nWith tremulous cadence slow, and bring\nThe eternal note of sadness in.\n\nSophocles long ago\nHeard it on the Aegean, and it brought\nInto his mind the turbid ebb and flow\nOf human misery; we\nFind also in the sound a thought,\nHearing it by this distant northern sea.\n\nThe Sea of Faith\nWas once, too, at the full, and round earth's shore\nLay like the folds of a bright girdle furled.\nBut now I only hear\nIts melancholy, long, withdrawing roar,\nRetreating, to the breath\nOf the night-wind, down the vast edges drear\nAnd naked shingles of the world.\n\nAh, love, let us be true\nTo one another! for the world, which seems\nTo lie before us like a land of dreams,\nSo various, so beautiful, so new,\nHath really neither joy, nor love, nor light,\nNor certitude, nor peace, nor help for pain;\nAnd we are here as on a darkling plain\nSwept with confused alarms of struggle and flight,\nWhere ignorant armies clash by night."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written on his honeymoon, looking across the Channel from Dover. The opening — a night anchorage perfectly observed — is among the finest in English poetry.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written on his honeymoon, looking across the Channel from Dover. The opening is a night anchorage perfectly observed.")
     );
   }},
   convergence:{title:"The Convergence of the Twain",badge:"reference",render:function(){
@@ -4405,7 +4474,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:19,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24,maxWidth:460}},
 "Our revels now are ended. These our actors,\nAs I foretold you, were all spirits, and\nAre melted into air, into thin air;\nAnd, like the baseless fabric of this vision,\nThe cloud-capp'd towers, the gorgeous palaces,\nThe solemn temples, the great globe itself,\nYea, all which it inherit, shall dissolve,\nAnd, like this insubstantial pageant faded,\nLeave not a rack behind.\n\nWe are such stuff\nAs dreams are made on, and our little life\nIs rounded with a sleep."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6,textAlign:"left"}},"Prospero, preparing to give up his magic, reflects on the impermanence of everything. Thought to be Shakespeare's farewell to the stage. For a night watch on open water, the last three lines are enough.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6,textAlign:"left"}},"Prospero, preparing to give up his magic, reflects on the impermanence of everything. Thought to be Shakespeare's farewell to the stage.")
     );
   }},
   othello:{title:"Moving Accidents by Flood and Field",badge:"reference",render:function(){
@@ -4415,7 +4484,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "I ran it through, even from my boyish days,\nTo the very moment that he bade me tell it;\nWherein I spake of most disastrous chances,\nOf moving accidents by flood and field,\nOf hair-breadth 'scapes i' the imminent deadly breach,\nOf being taken by the insolent foe\nAnd sold to slavery; of my redemption thence\nAnd portance in my travels' history;\nWherein of antres vast and deserts idle,\nRough quarries, rocks and hills whose heads touch heaven,\nIt was my hint to speak — such was the process:\nAnd of the Cannibals that each other eat,\nThe Anthropophagi, and men whose heads\nDo grow beneath their shoulders.\n\nShe lov'd me for the dangers I had pass'd,\nAnd I lov'd her that she did pity them."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Othello explains to the Duke how Desdemona fell in love with him — by hearing the stories of his life at sea and in battle. The last two lines are among Shakespeare's finest.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Othello explains to the Duke how Desdemona fell in love with him — by hearing the stories of his life at sea and in battle.")
     );
   }},
   invictus:{title:"Invictus",badge:"reference",render:function(){
@@ -4424,7 +4493,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "Out of the night that covers me,\n   Black as the pit from pole to pole,\nI thank whatever gods may be\n   For my unconquerable soul.\n\nIn the fell clutch of circumstance\n   I have not winced nor cried aloud.\nUnder the bludgeonings of chance\n   My head is bloody, but unbowed.\n\nBeyond this place of wrath and tears\n   Looms but the Horror of the shade,\nAnd yet the menace of the years\n   Finds and shall find me unafraid.\n\nIt matters not how strait the gate,\n   How charged with punishments the scroll,\nI am the master of my fate,\n   I am the captain of my soul."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written while Henley was having his left leg amputated without anaesthetic, having already lost the other. He was twenty-six. Invictus is Latin for unconquered. Nelson would have understood.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written while Henley was having his left leg amputated without anaesthetic, having already lost the other. He was twenty-six. Invictus is Latin for unconquered.")
     );
   }},
   innisfree:{title:"The Lake Isle of Innisfree",badge:"reference",render:function(){
@@ -4433,7 +4502,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "I will arise and go now, and go to Innisfree,\nAnd a small cabin build there, of clay and wattles made;\nNine bean-rows will I have there, a hive for the honey-bee,\nAnd live alone in the bee-loud glade.\n\nAnd I shall have some peace there, for peace comes dropping slow,\nDropping from the veils of the morning to where the cricket sings;\nThere midnight's all a glimmer, and noon a purple glow,\nAnd evening full of the linnet's wings.\n\nI will arise and go now, for always night and day\nI hear lake water lapping with low sounds by the shore;\nWhile I stand on the roadway, or on the pavements grey,\nI hear it in the deep heart's core."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Yeats wrote this in London, homesick for the west of Ireland. He said he was inspired by a small fountain in a shop window in the Strand — the sound of water in the city reminded him of the lake. The last line is one of the most beautiful in poetry.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Yeats wrote this in London, homesick for the west of Ireland. He said he was inspired by a small fountain in a shop window in the Strand — the sound of water in the city reminded him of the lake.")
     );
   }},
   donotgo:{title:"Do Not Go Gentle into That Good Night",badge:"reference",render:function(){
@@ -4442,7 +4511,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "Do not go gentle into that good night,\nOld age should burn and rave at close of day;\nRage, rage against the dying of the light.\n\nThough wise men at their end know dark is right,\nBecause their words had forked no lightning they\nDo not go gentle into that good night.\n\nGood men, the last wave by, crying how bright\nTheir frail deeds might have danced in a green bay,\nRage, rage against the dying of the light.\n\nWild men who caught and sang the sun in flight,\nAnd learn, too late, they grieved it on its way,\nDo not go gentle into that good night.\n\nGrave men, near death, who see with blinding sight\nBlind eyes could blaze like meteors and be gay,\nRage, rage against the dying of the light.\n\nAnd you, my father, there on the sad height,\nCurse, bless, me now with your fierce tears, I pray.\nDo not go gentle into that good night.\nRage, rage against the dying of the light."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written to his dying father. A villanelle — the most technically demanding form in English poetry, where two lines must recur throughout. That Thomas makes the repetition feel inevitable rather than mechanical is the measure of it.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written to his dying father. A villanelle — the most technically demanding form in English poetry, where two lines must recur throughout.")
     );
   }},
   highflight:{title:"High Flight",badge:"reference",render:function(){
@@ -4461,7 +4530,7 @@ var CONTENT={
 "\u201cMen wanted for hazardous journey.\nSmall wages, bitter cold, long months\nof complete darkness, constant danger,\nsafe return doubtful.\nHonour and recognition\nin case of success.\u201d"
       ),
       h("div",{style:{width:40,height:1,background:"rgba(200,168,74,0.3)",margin:"0 auto 18px"}}),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,lineHeight:1.6,maxWidth:400}},"Five thousand men applied. Whether Shackleton actually placed this advertisement in the London papers is disputed by historians — but the spirit of it is true. His 1914 expedition to Antarctica, and the extraordinary survival of every man, is the greatest story of seamanship and leadership ever told.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,lineHeight:1.6,maxWidth:400}},"Five thousand men applied. Whether Shackleton actually placed this advertisement in the London papers is disputed by historians — but the spirit of it is true. His 1914 expedition to Antarctica, and the extraordinary survival of every man, remains one of the great feats of seamanship.")
     );
   }},
 };
@@ -4751,7 +4820,7 @@ function App(){
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
-    h("div",{style:{flex:1,overflowY:(toolTab==="chart"||toolTab==="passage"||view==="log")?"hidden":"auto",overflowX:"hidden"}},
+    h("div",{style:{flex:1,overflowY:(view==="tools"&&(toolTab==="chart"||toolTab==="passage")||view==="log")?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
       searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
@@ -6094,10 +6163,79 @@ function AnchorTool(){
         h("input",{type:"range",min:1,max:15,step:1,value:chain,onChange:function(ev){setChain(Number(ev.target.value));},style:{width:"100%"}}),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL,textAlign:"center",marginTop:4}},chain+" m")
       ),
+      // Scope diagram
+      h("div",{style:{marginBottom:14,background:"rgba(10,22,40,0.5)",borderRadius:8,padding:"10px 6px 6px",border:"1px solid rgba(40,96,168,0.15)"}},
+        (function(){
+          var svgW=300,svgH=140,waterY=32,bedY=118,boatX=260,boatY=waterY;
+          var depthPx=bedY-waterY;
+          // Calculate how much chain lies on the seabed
+          // Chain on bottom = total rode - hypotenuse needed to reach surface
+          var hyp=Math.sqrt(depth*depth+depth*depth);// minimum rode to go straight
+          var chainOnBed=rodeType==="chain"?Math.max(0,recChain-depth*Math.sqrt(1+scope*scope)/scope)*0.7:rodeType==="mixed"?Math.max(0,chain-depth)*0.8:0;
+          var bedChainPx=Math.min(chainOnBed/Math.max(recChain,1)*180,120);
+          // Anchor position with chain on bed
+          var anchorX=boatX-scope*depthPx*0.7;
+          if(anchorX<40+bedChainPx)anchorX=40+bedChainPx;
+          if(anchorX<40)anchorX=40;
+          var chainEndX=anchorX-bedChainPx;
+          if(chainEndX<30)chainEndX=30;
+          // Catenary from boat down to where chain lifts off seabed
+          var liftX=anchorX;
+          var curve=[];
+          for(var ci=0;ci<=20;ci++){
+            var t=ci/20;
+            var cx=boatX+t*(liftX-boatX);
+            var sag=Math.sin(t*Math.PI)*depthPx*0.15*(1-1/Math.max(scope,1.5));
+            var cy=boatY+t*(bedY-boatY)-sag;
+            curve.push(cx+","+cy);
+          }
+          // Split curve for mixed rode (warp=dashed near boat, chain=solid near anchor)
+          var curvePts=curve.join(" ");
+          var warpPts="";
+          if(rodeType==="mixed"&&recChain>0){
+            var warpLen=recChain-chain;
+            var warpFrac=Math.min(warpLen/recChain,1);
+            var splitIdx=Math.round(warpFrac*20);
+            warpPts=curve.slice(0,splitIdx+1).join(" ");
+            curvePts=curve.slice(splitIdx).join(" ");
+          }
+          var rodeLabel=rodeType==="mixed"?"Let out "+chain+"m chain + "+(recChain-chain)+"m warp":"Let out "+recChain+"m "+(rodeType==="chain"?"chain":"warp");
+          return h("svg",{viewBox:"0 0 "+svgW+" "+svgH,style:{width:"100%",height:"auto",display:"block"}},
+            h("line",{x1:0,y1:waterY,x2:svgW,y2:waterY,stroke:"#2860A8",strokeWidth:1,strokeDasharray:"4,3",opacity:0.5}),
+            h("text",{x:8,y:waterY-6,fill:"#2860A8",fontSize:8,fontFamily:"Inter,sans-serif",opacity:0.6},"surface"),
+            h("rect",{x:0,y:bedY,width:svgW,height:svgH-bedY,fill:"rgba(90,116,144,0.08)"}),
+            h("line",{x1:0,y1:bedY,x2:svgW,y2:bedY,stroke:"#5A7490",strokeWidth:1,opacity:0.3}),
+            [40,80,120,160,200,240].map(function(dx,di){return h("circle",{key:"s"+di,cx:dx+(di%2)*10,cy:bedY+8+di%3*3,r:1,fill:"#5A7490",opacity:0.2});}),
+            // Depth arrow
+            h("line",{x1:20,y1:waterY+4,x2:20,y2:bedY-4,stroke:"#5A7490",strokeWidth:0.7,opacity:0.5}),
+            h("polygon",{points:"20,"+(waterY+4)+" 17,"+(waterY+10)+" 23,"+(waterY+10),fill:"#5A7490",opacity:0.5}),
+            h("polygon",{points:"20,"+(bedY-4)+" 17,"+(bedY-10)+" 23,"+(bedY-10),fill:"#5A7490",opacity:0.5}),
+            h("text",{x:10,y:(waterY+bedY)/2+3,fill:"#5A7490",fontSize:8,fontFamily:"Inter,sans-serif",textAnchor:"middle",opacity:0.6},depth+"m"),
+            // Chain on seabed (flat line from chain end to anchor)
+            bedChainPx>2&&h("line",{x1:chainEndX,y1:bedY-1,x2:anchorX,y2:bedY-1,stroke:holdingCol,strokeWidth:2,opacity:0.9}),
+            // Rode curve from boat to lift-off point
+            h("polyline",{points:curvePts,fill:"none",stroke:holdingCol,strokeWidth:1.8,opacity:0.9}),
+            // Warp portion (dashed) for mixed
+            warpPts&&h("polyline",{points:warpPts,fill:"none",stroke:holdingCol,strokeWidth:1.2,opacity:0.6,strokeDasharray:"4,3"}),
+            // Anchor (at end of chain on seabed)
+            h("text",{x:bedChainPx>2?chainEndX:anchorX,y:bedY-4,fill:"#C8A84A",fontSize:14,textAnchor:"middle"},"\u2693"),
+            // Boat
+            h("g",{transform:"translate("+boatX+","+(boatY-2)+")"},
+              h("path",{d:"M-18,4 L-14,-2 L14,-2 L18,4 L-18,4 Z",fill:"#162438",stroke:"#C8A84A",strokeWidth:0.8}),
+              h("line",{x1:0,y1:-2,x2:0,y2:-22,stroke:"#C8A84A",strokeWidth:0.8}),
+              h("path",{d:"M1,-20 L1,-6 L10,-8 Z",fill:"rgba(200,168,74,0.15)",stroke:"#C8A84A",strokeWidth:0.5})
+            ),
+            // Labels
+            h("text",{x:(boatX+anchorX)/2,y:(waterY+bedY)/2-10,fill:holdingCol,fontSize:9,fontFamily:"'Crimson Text',Georgia,serif",textAnchor:"middle",fontWeight:600},scope+":1"),
+            h("text",{x:(boatX+anchorX)/2,y:(waterY+bedY)/2+4,fill:"#5A7490",fontSize:8,fontFamily:"Inter,sans-serif",textAnchor:"middle"},rodeLabel),
+            bedChainPx>10&&h("text",{x:(chainEndX+anchorX)/2,y:bedY+14,fill:"#5A7490",fontSize:7,fontFamily:"Inter,sans-serif",textAnchor:"middle"},"chain on bed")
+          );
+        })()
+      ),
       h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
         h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
           h("div",null,
-            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Total rode"),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Let out"),
             h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},recChain+" m")
           ),
           h("div",null,
@@ -6105,7 +6243,7 @@ function AnchorTool(){
             h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:holdingCol}},holdingDesc)
           )
         ),
-        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},rode)
+        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},chain+" m chain then "+(recChain-chain)+" m warp")
       ),
       scope<minScope&&h(InfoBox,{type:"warn",title:"Insufficient scope"},"Minimum safe scope for "+rodeType+" is "+minScope+":1. Increase your rode or find shallower water."),
       h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/warp: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
@@ -9189,7 +9327,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "If you can keep your head when all about you\n   Are losing theirs and blaming it on you,\nIf you can trust yourself when all men doubt you,\n   But make allowance for their doubting too;\nIf you can wait and not be tired by waiting,\n   Or being lied about, don't deal in lies,\nOr being hated, don't give way to hating,\n   And yet don't look too good, nor talk too wise:\n\nIf you can dream — and not make dreams your master;\n   If you can think — and not make thoughts your aim;\nIf you can meet with Triumph and Disaster\n   And treat those two impostors just the same;\nIf you can bear to hear the truth you've spoken\n   Twisted by knaves to make a trap for fools,\nOr watch the things you gave your life to, broken,\n   And stoop and build 'em up with worn-out tools:\n\nIf you can make one heap of all your winnings\n   And risk it on one turn of pitch-and-toss,\nAnd lose, and start again at your beginnings\n   And never breathe a word about your loss;\nIf you can force your heart and nerve and sinew\n   To serve your turn long after they are gone,\nAnd so hold on when there is nothing in you\n   Except the Will which says to them: 'Hold on!'\n\nIf you can talk with crowds and keep your virtue,\n   Or walk with Kings — nor lose the common touch,\nIf neither foes nor loving friends can hurt you,\n   If all men count with you, but none too much;\nIf you can fill the unforgiving minute\n   With sixty seconds' worth of distance run,\nYours is the Earth and everything that's in it,\n   And — which is more — you'll be a Man, my son!"
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written as advice from a father to a son. Nelson would have recognised every line.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written as advice from a father to a son.")
     );
   }},
   drakesdrum:{title:"Drake's Drum",badge:"reference",render:function(){
@@ -9207,7 +9345,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "The sea is calm tonight.\nThe tide is full, the moon lies fair\nUpon the straits; on the French coast the light\nGleams and is gone; the cliffs of England stand,\nGlimmering and vast, out in the tranquil bay.\nCome to the window, sweet is the night-air!\nOnly, from the long line of spray\nWhere the sea meets the moon-blanched land,\nListen! you hear the grating roar\nOf pebbles which the waves draw back, and fling,\nAt their return, up the high strand,\nBegin, and cease, and then again begin,\nWith tremulous cadence slow, and bring\nThe eternal note of sadness in.\n\nSophocles long ago\nHeard it on the Aegean, and it brought\nInto his mind the turbid ebb and flow\nOf human misery; we\nFind also in the sound a thought,\nHearing it by this distant northern sea.\n\nThe Sea of Faith\nWas once, too, at the full, and round earth's shore\nLay like the folds of a bright girdle furled.\nBut now I only hear\nIts melancholy, long, withdrawing roar,\nRetreating, to the breath\nOf the night-wind, down the vast edges drear\nAnd naked shingles of the world.\n\nAh, love, let us be true\nTo one another! for the world, which seems\nTo lie before us like a land of dreams,\nSo various, so beautiful, so new,\nHath really neither joy, nor love, nor light,\nNor certitude, nor peace, nor help for pain;\nAnd we are here as on a darkling plain\nSwept with confused alarms of struggle and flight,\nWhere ignorant armies clash by night."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written on his honeymoon, looking across the Channel from Dover. The opening — a night anchorage perfectly observed — is among the finest in English poetry.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written on his honeymoon, looking across the Channel from Dover. The opening is a night anchorage perfectly observed.")
     );
   }},
   convergence:{title:"The Convergence of the Twain",badge:"reference",render:function(){
@@ -9278,7 +9416,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:19,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24,maxWidth:460}},
 "Our revels now are ended. These our actors,\nAs I foretold you, were all spirits, and\nAre melted into air, into thin air;\nAnd, like the baseless fabric of this vision,\nThe cloud-capp'd towers, the gorgeous palaces,\nThe solemn temples, the great globe itself,\nYea, all which it inherit, shall dissolve,\nAnd, like this insubstantial pageant faded,\nLeave not a rack behind.\n\nWe are such stuff\nAs dreams are made on, and our little life\nIs rounded with a sleep."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6,textAlign:"left"}},"Prospero, preparing to give up his magic, reflects on the impermanence of everything. Thought to be Shakespeare's farewell to the stage. For a night watch on open water, the last three lines are enough.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6,textAlign:"left"}},"Prospero, preparing to give up his magic, reflects on the impermanence of everything. Thought to be Shakespeare's farewell to the stage.")
     );
   }},
   othello:{title:"Moving Accidents by Flood and Field",badge:"reference",render:function(){
@@ -9288,7 +9426,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "I ran it through, even from my boyish days,\nTo the very moment that he bade me tell it;\nWherein I spake of most disastrous chances,\nOf moving accidents by flood and field,\nOf hair-breadth 'scapes i' the imminent deadly breach,\nOf being taken by the insolent foe\nAnd sold to slavery; of my redemption thence\nAnd portance in my travels' history;\nWherein of antres vast and deserts idle,\nRough quarries, rocks and hills whose heads touch heaven,\nIt was my hint to speak — such was the process:\nAnd of the Cannibals that each other eat,\nThe Anthropophagi, and men whose heads\nDo grow beneath their shoulders.\n\nShe lov'd me for the dangers I had pass'd,\nAnd I lov'd her that she did pity them."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Othello explains to the Duke how Desdemona fell in love with him — by hearing the stories of his life at sea and in battle. The last two lines are among Shakespeare's finest.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Othello explains to the Duke how Desdemona fell in love with him — by hearing the stories of his life at sea and in battle.")
     );
   }},
   invictus:{title:"Invictus",badge:"reference",render:function(){
@@ -9297,7 +9435,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "Out of the night that covers me,\n   Black as the pit from pole to pole,\nI thank whatever gods may be\n   For my unconquerable soul.\n\nIn the fell clutch of circumstance\n   I have not winced nor cried aloud.\nUnder the bludgeonings of chance\n   My head is bloody, but unbowed.\n\nBeyond this place of wrath and tears\n   Looms but the Horror of the shade,\nAnd yet the menace of the years\n   Finds and shall find me unafraid.\n\nIt matters not how strait the gate,\n   How charged with punishments the scroll,\nI am the master of my fate,\n   I am the captain of my soul."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written while Henley was having his left leg amputated without anaesthetic, having already lost the other. He was twenty-six. Invictus is Latin for unconquered. Nelson would have understood.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written while Henley was having his left leg amputated without anaesthetic, having already lost the other. He was twenty-six. Invictus is Latin for unconquered.")
     );
   }},
   innisfree:{title:"The Lake Isle of Innisfree",badge:"reference",render:function(){
@@ -9306,7 +9444,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "I will arise and go now, and go to Innisfree,\nAnd a small cabin build there, of clay and wattles made;\nNine bean-rows will I have there, a hive for the honey-bee,\nAnd live alone in the bee-loud glade.\n\nAnd I shall have some peace there, for peace comes dropping slow,\nDropping from the veils of the morning to where the cricket sings;\nThere midnight's all a glimmer, and noon a purple glow,\nAnd evening full of the linnet's wings.\n\nI will arise and go now, for always night and day\nI hear lake water lapping with low sounds by the shore;\nWhile I stand on the roadway, or on the pavements grey,\nI hear it in the deep heart's core."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Yeats wrote this in London, homesick for the west of Ireland. He said he was inspired by a small fountain in a shop window in the Strand — the sound of water in the city reminded him of the lake. The last line is one of the most beautiful in poetry.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Yeats wrote this in London, homesick for the west of Ireland. He said he was inspired by a small fountain in a shop window in the Strand — the sound of water in the city reminded him of the lake.")
     );
   }},
   donotgo:{title:"Do Not Go Gentle into That Good Night",badge:"reference",render:function(){
@@ -9315,7 +9453,7 @@ var CONTENT={
       h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:17,color:WH,lineHeight:1.9,whiteSpace:"pre-line",marginBottom:24}},
 "Do not go gentle into that good night,\nOld age should burn and rave at close of day;\nRage, rage against the dying of the light.\n\nThough wise men at their end know dark is right,\nBecause their words had forked no lightning they\nDo not go gentle into that good night.\n\nGood men, the last wave by, crying how bright\nTheir frail deeds might have danced in a green bay,\nRage, rage against the dying of the light.\n\nWild men who caught and sang the sun in flight,\nAnd learn, too late, they grieved it on its way,\nDo not go gentle into that good night.\n\nGrave men, near death, who see with blinding sight\nBlind eyes could blaze like meteors and be gay,\nRage, rage against the dying of the light.\n\nAnd you, my father, there on the sad height,\nCurse, bless, me now with your fierce tears, I pray.\nDo not go gentle into that good night.\nRage, rage against the dying of the light."
       ),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written to his dying father. A villanelle — the most technically demanding form in English poetry, where two lines must recur throughout. That Thomas makes the repetition feel inevitable rather than mechanical is the measure of it.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,borderLeft:"3px solid rgba(200,168,74,0.25)",paddingLeft:14,lineHeight:1.6}},"Written to his dying father. A villanelle — the most technically demanding form in English poetry, where two lines must recur throughout.")
     );
   }},
   highflight:{title:"High Flight",badge:"reference",render:function(){
@@ -9334,7 +9472,7 @@ var CONTENT={
 "\u201cMen wanted for hazardous journey.\nSmall wages, bitter cold, long months\nof complete darkness, constant danger,\nsafe return doubtful.\nHonour and recognition\nin case of success.\u201d"
       ),
       h("div",{style:{width:40,height:1,background:"rgba(200,168,74,0.3)",margin:"0 auto 18px"}}),
-      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,lineHeight:1.6,maxWidth:400}},"Five thousand men applied. Whether Shackleton actually placed this advertisement in the London papers is disputed by historians — but the spirit of it is true. His 1914 expedition to Antarctica, and the extraordinary survival of every man, is the greatest story of seamanship and leadership ever told.")
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:13,color:MU,lineHeight:1.6,maxWidth:400}},"Five thousand men applied. Whether Shackleton actually placed this advertisement in the London papers is disputed by historians — but the spirit of it is true. His 1914 expedition to Antarctica, and the extraordinary survival of every man, remains one of the great feats of seamanship.")
     );
   }},
 };
@@ -9624,7 +9762,7 @@ function App(){
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
-    h("div",{style:{flex:1,overflowY:(toolTab==="chart"||toolTab==="passage"||view==="log")?"hidden":"auto",overflowX:"hidden"}},
+    h("div",{style:{flex:1,overflowY:(view==="tools"&&(toolTab==="chart"||toolTab==="passage")||view==="log")?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
       searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
