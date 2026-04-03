@@ -1088,7 +1088,7 @@ function AnchorTool(){
   var dS=useState(4);var depth=dS[0];var setDepth=dS[1];
   var sS=useState(7);var scope=sS[0];var setScope=sS[1];
   var cS=useState(3);var chain=cS[0];var setChain=cS[1];
-  var tS=useState("mixed");var rodeType=tS[0];var setRodeType=tS[1];
+  var tS=useState("chain");var rodeType=tS[0];var setRodeType=tS[1];
   // Anchor watch state
   var watchS=useState(false);var watching=watchS[0];var setWatching=watchS[1];
   var anchorPosS=useState(null);var anchorPos=anchorPosS[0];var setAnchorPos=anchorPosS[1];
@@ -1102,7 +1102,7 @@ function AnchorTool(){
 
   var minScope=rodeType==="chain"?3:rodeType==="mixed"?5:7;
   var recChain=Math.ceil(depth*scope);
-  var rode=rodeType==="chain"?recChain:rodeType==="mixed"?chain+" m chain + "+(recChain-chain)+" m warp":recChain+" m warp";
+  var rode=rodeType==="chain"?recChain:rodeType==="mixed"?chain+" m chain + "+(recChain-chain)+" m rope":recChain+" m rope";
   var holdingDesc=scope>=7?"Excellent":scope>=5?"Good":scope>=3?"Minimum":"Insufficient";
   var holdingCol=scope>=7?GR:scope>=5?GO:scope>=3?AM:RE;
 
@@ -1201,6 +1201,20 @@ function AnchorTool(){
       h(InfoBox,{type:"tip",title:"Tip"},"Set the radius to roughly your rode length. GPS accuracy is typically 3\u201310 m, so set at least 20 m to avoid false alarms. Keep the screen on or use your browser\u2019s background location setting.")
     ):h("div",{style:{flex:1,overflowY:"auto",padding:16}},
       h(STitle,{noTop:true},"Anchor Scope"),
+      h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:14}},
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Let out"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:28,color:GL,fontWeight:600}},recChain+" m")
+          ),
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Holding"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:28,color:holdingCol,fontWeight:600}},holdingDesc)
+          )
+        ),
+        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:GL,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},chain+" m chain then "+(recChain-chain)+" m rope"),
+        rodeType!=="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",marginTop:4}},depth+" m depth \u00d7 "+scope+":1 scope")
+      ),
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
         h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
           h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Depth at HW (m)"),
@@ -1214,7 +1228,7 @@ function AnchorTool(){
         )
       ),
       h("div",{style:{display:"flex",gap:6,marginBottom:14}},
-        ["chain","mixed","warp"].map(function(t){return h("button",{key:t,onClick:function(){setRodeType(t);},style:{flex:1,background:rodeType===t?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(rodeType===t?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:rodeType===t?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13}},t.charAt(0).toUpperCase()+t.slice(1));})
+        ["chain","mixed","rope"].map(function(t){return h("button",{key:t,onClick:function(){setRodeType(t);},style:{flex:1,background:rodeType===t?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(rodeType===t?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:rodeType===t?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13}},t.charAt(0).toUpperCase()+t.slice(1));})
       ),
       rodeType==="mixed"&&h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Chain length (m)"),
@@ -1222,9 +1236,9 @@ function AnchorTool(){
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL,textAlign:"center",marginTop:4}},chain+" m")
       ),
       // Scope diagram
-      h("div",{style:{marginBottom:14,background:"rgba(10,22,40,0.5)",borderRadius:8,padding:"10px 6px 6px",border:"1px solid rgba(40,96,168,0.15)"}},
+      h("div",{style:{marginBottom:14,background:"rgba(10,22,40,0.5)",borderRadius:8,padding:"10px 6px 6px",border:"1px solid rgba(40,96,168,0.15)",transition:"all 0.3s ease"}},
         (function(){
-          var svgW=300,svgH=140,waterY=32,bedY=118,boatX=260,boatY=waterY;
+          var svgW=300,svgH=140,waterY=32,bedY=Math.round(70+Math.min(depth,20)*2.75),boatX=260,boatY=waterY;
           var depthPx=bedY-waterY;
           // Calculate how much chain lies on the seabed
           // Chain on bottom = total rode - hypotenuse needed to reach surface
@@ -1247,17 +1261,17 @@ function AnchorTool(){
             var cy=boatY+t*(bedY-boatY)-sag;
             curve.push(cx+","+cy);
           }
-          // Split curve for mixed rode (warp=dashed near boat, chain=solid near anchor)
+          // Split curve for mixed (rope=dashed near boat, chain=solid near anchor)
           var curvePts=curve.join(" ");
-          var warpPts="";
+          var ropePts="";
           if(rodeType==="mixed"&&recChain>0){
-            var warpLen=recChain-chain;
-            var warpFrac=Math.min(warpLen/recChain,1);
-            var splitIdx=Math.round(warpFrac*20);
-            warpPts=curve.slice(0,splitIdx+1).join(" ");
+            var ropeLen=recChain-chain;
+            var ropeFrac=Math.min(ropeLen/recChain,1);
+            var splitIdx=Math.round(ropeFrac*20);
+            ropePts=curve.slice(0,splitIdx+1).join(" ");
             curvePts=curve.slice(splitIdx).join(" ");
           }
-          var rodeLabel=rodeType==="mixed"?"Let out "+chain+"m chain + "+(recChain-chain)+"m warp":"Let out "+recChain+"m "+(rodeType==="chain"?"chain":"warp");
+          var rodeLabel=rodeType==="mixed"?"Let out "+chain+"m chain + "+(recChain-chain)+"m rope":"Let out "+recChain+"m "+(rodeType==="chain"?"chain":"rope");
           return h("svg",{viewBox:"0 0 "+svgW+" "+svgH,style:{width:"100%",height:"auto",display:"block"}},
             h("line",{x1:0,y1:waterY,x2:svgW,y2:waterY,stroke:"#2860A8",strokeWidth:1,strokeDasharray:"4,3",opacity:0.5}),
             h("text",{x:8,y:waterY-6,fill:"#2860A8",fontSize:8,fontFamily:"Inter,sans-serif",opacity:0.6},"surface"),
@@ -1273,8 +1287,8 @@ function AnchorTool(){
             bedChainPx>2&&h("line",{x1:chainEndX,y1:bedY-1,x2:anchorX,y2:bedY-1,stroke:holdingCol,strokeWidth:2,opacity:0.9}),
             // Rode curve from boat to lift-off point
             h("polyline",{points:curvePts,fill:"none",stroke:holdingCol,strokeWidth:1.8,opacity:0.9}),
-            // Warp portion (dashed) for mixed
-            warpPts&&h("polyline",{points:warpPts,fill:"none",stroke:holdingCol,strokeWidth:1.2,opacity:0.6,strokeDasharray:"4,3"}),
+            // Rope portion (dashed) for mixed
+            ropePts&&h("polyline",{points:ropePts,fill:"none",stroke:holdingCol,strokeWidth:1.2,opacity:0.6,strokeDasharray:"4,3"}),
             // Anchor (at end of chain on seabed)
             h("text",{x:bedChainPx>2?chainEndX:anchorX,y:bedY-4,fill:"#C8A84A",fontSize:14,textAnchor:"middle"},"\u2693"),
             // Boat
@@ -1290,21 +1304,9 @@ function AnchorTool(){
           );
         })()
       ),
-      h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
-        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
-          h("div",null,
-            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Let out"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},recChain+" m")
-          ),
-          h("div",null,
-            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Holding"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:holdingCol}},holdingDesc)
-          )
-        ),
-        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},chain+" m chain then "+(recChain-chain)+" m warp")
-      ),
+
       scope<minScope&&h(InfoBox,{type:"warn",title:"Insufficient scope"},"Minimum safe scope for "+rodeType+" is "+minScope+":1. Increase your rode or find shallower water."),
-      h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/warp: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
+      h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/rope: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
     )
   );
 }
@@ -6030,7 +6032,7 @@ function AnchorTool(){
   var dS=useState(4);var depth=dS[0];var setDepth=dS[1];
   var sS=useState(7);var scope=sS[0];var setScope=sS[1];
   var cS=useState(3);var chain=cS[0];var setChain=cS[1];
-  var tS=useState("mixed");var rodeType=tS[0];var setRodeType=tS[1];
+  var tS=useState("chain");var rodeType=tS[0];var setRodeType=tS[1];
   // Anchor watch state
   var watchS=useState(false);var watching=watchS[0];var setWatching=watchS[1];
   var anchorPosS=useState(null);var anchorPos=anchorPosS[0];var setAnchorPos=anchorPosS[1];
@@ -6044,7 +6046,7 @@ function AnchorTool(){
 
   var minScope=rodeType==="chain"?3:rodeType==="mixed"?5:7;
   var recChain=Math.ceil(depth*scope);
-  var rode=rodeType==="chain"?recChain:rodeType==="mixed"?chain+" m chain + "+(recChain-chain)+" m warp":recChain+" m warp";
+  var rode=rodeType==="chain"?recChain:rodeType==="mixed"?chain+" m chain + "+(recChain-chain)+" m rope":recChain+" m rope";
   var holdingDesc=scope>=7?"Excellent":scope>=5?"Good":scope>=3?"Minimum":"Insufficient";
   var holdingCol=scope>=7?GR:scope>=5?GO:scope>=3?AM:RE;
 
@@ -6143,6 +6145,20 @@ function AnchorTool(){
       h(InfoBox,{type:"tip",title:"Tip"},"Set the radius to roughly your rode length. GPS accuracy is typically 3\u201310 m, so set at least 20 m to avoid false alarms. Keep the screen on or use your browser\u2019s background location setting.")
     ):h("div",{style:{flex:1,overflowY:"auto",padding:16}},
       h(STitle,{noTop:true},"Anchor Scope"),
+      h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:14}},
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Let out"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:28,color:GL,fontWeight:600}},recChain+" m")
+          ),
+          h("div",null,
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Holding"),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:28,color:holdingCol,fontWeight:600}},holdingDesc)
+          )
+        ),
+        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:GL,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},chain+" m chain then "+(recChain-chain)+" m rope"),
+        rodeType!=="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",marginTop:4}},depth+" m depth \u00d7 "+scope+":1 scope")
+      ),
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
         h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px"}},
           h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Depth at HW (m)"),
@@ -6156,7 +6172,7 @@ function AnchorTool(){
         )
       ),
       h("div",{style:{display:"flex",gap:6,marginBottom:14}},
-        ["chain","mixed","warp"].map(function(t){return h("button",{key:t,onClick:function(){setRodeType(t);},style:{flex:1,background:rodeType===t?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(rodeType===t?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:rodeType===t?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13}},t.charAt(0).toUpperCase()+t.slice(1));})
+        ["chain","mixed","rope"].map(function(t){return h("button",{key:t,onClick:function(){setRodeType(t);},style:{flex:1,background:rodeType===t?"rgba(200,168,74,0.1)":NC,border:"1px solid "+(rodeType===t?"rgba(200,168,74,0.35)":"rgba(22,36,56,1)"),borderRadius:6,padding:"9px",cursor:"pointer",color:rodeType===t?GO:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:13}},t.charAt(0).toUpperCase()+t.slice(1));})
       ),
       rodeType==="mixed"&&h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:14}},
         h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}},"Chain length (m)"),
@@ -6164,9 +6180,9 @@ function AnchorTool(){
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL,textAlign:"center",marginTop:4}},chain+" m")
       ),
       // Scope diagram
-      h("div",{style:{marginBottom:14,background:"rgba(10,22,40,0.5)",borderRadius:8,padding:"10px 6px 6px",border:"1px solid rgba(40,96,168,0.15)"}},
+      h("div",{style:{marginBottom:14,background:"rgba(10,22,40,0.5)",borderRadius:8,padding:"10px 6px 6px",border:"1px solid rgba(40,96,168,0.15)",transition:"all 0.3s ease"}},
         (function(){
-          var svgW=300,svgH=140,waterY=32,bedY=118,boatX=260,boatY=waterY;
+          var svgW=300,svgH=140,waterY=32,bedY=Math.round(70+Math.min(depth,20)*2.75),boatX=260,boatY=waterY;
           var depthPx=bedY-waterY;
           // Calculate how much chain lies on the seabed
           // Chain on bottom = total rode - hypotenuse needed to reach surface
@@ -6189,17 +6205,17 @@ function AnchorTool(){
             var cy=boatY+t*(bedY-boatY)-sag;
             curve.push(cx+","+cy);
           }
-          // Split curve for mixed rode (warp=dashed near boat, chain=solid near anchor)
+          // Split curve for mixed (rope=dashed near boat, chain=solid near anchor)
           var curvePts=curve.join(" ");
-          var warpPts="";
+          var ropePts="";
           if(rodeType==="mixed"&&recChain>0){
-            var warpLen=recChain-chain;
-            var warpFrac=Math.min(warpLen/recChain,1);
-            var splitIdx=Math.round(warpFrac*20);
-            warpPts=curve.slice(0,splitIdx+1).join(" ");
+            var ropeLen=recChain-chain;
+            var ropeFrac=Math.min(ropeLen/recChain,1);
+            var splitIdx=Math.round(ropeFrac*20);
+            ropePts=curve.slice(0,splitIdx+1).join(" ");
             curvePts=curve.slice(splitIdx).join(" ");
           }
-          var rodeLabel=rodeType==="mixed"?"Let out "+chain+"m chain + "+(recChain-chain)+"m warp":"Let out "+recChain+"m "+(rodeType==="chain"?"chain":"warp");
+          var rodeLabel=rodeType==="mixed"?"Let out "+chain+"m chain + "+(recChain-chain)+"m rope":"Let out "+recChain+"m "+(rodeType==="chain"?"chain":"rope");
           return h("svg",{viewBox:"0 0 "+svgW+" "+svgH,style:{width:"100%",height:"auto",display:"block"}},
             h("line",{x1:0,y1:waterY,x2:svgW,y2:waterY,stroke:"#2860A8",strokeWidth:1,strokeDasharray:"4,3",opacity:0.5}),
             h("text",{x:8,y:waterY-6,fill:"#2860A8",fontSize:8,fontFamily:"Inter,sans-serif",opacity:0.6},"surface"),
@@ -6215,8 +6231,8 @@ function AnchorTool(){
             bedChainPx>2&&h("line",{x1:chainEndX,y1:bedY-1,x2:anchorX,y2:bedY-1,stroke:holdingCol,strokeWidth:2,opacity:0.9}),
             // Rode curve from boat to lift-off point
             h("polyline",{points:curvePts,fill:"none",stroke:holdingCol,strokeWidth:1.8,opacity:0.9}),
-            // Warp portion (dashed) for mixed
-            warpPts&&h("polyline",{points:warpPts,fill:"none",stroke:holdingCol,strokeWidth:1.2,opacity:0.6,strokeDasharray:"4,3"}),
+            // Rope portion (dashed) for mixed
+            ropePts&&h("polyline",{points:ropePts,fill:"none",stroke:holdingCol,strokeWidth:1.2,opacity:0.6,strokeDasharray:"4,3"}),
             // Anchor (at end of chain on seabed)
             h("text",{x:bedChainPx>2?chainEndX:anchorX,y:bedY-4,fill:"#C8A84A",fontSize:14,textAnchor:"middle"},"\u2693"),
             // Boat
@@ -6232,21 +6248,9 @@ function AnchorTool(){
           );
         })()
       ),
-      h("div",{style:{background:"rgba(40,96,168,0.08)",border:"1px solid rgba(40,96,168,0.2)",borderRadius:10,padding:"16px",marginBottom:12}},
-        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,textAlign:"center",marginBottom:10}},
-          h("div",null,
-            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Let out"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:GL}},recChain+" m")
-          ),
-          h("div",null,
-            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}},"Holding"),
-            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,color:holdingCol}},holdingDesc)
-          )
-        ),
-        rodeType==="mixed"&&h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:MU,textAlign:"center",background:"rgba(10,22,40,0.6)",borderRadius:6,padding:"8px 12px"}},chain+" m chain then "+(recChain-chain)+" m warp")
-      ),
+
       scope<minScope&&h(InfoBox,{type:"warn",title:"Insufficient scope"},"Minimum safe scope for "+rodeType+" is "+minScope+":1. Increase your rode or find shallower water."),
-      h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/warp: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
+      h(InfoBox,{type:"tip",title:"Rule of thumb"},"All chain: 3:1 calm, 5:1 moderate. Mixed/rope: 5:1 minimum, 7:1 in wind. Always add 1\u20132 m for freeboard and tidal rise.")
     )
   );
 }
