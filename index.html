@@ -1619,6 +1619,7 @@ function HomeScreen(props){
     {id:"seamanship",icon:"⚓",label:"Seamanship",desc:"Anchoring · Coming Alongside"},
     {id:"ropework",icon:"🪢",label:"Ropework & Knots",desc:"Bowline · Cleat hitch · Sheet bend"},
     {id:"emergency",icon:"🆘",label:"Emergency Procedures",desc:"MOB · Fire · Flood · Mayday · Abandon Ship"},
+    {id:"comms",icon:"🚩",label:"Communications",desc:"Signal flags · Morse code · Phonetic alphabet"},
     {id:"safety",icon:"🦺",label:"Safety & First Aid",desc:"First aid · Harness · Hypothermia"},
     {id:"cocktails",icon:"🍹",label:"Elixirs of the Sea",desc:"The High Seas · Dark 'n Stormy · Navy Grog"},
     {id:"shanties",icon:"🎵",label:"Shanties & Songs",desc:"How Pleasant · Hanging Johnny · Shallow Brown"},
@@ -3986,6 +3987,179 @@ var CONTENT={
       ["1982","The Falklands \u2014 a task force sails 8,000 miles in three weeks to retake islands most people had never heard of. Six ships lost, 255 killed. The islands were liberated in 74 days."]
     ]})
   );}},
+    signalflags:{title:"International Signal Flags",badge:"reference",render:function(){
+    var flags=[
+      {letter:"A",name:"Alfa",meaning:"Diver down; keep clear",colors:"white/blue",desc:"White and blue, swallow-tailed"},
+      {letter:"B",name:"Bravo",meaning:"Dangerous cargo on board",colors:"red",desc:"Red burgee"},
+      {letter:"C",name:"Charlie",meaning:"Yes / affirmative",colors:"blue/white/red/white/blue",desc:"Five horizontal stripes"},
+      {letter:"D",name:"Delta",meaning:"Keep clear; manoeuvring with difficulty",colors:"yellow/blue/yellow",desc:"Yellow over blue over yellow"},
+      {letter:"E",name:"Echo",meaning:"Altering course to starboard",colors:"blue/red",desc:"Blue over red"},
+      {letter:"F",name:"Foxtrot",meaning:"I am disabled; communicate with me",colors:"white/red diamond",desc:"Red diamond on white"},
+      {letter:"G",name:"Golf",meaning:"I require a pilot",colors:"yellow/blue vertical",desc:"Six vertical stripes"},
+      {letter:"H",name:"Hotel",meaning:"Pilot on board",colors:"white/red halves",desc:"White and red vertical halves"},
+      {letter:"I",name:"India",meaning:"Altering course to port",colors:"yellow/black dot",desc:"Black dot on yellow"},
+      {letter:"J",name:"Juliet",meaning:"On fire; keep clear",colors:"blue/white/blue",desc:"Blue, white horizontal stripe, blue"},
+      {letter:"K",name:"Kilo",meaning:"I wish to communicate with you",colors:"yellow/blue halves",desc:"Yellow and blue vertical halves"},
+      {letter:"L",name:"Lima",meaning:"Stop instantly",colors:"yellow/black quarters",desc:"Yellow and black quartered"},
+      {letter:"M",name:"Mike",meaning:"I am stopped; making no way",colors:"blue/white/blue",desc:"Blue X on white"},
+      {letter:"N",name:"November",meaning:"No / negative",colors:"blue/white chequered",desc:"Blue and white chequered"},
+      {letter:"O",name:"Oscar",meaning:"Man overboard",colors:"red/yellow diagonal",desc:"Red and yellow diagonally divided"},
+      {letter:"P",name:"Papa",meaning:"About to sail; all report on board",colors:"blue/white centre",desc:"Blue with white centre (the Blue Peter)"},
+      {letter:"Q",name:"Quebec",meaning:"Ship is healthy; request free pratique",colors:"yellow",desc:"Plain yellow"},
+      {letter:"R",name:"Romeo",meaning:"No single-letter meaning",colors:"red/yellow cross",desc:"Yellow cross on red"},
+      {letter:"S",name:"Sierra",meaning:"Engines going astern",colors:"white/blue centre",desc:"White with blue centre"},
+      {letter:"T",name:"Tango",meaning:"Keep clear; engaged in trawling",colors:"red/white/blue vertical",desc:"Red, white, blue vertical"},
+      {letter:"U",name:"Uniform",meaning:"You are running into danger",colors:"red/white quarters",desc:"Red and white quartered"},
+      {letter:"V",name:"Victor",meaning:"I require assistance",colors:"white/red X",desc:"Red X on white"},
+      {letter:"W",name:"Whiskey",meaning:"I require medical assistance",colors:"blue/white/red",desc:"Blue, white centre, red border"},
+      {letter:"X",name:"X-ray",meaning:"Stop and watch for my signals",colors:"white/blue cross",desc:"Blue cross on white"},
+      {letter:"Y",name:"Yankee",meaning:"I am dragging my anchor",colors:"red/yellow diagonal stripes",desc:"Red and yellow diagonal stripes"},
+      {letter:"Z",name:"Zulu",meaning:"I require a tug",colors:"yellow/blue/red/black",desc:"Four triangles"}
+    ];
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"International Code of Signals"),
+      h(STitle,{noTop:true},"Single-Letter Signals"),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:14,lineHeight:1.6}},"Each flag has a specific meaning when flown alone. These are understood internationally regardless of language."),
+      h("div",{style:{marginBottom:16}},
+        flags.map(function(f){
+          return h("div",{key:f.letter,style:{display:"flex",alignItems:"flex-start",padding:"8px 0",borderBottom:"1px solid rgba(22,36,56,0.8)",gap:10}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,fontWeight:700,color:GL,minWidth:28,textAlign:"center"}},f.letter),
+            h("div",{style:{flex:1}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,fontWeight:600,color:WH}},f.name),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL,marginTop:1}},f.meaning),
+              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU,marginTop:2}},f.desc)
+            )
+          );
+        })
+      ),
+      h(STitle,null,"Important Multi-Flag Signals"),
+      h(RTable,{headers:["Flags","Meaning"],rows:[
+        ["NC","Distress \u2014 I am in distress and require immediate assistance"],
+        ["RY","Keep clear; moving at slow speed"],
+        ["SO","Stop; you should stop your vessel"],
+        ["ZL","Your signal has been received"],
+        ["UW","I wish you a pleasant voyage"],
+        ["ZD2","Please report me to Coastguard"]
+      ]}),
+      h(InfoBox,{type:"tip",title:"The Blue Peter"},"Flag P (Papa) \u2014 the Blue Peter \u2014 flown in harbour means the vessel is about to sail and all crew should report on board. It is one of the oldest signals in the code and gave its name to the television programme.")
+    );
+  }},
+  morsecode:{title:"Morse Code",badge:"reference",render:function(){
+    var codes=[
+      ["A","\u00b7\u2014","N","\u2014\u00b7"],
+      ["B","\u2014\u00b7\u00b7\u00b7","O","\u2014\u2014\u2014"],
+      ["C","\u2014\u00b7\u2014\u00b7","P","\u00b7\u2014\u2014\u00b7"],
+      ["D","\u2014\u00b7\u00b7","Q","\u2014\u2014\u00b7\u2014"],
+      ["E","\u00b7","R","\u00b7\u2014\u00b7"],
+      ["F","\u00b7\u00b7\u2014\u00b7","S","\u00b7\u00b7\u00b7"],
+      ["G","\u2014\u2014\u00b7","T","\u2014"],
+      ["H","\u00b7\u00b7\u00b7\u00b7","U","\u00b7\u00b7\u2014"],
+      ["I","\u00b7\u00b7","V","\u00b7\u00b7\u00b7\u2014"],
+      ["J","\u00b7\u2014\u2014\u2014","W","\u00b7\u2014\u2014"],
+      ["K","\u2014\u00b7\u2014","X","\u2014\u00b7\u00b7\u2014"],
+      ["L","\u00b7\u2014\u00b7\u00b7","Y","\u2014\u00b7\u2014\u2014"],
+      ["M","\u2014\u2014","Z","\u2014\u2014\u00b7\u00b7"]
+    ];
+    var nums=[
+      ["1","\u00b7\u2014\u2014\u2014\u2014"],["2","\u00b7\u00b7\u2014\u2014\u2014"],
+      ["3","\u00b7\u00b7\u00b7\u2014\u2014"],["4","\u00b7\u00b7\u00b7\u00b7\u2014"],
+      ["5","\u00b7\u00b7\u00b7\u00b7\u00b7"],["6","\u2014\u00b7\u00b7\u00b7\u00b7"],
+      ["7","\u2014\u2014\u00b7\u00b7\u00b7"],["8","\u2014\u2014\u2014\u00b7\u00b7"],
+      ["9","\u2014\u2014\u2014\u2014\u00b7"],["0","\u2014\u2014\u2014\u2014\u2014"]
+    ];
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"Reference"),
+      h(STitle,{noTop:true},"Letters"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        codes.map(function(row,i){
+          return h("g",{key:i},
+            h("div",{style:{display:"flex",alignItems:"center",padding:"6px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:6}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:700,color:GL,width:18}},row[0]),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,letterSpacing:"0.15em"}},row[1])
+            ),
+            h("div",{style:{display:"flex",alignItems:"center",padding:"6px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:6}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:700,color:GL,width:18}},row[2]),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,letterSpacing:"0.15em"}},row[3])
+            )
+          );
+        })
+      ),
+      h(STitle,null,"Numbers"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        nums.map(function(n,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"6px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:6}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:700,color:GL,width:18}},n[0]),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,letterSpacing:"0.15em"}},n[1])
+          );
+        })
+      ),
+      h(STitle,null,"Essential Signals"),
+      h(RTable,{headers:["Signal","Code","When to use"],rows:[
+        ["SOS","\u00b7\u00b7\u00b7 \u2014\u2014\u2014 \u00b7\u00b7\u00b7","International distress signal \u2014 three short, three long, three short"],
+        ["Attention","\u2014\u00b7\u2014\u00b7","Call sign \u2014 used to begin a message"],
+        ["Understood","\u00b7\u00b7\u00b7\u2014","Message received and understood"],
+        ["Error","\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7","Eight dots \u2014 cancel the previous word"]
+      ]}),
+      h(STitle,null,"Timing"),
+      h(BList,{items:[
+        "A <strong>dot</strong> is one unit",
+        "A <strong>dash</strong> is three units",
+        "Gap between dots and dashes in the same letter: <strong>one unit</strong>",
+        "Gap between letters: <strong>three units</strong>",
+        "Gap between words: <strong>seven units</strong>"
+      ]}),
+      h(InfoBox,{type:"tip",title:"Light signals"},"Morse code by light is still used at sea. A short flash for a dot, a long flash for a dash. An Aldis lamp or even a torch can be used. SOS by light \u2014 three short flashes, three long, three short \u2014 is universally understood.")
+    );
+  }},
+  phonetic:{title:"Phonetic Alphabet",badge:"reference",render:function(){
+    var alpha=[
+      ["A","Alfa","AL-FAH"],["B","Bravo","BRAH-VOH"],["C","Charlie","CHAR-LEE"],
+      ["D","Delta","DELL-TAH"],["E","Echo","ECK-OH"],["F","Foxtrot","FOKS-TROT"],
+      ["G","Golf","GOLF"],["H","Hotel","HOH-TEL"],["I","India","IN-DEE-AH"],
+      ["J","Juliet","JEW-LEE-ETT"],["K","Kilo","KEY-LOH"],["L","Lima","LEE-MAH"],
+      ["M","Mike","MIKE"],["N","November","NO-VEM-BER"],["O","Oscar","OSS-CAR"],
+      ["P","Papa","PAH-PAH"],["Q","Quebec","KEH-BECK"],["R","Romeo","ROW-ME-OH"],
+      ["S","Sierra","SEE-AIR-RAH"],["T","Tango","TANG-GO"],["U","Uniform","YOU-NEE-FORM"],
+      ["V","Victor","VIK-TAH"],["W","Whiskey","WISS-KEY"],["X","X-ray","ECKS-RAY"],
+      ["Y","Yankee","YANG-KEY"],["Z","Zulu","ZOO-LOO"]
+    ];
+    var nums=[
+      ["0","Zero","ZE-RO"],["1","One","WUN"],["2","Two","TOO"],
+      ["3","Three","TREE"],["4","Four","FOW-ER"],["5","Five","FIFE"],
+      ["6","Six","SIX"],["7","Seven","SEV-EN"],["8","Eight","AIT"],
+      ["9","Nine","NIN-ER"]
+    ];
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"NATO / IMO Standard"),
+      h(STitle,{noTop:true},"Letters"),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:12,lineHeight:1.6}},"Used on all VHF radio communications. Spell out vessel names, call signs, and any word that could be misheard."),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        alpha.map(function(a,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"5px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:4}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontWeight:700,color:GL,width:16}},a[0]),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,flex:1}},a[1]),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU}},a[2])
+          );
+        })
+      ),
+      h(STitle,null,"Numbers"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        nums.map(function(n,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"5px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:4}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontWeight:700,color:GL,width:16}},n[0]),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,flex:1}},n[1]),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU}},n[2])
+          );
+        })
+      ),
+      h(STitle,null,"VHF Example"),
+      h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"12px 14px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH,lineHeight:1.8,marginBottom:12}},
+        h("div",{style:{color:MU,fontSize:12,marginBottom:6,fontStyle:"italic"}},"Spelling the vessel name DORIS on VHF:"),
+        h("div",{style:{color:GL,fontWeight:600}},"\"Delta Oscar Romeo India Sierra\"")
+      ),
+      h(InfoBox,{type:"tip",title:"Pronunciation matters"},"The phonetic alphabet exists because letters sound alike on a crackling VHF radio. B, C, D, E, G, P, T and V are easily confused. \u201cBravo\u201d and \u201cCharlie\u201d are not. Always spell out names, positions, and any critical information.")
+    );
+  }},
     fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
     h(Badge,{type:"reference"},"Reference"),
     h(WeatherFrontsDiagram),
@@ -4676,6 +4850,7 @@ var SECTIONS={
   sailing:{title:"Sail Handling",icon:"⛵",topics:[{id:"reef",name:"Reefing",preview:"When & how"},{id:"tacking",name:"Tacking",preview:"Helm & crew actions"},{id:"sailtrim",name:"Sail Trim",preview:"Points of sail, telltales, controls"},{id:"heaveto",name:"Heaving-To",preview:"Stop the boat safely"},{id:"jibing",name:"Jibing",preview:"Controlled gybe"}]},
   seamanship:{title:"Seamanship",icon:"⚓",topics:[{id:"anchoring",name:"Anchoring",preview:"Scope, holding, procedure"},{id:"berthing",name:"Coming Alongside",preview:"Approach, lines, med moor"}]},
   ropework:{title:"Ropework & Knots",icon:"🪢",topics:[{id:"knots",name:"Essential Knots",preview:"Bowline, cleat hitch, figure-8 and more"},{id:"coiling",name:"Coiling & Cleating",preview:"Cleats, winches, running lines"}]},
+  comms:{title:"Communications",icon:"🚩",topics:[{id:"signalflags",name:"Signal Flags",preview:"Alpha to Zulu \u2014 international code"},{id:"morsecode",name:"Morse Code",preview:"Dots, dashes & light signals"},{id:"phonetic",name:"Phonetic Alphabet",preview:"Alpha, Bravo, Charlie \u2014 VHF standard"}]},
   safety:{title:"Safety & First Aid",icon:"🦺",topics:[{id:"firstaid",name:"First Aid Afloat",preview:"CPR, fractures, burns, bleeding"},{id:"harness",name:"Harness & Jackstays",preview:"When to clip on"},{id:"hypothermia",name:"Hypothermia",preview:"Signs, treatment"},{id:"seasickness",name:"Seasickness",preview:"Prevention & management"}]},
   cocktails:{title:"Elixirs of the Sea",icon:"🍹",topics:[{id:"highseas",name:"The High Seas",preview:"Premium gin & lemon"},{id:"darkstormy",name:"Dark 'n Stormy",preview:"Dark rum & ginger beer"},{id:"saltydog",name:"Salty Dog",preview:"Gin, grapefruit, salted rim"},{id:"navygrog",name:"Navy Grog",preview:"Rum, lime, honey"},{id:"anchorsaway",name:"Anchor's Away",preview:"Spiced rum & blue curaçao"},{id:"mermaidkiss",name:"Mermaid's Kiss",preview:"Coconut rum & pineapple"},{id:"captainscoffee",name:"Captain's Coffee",preview:"Dark rum & hot coffee"}]},
   shanties:{title:"Shanties & Songs of the Sea",icon:"🎵",topics:[{id:"howpleasant",name:"How Pleasant and Delightful",preview:"A sailor's farewell ballad"},{id:"hangingjohnny",name:"Hanging Johnny",preview:"A hauling shanty"},{id:"shallowbrown",name:"Shallow Brown",preview:"A capstan shanty"},{id:"shoalsofherring",name:"Shoals of Herring",preview:"A fisherman's ballad"}]},
@@ -4700,6 +4875,9 @@ for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SE
   {id:"copenhagen",title:"Copenhagen",section:"Maritime History",preview:"Nelson\'s blind eye, 1801",type:"content"},
   {id:"capestv",title:"Cape St Vincent",section:"Maritime History",preview:"Nelson makes his name, 1797",type:"content"},
   {id:"greatvoyages",title:"Great Voyages",section:"Maritime History",preview:"Magellan, Cook, Shackleton, Chichester",type:"content"},
+  {id:"signalflags",title:"Signal Flags",section:"Communications",preview:"Alpha to Zulu, international code",type:"content"},
+  {id:"morsecode",title:"Morse Code",section:"Communications",preview:"Dots, dashes, light signals",type:"content"},
+  {id:"phonetic",title:"Phonetic Alphabet",section:"Communications",preview:"Alpha Bravo Charlie, VHF standard",type:"content"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
   {id:"anchor",title:"Anchor Calculator",section:"Tools",preview:"Scope and chain calculator"},
@@ -4724,6 +4902,9 @@ var RELATED={
   tides:["anchoring","passage","fronts"],
   celestial:["nightsailing","papercharts","colregs"],
   papercharts:["celestial","colregs","buoyage"],
+  signalflags:["morsecode","phonetic","navlights"],
+  morsecode:["signalflags","phonetic","fogsailing"],
+  phonetic:["vhf","signalflags","morsecode"],
   trafalgar:["nile","copenhagen","capestv"],
   capestv:["nile","trafalgar","navhistory"],
   nile:["trafalgar","copenhagen","greatvoyages"],
@@ -4959,13 +5140,13 @@ function App(){
       h("button",{style:{background:"transparent",color:RE,border:"1px solid rgba(196,48,48,0.45)",borderRadius:4,fontSize:10,fontWeight:600,letterSpacing:"0.14em",padding:"7px 11px",cursor:"pointer",minHeight:34,fontFamily:"'Inter',system-ui,sans-serif",textTransform:"uppercase"},onClick:function(){push(view);setView("emergency");setActiveTab("emergency");}},"⚠ SOS")
     ),
     // SEARCH BAR
-    (view==="home"||view==="section")&&h("div",{style:{background:NM,padding:"6px 16px 8px",borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+    (view==="home"||view==="section"||view==="library")&&h("div",{style:{background:NM,padding:"6px 16px 8px",borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
     h("div",{style:{flex:1,overflowY:(view==="tools"&&(toolTab==="chart"||toolTab==="passage")||view==="log")?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
-      searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
+      searchQ.length>1&&(view==="home"||view==="section"||view==="library")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
         sr.map(function(r){return h("div",{key:r.id,style:{padding:"12px 16px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer"},onClick:function(){
           setSearchQ("");
@@ -5046,17 +5227,35 @@ function App(){
       // SAVED
       // NELSON
       view==="nelson"&&h(NelsonView),
-      view==="log"&&h(ShipsLog)
+      view==="log"&&h(ShipsLog),
+      view==="library"&&!searchQ&&h("div",{style:{padding:"16px 16px 8px"}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU,lineHeight:1.6,marginBottom:16,textAlign:"center"}},"Everything you need to know, from knots to navigation to Nelson."),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:GD,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10,marginTop:8}},"Seamanship"),
+        [{id:"knowyourboat",icon:"🚢",label:"Know Your Boat"},{id:"navigation",icon:"🧭",label:"Navigation"},{id:"weather",icon:"🌬️",label:"Weather & Wind"},{id:"sailing",icon:"⛵",label:"Sail Handling"},{id:"seamanship",icon:"⚓",label:"Seamanship"},{id:"ropework",icon:"🪢",label:"Ropework & Knots"},{id:"comms",icon:"🚩",label:"Communications"},{id:"emergency",icon:"🆘",label:"Emergency Procedures"},{id:"safety",icon:"🦺",label:"Safety & First Aid"}].map(function(s){
+          return h("div",{key:s.id,style:{padding:"11px 14px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:10},onClick:function(){openSec(s.id);}},
+            h("span",{style:{fontSize:18}},s.icon),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},s.label)
+          );
+        }),
+        h("div",{style:{width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.2),transparent)",margin:"20px 0"}}),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:GD,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10}},"Make & Mend"),
+        [{id:"cocktails",icon:"🍹",label:"Elixirs of the Sea"},{id:"shanties",icon:"🎵",label:"Shanties & Songs"},{id:"poetry",icon:"📜",label:"When Words Are Needed"},{id:"history",icon:"⚔️",label:"Maritime History"}].map(function(s){
+          return h("div",{key:s.id,style:{padding:"11px 14px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:10},onClick:function(){openSec(s.id);}},
+            h("span",{style:{fontSize:18}},s.icon),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},s.label)
+          );
+        })
+      )
     ),
     // BOTTOM NAV
     h("div",{style:{display:"flex",background:NM,borderTop:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-      [["home","⛵","Home"],["tools","🔧","Tools"],["emergency","⚠️","SOS"],["checklists","📋","Lists"],["log","✏️","Log"]].map(function(row){
+      [["home","⛵","Home"],["tools","🔧","Tools"],["library","📖","Library"],["checklists","📋","Lists"],["log","✏️","Log"]].map(function(row){
         var tab=row[0],icon=row[1],lbl=row[2];
-        return h("button",{key:tab,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 2px 10px",cursor:"pointer",border:"none",background:"none",color:tab==="emergency"?RE:activeTab===tab?GO:MU,fontSize:8,letterSpacing:"0.08em",textTransform:"uppercase",gap:3,minHeight:52,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500},onClick:function(){
+        return h("button",{key:tab,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 2px 10px",cursor:"pointer",border:"none",background:"none",color:activeTab===tab?GO:MU,fontSize:8,letterSpacing:"0.08em",textTransform:"uppercase",gap:3,minHeight:52,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500},onClick:function(){
           setActiveTab(tab);setSearchQ("");setStack([]);
           if(tab==="home")setView("home");
           else if(tab==="tools")setView("tools");
-          else if(tab==="emergency"){push("home");setView("emergency");}
+          else if(tab==="library"){setView("library");}
           else if(tab==="checklists"){setView("checklist");}
           else if(tab==="log")setView("log");
         }},h("span",{style:{fontSize:18}},icon),lbl);
@@ -6695,6 +6894,7 @@ function HomeScreen(props){
     {id:"seamanship",icon:"⚓",label:"Seamanship",desc:"Anchoring · Coming Alongside"},
     {id:"ropework",icon:"🪢",label:"Ropework & Knots",desc:"Bowline · Cleat hitch · Sheet bend"},
     {id:"emergency",icon:"🆘",label:"Emergency Procedures",desc:"MOB · Fire · Flood · Mayday · Abandon Ship"},
+    {id:"comms",icon:"🚩",label:"Communications",desc:"Signal flags · Morse code · Phonetic alphabet"},
     {id:"safety",icon:"🦺",label:"Safety & First Aid",desc:"First aid · Harness · Hypothermia"},
     {id:"cocktails",icon:"🍹",label:"Elixirs of the Sea",desc:"The High Seas · Dark 'n Stormy · Navy Grog"},
     {id:"shanties",icon:"🎵",label:"Shanties & Songs",desc:"How Pleasant · Hanging Johnny · Shallow Brown"},
@@ -9062,6 +9262,179 @@ var CONTENT={
       ["1982","The Falklands \u2014 a task force sails 8,000 miles in three weeks to retake islands most people had never heard of. Six ships lost, 255 killed. The islands were liberated in 74 days."]
     ]})
   );}},
+    signalflags:{title:"International Signal Flags",badge:"reference",render:function(){
+    var flags=[
+      {letter:"A",name:"Alfa",meaning:"Diver down; keep clear",colors:"white/blue",desc:"White and blue, swallow-tailed"},
+      {letter:"B",name:"Bravo",meaning:"Dangerous cargo on board",colors:"red",desc:"Red burgee"},
+      {letter:"C",name:"Charlie",meaning:"Yes / affirmative",colors:"blue/white/red/white/blue",desc:"Five horizontal stripes"},
+      {letter:"D",name:"Delta",meaning:"Keep clear; manoeuvring with difficulty",colors:"yellow/blue/yellow",desc:"Yellow over blue over yellow"},
+      {letter:"E",name:"Echo",meaning:"Altering course to starboard",colors:"blue/red",desc:"Blue over red"},
+      {letter:"F",name:"Foxtrot",meaning:"I am disabled; communicate with me",colors:"white/red diamond",desc:"Red diamond on white"},
+      {letter:"G",name:"Golf",meaning:"I require a pilot",colors:"yellow/blue vertical",desc:"Six vertical stripes"},
+      {letter:"H",name:"Hotel",meaning:"Pilot on board",colors:"white/red halves",desc:"White and red vertical halves"},
+      {letter:"I",name:"India",meaning:"Altering course to port",colors:"yellow/black dot",desc:"Black dot on yellow"},
+      {letter:"J",name:"Juliet",meaning:"On fire; keep clear",colors:"blue/white/blue",desc:"Blue, white horizontal stripe, blue"},
+      {letter:"K",name:"Kilo",meaning:"I wish to communicate with you",colors:"yellow/blue halves",desc:"Yellow and blue vertical halves"},
+      {letter:"L",name:"Lima",meaning:"Stop instantly",colors:"yellow/black quarters",desc:"Yellow and black quartered"},
+      {letter:"M",name:"Mike",meaning:"I am stopped; making no way",colors:"blue/white/blue",desc:"Blue X on white"},
+      {letter:"N",name:"November",meaning:"No / negative",colors:"blue/white chequered",desc:"Blue and white chequered"},
+      {letter:"O",name:"Oscar",meaning:"Man overboard",colors:"red/yellow diagonal",desc:"Red and yellow diagonally divided"},
+      {letter:"P",name:"Papa",meaning:"About to sail; all report on board",colors:"blue/white centre",desc:"Blue with white centre (the Blue Peter)"},
+      {letter:"Q",name:"Quebec",meaning:"Ship is healthy; request free pratique",colors:"yellow",desc:"Plain yellow"},
+      {letter:"R",name:"Romeo",meaning:"No single-letter meaning",colors:"red/yellow cross",desc:"Yellow cross on red"},
+      {letter:"S",name:"Sierra",meaning:"Engines going astern",colors:"white/blue centre",desc:"White with blue centre"},
+      {letter:"T",name:"Tango",meaning:"Keep clear; engaged in trawling",colors:"red/white/blue vertical",desc:"Red, white, blue vertical"},
+      {letter:"U",name:"Uniform",meaning:"You are running into danger",colors:"red/white quarters",desc:"Red and white quartered"},
+      {letter:"V",name:"Victor",meaning:"I require assistance",colors:"white/red X",desc:"Red X on white"},
+      {letter:"W",name:"Whiskey",meaning:"I require medical assistance",colors:"blue/white/red",desc:"Blue, white centre, red border"},
+      {letter:"X",name:"X-ray",meaning:"Stop and watch for my signals",colors:"white/blue cross",desc:"Blue cross on white"},
+      {letter:"Y",name:"Yankee",meaning:"I am dragging my anchor",colors:"red/yellow diagonal stripes",desc:"Red and yellow diagonal stripes"},
+      {letter:"Z",name:"Zulu",meaning:"I require a tug",colors:"yellow/blue/red/black",desc:"Four triangles"}
+    ];
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"International Code of Signals"),
+      h(STitle,{noTop:true},"Single-Letter Signals"),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:14,lineHeight:1.6}},"Each flag has a specific meaning when flown alone. These are understood internationally regardless of language."),
+      h("div",{style:{marginBottom:16}},
+        flags.map(function(f){
+          return h("div",{key:f.letter,style:{display:"flex",alignItems:"flex-start",padding:"8px 0",borderBottom:"1px solid rgba(22,36,56,0.8)",gap:10}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:24,fontWeight:700,color:GL,minWidth:28,textAlign:"center"}},f.letter),
+            h("div",{style:{flex:1}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,fontWeight:600,color:WH}},f.name),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:GL,marginTop:1}},f.meaning),
+              h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:10,color:MU,marginTop:2}},f.desc)
+            )
+          );
+        })
+      ),
+      h(STitle,null,"Important Multi-Flag Signals"),
+      h(RTable,{headers:["Flags","Meaning"],rows:[
+        ["NC","Distress \u2014 I am in distress and require immediate assistance"],
+        ["RY","Keep clear; moving at slow speed"],
+        ["SO","Stop; you should stop your vessel"],
+        ["ZL","Your signal has been received"],
+        ["UW","I wish you a pleasant voyage"],
+        ["ZD2","Please report me to Coastguard"]
+      ]}),
+      h(InfoBox,{type:"tip",title:"The Blue Peter"},"Flag P (Papa) \u2014 the Blue Peter \u2014 flown in harbour means the vessel is about to sail and all crew should report on board. It is one of the oldest signals in the code and gave its name to the television programme.")
+    );
+  }},
+  morsecode:{title:"Morse Code",badge:"reference",render:function(){
+    var codes=[
+      ["A","\u00b7\u2014","N","\u2014\u00b7"],
+      ["B","\u2014\u00b7\u00b7\u00b7","O","\u2014\u2014\u2014"],
+      ["C","\u2014\u00b7\u2014\u00b7","P","\u00b7\u2014\u2014\u00b7"],
+      ["D","\u2014\u00b7\u00b7","Q","\u2014\u2014\u00b7\u2014"],
+      ["E","\u00b7","R","\u00b7\u2014\u00b7"],
+      ["F","\u00b7\u00b7\u2014\u00b7","S","\u00b7\u00b7\u00b7"],
+      ["G","\u2014\u2014\u00b7","T","\u2014"],
+      ["H","\u00b7\u00b7\u00b7\u00b7","U","\u00b7\u00b7\u2014"],
+      ["I","\u00b7\u00b7","V","\u00b7\u00b7\u00b7\u2014"],
+      ["J","\u00b7\u2014\u2014\u2014","W","\u00b7\u2014\u2014"],
+      ["K","\u2014\u00b7\u2014","X","\u2014\u00b7\u00b7\u2014"],
+      ["L","\u00b7\u2014\u00b7\u00b7","Y","\u2014\u00b7\u2014\u2014"],
+      ["M","\u2014\u2014","Z","\u2014\u2014\u00b7\u00b7"]
+    ];
+    var nums=[
+      ["1","\u00b7\u2014\u2014\u2014\u2014"],["2","\u00b7\u00b7\u2014\u2014\u2014"],
+      ["3","\u00b7\u00b7\u00b7\u2014\u2014"],["4","\u00b7\u00b7\u00b7\u00b7\u2014"],
+      ["5","\u00b7\u00b7\u00b7\u00b7\u00b7"],["6","\u2014\u00b7\u00b7\u00b7\u00b7"],
+      ["7","\u2014\u2014\u00b7\u00b7\u00b7"],["8","\u2014\u2014\u2014\u00b7\u00b7"],
+      ["9","\u2014\u2014\u2014\u2014\u00b7"],["0","\u2014\u2014\u2014\u2014\u2014"]
+    ];
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"Reference"),
+      h(STitle,{noTop:true},"Letters"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        codes.map(function(row,i){
+          return h("g",{key:i},
+            h("div",{style:{display:"flex",alignItems:"center",padding:"6px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:6}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:700,color:GL,width:18}},row[0]),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,letterSpacing:"0.15em"}},row[1])
+            ),
+            h("div",{style:{display:"flex",alignItems:"center",padding:"6px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:6}},
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:700,color:GL,width:18}},row[2]),
+              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,letterSpacing:"0.15em"}},row[3])
+            )
+          );
+        })
+      ),
+      h(STitle,null,"Numbers"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        nums.map(function(n,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"6px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:6}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:700,color:GL,width:18}},n[0]),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:18,color:WH,letterSpacing:"0.15em"}},n[1])
+          );
+        })
+      ),
+      h(STitle,null,"Essential Signals"),
+      h(RTable,{headers:["Signal","Code","When to use"],rows:[
+        ["SOS","\u00b7\u00b7\u00b7 \u2014\u2014\u2014 \u00b7\u00b7\u00b7","International distress signal \u2014 three short, three long, three short"],
+        ["Attention","\u2014\u00b7\u2014\u00b7","Call sign \u2014 used to begin a message"],
+        ["Understood","\u00b7\u00b7\u00b7\u2014","Message received and understood"],
+        ["Error","\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7","Eight dots \u2014 cancel the previous word"]
+      ]}),
+      h(STitle,null,"Timing"),
+      h(BList,{items:[
+        "A <strong>dot</strong> is one unit",
+        "A <strong>dash</strong> is three units",
+        "Gap between dots and dashes in the same letter: <strong>one unit</strong>",
+        "Gap between letters: <strong>three units</strong>",
+        "Gap between words: <strong>seven units</strong>"
+      ]}),
+      h(InfoBox,{type:"tip",title:"Light signals"},"Morse code by light is still used at sea. A short flash for a dot, a long flash for a dash. An Aldis lamp or even a torch can be used. SOS by light \u2014 three short flashes, three long, three short \u2014 is universally understood.")
+    );
+  }},
+  phonetic:{title:"Phonetic Alphabet",badge:"reference",render:function(){
+    var alpha=[
+      ["A","Alfa","AL-FAH"],["B","Bravo","BRAH-VOH"],["C","Charlie","CHAR-LEE"],
+      ["D","Delta","DELL-TAH"],["E","Echo","ECK-OH"],["F","Foxtrot","FOKS-TROT"],
+      ["G","Golf","GOLF"],["H","Hotel","HOH-TEL"],["I","India","IN-DEE-AH"],
+      ["J","Juliet","JEW-LEE-ETT"],["K","Kilo","KEY-LOH"],["L","Lima","LEE-MAH"],
+      ["M","Mike","MIKE"],["N","November","NO-VEM-BER"],["O","Oscar","OSS-CAR"],
+      ["P","Papa","PAH-PAH"],["Q","Quebec","KEH-BECK"],["R","Romeo","ROW-ME-OH"],
+      ["S","Sierra","SEE-AIR-RAH"],["T","Tango","TANG-GO"],["U","Uniform","YOU-NEE-FORM"],
+      ["V","Victor","VIK-TAH"],["W","Whiskey","WISS-KEY"],["X","X-ray","ECKS-RAY"],
+      ["Y","Yankee","YANG-KEY"],["Z","Zulu","ZOO-LOO"]
+    ];
+    var nums=[
+      ["0","Zero","ZE-RO"],["1","One","WUN"],["2","Two","TOO"],
+      ["3","Three","TREE"],["4","Four","FOW-ER"],["5","Five","FIFE"],
+      ["6","Six","SIX"],["7","Seven","SEV-EN"],["8","Eight","AIT"],
+      ["9","Nine","NIN-ER"]
+    ];
+    return h("div",{style:{padding:16}},
+      h(Badge,{type:"reference"},"NATO / IMO Standard"),
+      h(STitle,{noTop:true},"Letters"),
+      h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:MU,fontStyle:"italic",marginBottom:12,lineHeight:1.6}},"Used on all VHF radio communications. Spell out vessel names, call signs, and any word that could be misheard."),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        alpha.map(function(a,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"5px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:4}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontWeight:700,color:GL,width:16}},a[0]),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,flex:1}},a[1]),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU}},a[2])
+          );
+        })
+      ),
+      h(STitle,null,"Numbers"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,marginBottom:16}},
+        nums.map(function(n,i){
+          return h("div",{key:i,style:{display:"flex",alignItems:"center",padding:"5px 8px",borderBottom:"1px solid rgba(22,36,56,0.6)",gap:4}},
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontWeight:700,color:GL,width:16}},n[0]),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:WH,flex:1}},n[1]),
+            h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:9,color:MU}},n[2])
+          );
+        })
+      ),
+      h(STitle,null,"VHF Example"),
+      h("div",{style:{background:NC,border:"1px solid rgba(200,168,74,0.15)",borderRadius:8,padding:"12px 14px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH,lineHeight:1.8,marginBottom:12}},
+        h("div",{style:{color:MU,fontSize:12,marginBottom:6,fontStyle:"italic"}},"Spelling the vessel name DORIS on VHF:"),
+        h("div",{style:{color:GL,fontWeight:600}},"\"Delta Oscar Romeo India Sierra\"")
+      ),
+      h(InfoBox,{type:"tip",title:"Pronunciation matters"},"The phonetic alphabet exists because letters sound alike on a crackling VHF radio. B, C, D, E, G, P, T and V are easily confused. \u201cBravo\u201d and \u201cCharlie\u201d are not. Always spell out names, positions, and any critical information.")
+    );
+  }},
     fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
     h(Badge,{type:"reference"},"Reference"),
     h(WeatherFrontsDiagram),
@@ -9752,6 +10125,7 @@ var SECTIONS={
   sailing:{title:"Sail Handling",icon:"⛵",topics:[{id:"reef",name:"Reefing",preview:"When & how"},{id:"tacking",name:"Tacking",preview:"Helm & crew actions"},{id:"sailtrim",name:"Sail Trim",preview:"Points of sail, telltales, controls"},{id:"heaveto",name:"Heaving-To",preview:"Stop the boat safely"},{id:"jibing",name:"Jibing",preview:"Controlled gybe"}]},
   seamanship:{title:"Seamanship",icon:"⚓",topics:[{id:"anchoring",name:"Anchoring",preview:"Scope, holding, procedure"},{id:"berthing",name:"Coming Alongside",preview:"Approach, lines, med moor"}]},
   ropework:{title:"Ropework & Knots",icon:"🪢",topics:[{id:"knots",name:"Essential Knots",preview:"Bowline, cleat hitch, figure-8 and more"},{id:"coiling",name:"Coiling & Cleating",preview:"Cleats, winches, running lines"}]},
+  comms:{title:"Communications",icon:"🚩",topics:[{id:"signalflags",name:"Signal Flags",preview:"Alpha to Zulu \u2014 international code"},{id:"morsecode",name:"Morse Code",preview:"Dots, dashes & light signals"},{id:"phonetic",name:"Phonetic Alphabet",preview:"Alpha, Bravo, Charlie \u2014 VHF standard"}]},
   safety:{title:"Safety & First Aid",icon:"🦺",topics:[{id:"firstaid",name:"First Aid Afloat",preview:"CPR, fractures, burns, bleeding"},{id:"harness",name:"Harness & Jackstays",preview:"When to clip on"},{id:"hypothermia",name:"Hypothermia",preview:"Signs, treatment"},{id:"seasickness",name:"Seasickness",preview:"Prevention & management"}]},
   cocktails:{title:"Elixirs of the Sea",icon:"🍹",topics:[{id:"highseas",name:"The High Seas",preview:"Premium gin & lemon"},{id:"darkstormy",name:"Dark 'n Stormy",preview:"Dark rum & ginger beer"},{id:"saltydog",name:"Salty Dog",preview:"Gin, grapefruit, salted rim"},{id:"navygrog",name:"Navy Grog",preview:"Rum, lime, honey"},{id:"anchorsaway",name:"Anchor's Away",preview:"Spiced rum & blue curaçao"},{id:"mermaidkiss",name:"Mermaid's Kiss",preview:"Coconut rum & pineapple"},{id:"captainscoffee",name:"Captain's Coffee",preview:"Dark rum & hot coffee"}]},
   shanties:{title:"Shanties & Songs of the Sea",icon:"🎵",topics:[{id:"howpleasant",name:"How Pleasant and Delightful",preview:"A sailor's farewell ballad"},{id:"hangingjohnny",name:"Hanging Johnny",preview:"A hauling shanty"},{id:"shallowbrown",name:"Shallow Brown",preview:"A capstan shanty"},{id:"shoalsofherring",name:"Shoals of Herring",preview:"A fisherman's ballad"}]},
@@ -9776,6 +10150,9 @@ for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SE
   {id:"copenhagen",title:"Copenhagen",section:"Maritime History",preview:"Nelson\'s blind eye, 1801",type:"content"},
   {id:"capestv",title:"Cape St Vincent",section:"Maritime History",preview:"Nelson makes his name, 1797",type:"content"},
   {id:"greatvoyages",title:"Great Voyages",section:"Maritime History",preview:"Magellan, Cook, Shackleton, Chichester",type:"content"},
+  {id:"signalflags",title:"Signal Flags",section:"Communications",preview:"Alpha to Zulu, international code",type:"content"},
+  {id:"morsecode",title:"Morse Code",section:"Communications",preview:"Dots, dashes, light signals",type:"content"},
+  {id:"phonetic",title:"Phonetic Alphabet",section:"Communications",preview:"Alpha Bravo Charlie, VHF standard",type:"content"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
   {id:"anchor",title:"Anchor Calculator",section:"Tools",preview:"Scope and chain calculator"},
@@ -9800,6 +10177,9 @@ var RELATED={
   tides:["anchoring","passage","fronts"],
   celestial:["nightsailing","papercharts","colregs"],
   papercharts:["celestial","colregs","buoyage"],
+  signalflags:["morsecode","phonetic","navlights"],
+  morsecode:["signalflags","phonetic","fogsailing"],
+  phonetic:["vhf","signalflags","morsecode"],
   trafalgar:["nile","copenhagen","capestv"],
   capestv:["nile","trafalgar","navhistory"],
   nile:["trafalgar","copenhagen","greatvoyages"],
@@ -10035,13 +10415,13 @@ function App(){
       h("button",{style:{background:"transparent",color:RE,border:"1px solid rgba(196,48,48,0.45)",borderRadius:4,fontSize:10,fontWeight:600,letterSpacing:"0.14em",padding:"7px 11px",cursor:"pointer",minHeight:34,fontFamily:"'Inter',system-ui,sans-serif",textTransform:"uppercase"},onClick:function(){push(view);setView("emergency");setActiveTab("emergency");}},"⚠ SOS")
     ),
     // SEARCH BAR
-    (view==="home"||view==="section")&&h("div",{style:{background:NM,padding:"6px 16px 8px",borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
+    (view==="home"||view==="section"||view==="library")&&h("div",{style:{background:NM,padding:"6px 16px 8px",borderBottom:"1px solid rgba(22,36,56,0.9)",flexShrink:0}},
       h("input",{style:{width:"100%",background:"rgba(5,14,24,0.8)",border:"1px solid rgba(200,168,74,0.15)",borderRadius:6,color:WH,fontSize:13,fontFamily:"'Crimson Text',Georgia,serif",padding:"8px 14px",outline:"none",boxSizing:"border-box"},placeholder:"Search procedures, signals, tactics…",value:searchQ,onChange:function(ev){setSearchQ(ev.target.value);}})
     ),
     // MAIN
     h("div",{style:{flex:1,overflowY:(view==="tools"&&(toolTab==="chart"||toolTab==="passage")||view==="log")?"hidden":"auto",overflowX:"hidden"}},
       // SEARCH RESULTS
-      searchQ.length>1&&(view==="home"||view==="section")&&h("div",null,
+      searchQ.length>1&&(view==="home"||view==="section"||view==="library")&&h("div",null,
         sr.length===0&&h("div",{style:{padding:"32px 16px",textAlign:"center",color:MU,fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,fontStyle:"italic"}},'No results for "'+searchQ+'"'),
         sr.map(function(r){return h("div",{key:r.id,style:{padding:"12px 16px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer"},onClick:function(){
           setSearchQ("");
@@ -10122,17 +10502,35 @@ function App(){
       // SAVED
       // NELSON
       view==="nelson"&&h(NelsonView),
-      view==="log"&&h(ShipsLog)
+      view==="log"&&h(ShipsLog),
+      view==="library"&&!searchQ&&h("div",{style:{padding:"16px 16px 8px"}},
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:15,color:MU,lineHeight:1.6,marginBottom:16,textAlign:"center"}},"Everything you need to know, from knots to navigation to Nelson."),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:GD,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10,marginTop:8}},"Seamanship"),
+        [{id:"knowyourboat",icon:"🚢",label:"Know Your Boat"},{id:"navigation",icon:"🧭",label:"Navigation"},{id:"weather",icon:"🌬️",label:"Weather & Wind"},{id:"sailing",icon:"⛵",label:"Sail Handling"},{id:"seamanship",icon:"⚓",label:"Seamanship"},{id:"ropework",icon:"🪢",label:"Ropework & Knots"},{id:"comms",icon:"🚩",label:"Communications"},{id:"emergency",icon:"🆘",label:"Emergency Procedures"},{id:"safety",icon:"🦺",label:"Safety & First Aid"}].map(function(s){
+          return h("div",{key:s.id,style:{padding:"11px 14px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:10},onClick:function(){openSec(s.id);}},
+            h("span",{style:{fontSize:18}},s.icon),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},s.label)
+          );
+        }),
+        h("div",{style:{width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.2),transparent)",margin:"20px 0"}}),
+        h("div",{style:{fontFamily:"'Inter',sans-serif",fontSize:8,color:GD,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10}},"Make & Mend"),
+        [{id:"cocktails",icon:"🍹",label:"Elixirs of the Sea"},{id:"shanties",icon:"🎵",label:"Shanties & Songs"},{id:"poetry",icon:"📜",label:"When Words Are Needed"},{id:"history",icon:"⚔️",label:"Maritime History"}].map(function(s){
+          return h("div",{key:s.id,style:{padding:"11px 14px",borderBottom:"1px solid rgba(22,36,56,0.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:10},onClick:function(){openSec(s.id);}},
+            h("span",{style:{fontSize:18}},s.icon),
+            h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:16,fontWeight:600,color:WH}},s.label)
+          );
+        })
+      )
     ),
     // BOTTOM NAV
     h("div",{style:{display:"flex",background:NM,borderTop:"1px solid rgba(200,168,74,0.1)",flexShrink:0}},
-      [["home","⛵","Home"],["tools","🔧","Tools"],["emergency","⚠️","SOS"],["checklists","📋","Lists"],["log","✏️","Log"]].map(function(row){
+      [["home","⛵","Home"],["tools","🔧","Tools"],["library","📖","Library"],["checklists","📋","Lists"],["log","✏️","Log"]].map(function(row){
         var tab=row[0],icon=row[1],lbl=row[2];
-        return h("button",{key:tab,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 2px 10px",cursor:"pointer",border:"none",background:"none",color:tab==="emergency"?RE:activeTab===tab?GO:MU,fontSize:8,letterSpacing:"0.08em",textTransform:"uppercase",gap:3,minHeight:52,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500},onClick:function(){
+        return h("button",{key:tab,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 2px 10px",cursor:"pointer",border:"none",background:"none",color:activeTab===tab?GO:MU,fontSize:8,letterSpacing:"0.08em",textTransform:"uppercase",gap:3,minHeight:52,fontFamily:"'Inter',system-ui,sans-serif",fontWeight:500},onClick:function(){
           setActiveTab(tab);setSearchQ("");setStack([]);
           if(tab==="home")setView("home");
           else if(tab==="tools")setView("tools");
-          else if(tab==="emergency"){push("home");setView("emergency");}
+          else if(tab==="library"){setView("library");}
           else if(tab==="checklists"){setView("checklist");}
           else if(tab==="log")setView("log");
         }},h("span",{style:{fontSize:18}},icon),lbl);
