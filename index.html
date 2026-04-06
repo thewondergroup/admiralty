@@ -665,8 +665,8 @@ function BerthingLinesDiagram(){
 }
 
 function WeatherFrontsDiagram(){
-  return h("svg",{width:"100%",viewBox:"0 0 300 170",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
-    h("rect",{width:300,height:170,fill:"#050D18"}),
+  return h("svg",{width:"100%",viewBox:"0 0 300 182",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
+    h("rect",{width:300,height:182,fill:"#050D18"}),
     h("text",{x:150,y:11,fill:MU,fontSize:8,textAnchor:"middle",letterSpacing:"0.1em"},"WARM FRONT APPROACHING →"),
     h("rect",{x:0,y:16,width:300,height:140,fill:"#040C18"}),
     h("path",{d:"M0,90 L300,90",stroke:"rgba(48,112,184,0.2)",strokeWidth:1}),
@@ -705,30 +705,30 @@ function ScopeExplainerDiagram(){
     {scope:5,label:"5:1 — Standard",color:AM,note:"Normal conditions"},
     {scope:7,label:"7:1 — Recommended",color:GR,note:"Offshore / overnight"},
   ];
-  var depth=5,w=300,seabedY=120,waterY=40;
-  return h("svg",{width:"100%",viewBox:"0 0 300 155",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
-    h("rect",{width:w,height:155,fill:"#050D18"}),
+  var depth=5,w=300,seabedY=130,waterY=50;
+  return h("svg",{width:"100%",viewBox:"0 0 300 165",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
+    h("rect",{width:w,height:165,fill:"#050D18"}),
     h("rect",{x:0,y:waterY,width:w,height:seabedY-waterY,fill:"rgba(6,16,44,0.9)"}),
-    h("rect",{x:0,y:seabedY,width:w,height:155-seabedY,fill:"rgba(24,14,6,0.9)"}),
+    h("rect",{x:0,y:seabedY,width:w,height:165-seabedY,fill:"rgba(24,14,6,0.9)"}),
     h("line",{x1:0,y1:waterY,x2:w,y2:waterY,stroke:"rgba(48,112,184,0.25)",strokeWidth:1}),
     h("line",{x1:0,y1:seabedY,x2:w,y2:seabedY,stroke:"rgba(60,42,18,0.5)",strokeWidth:1}),
-    h("text",{x:14,y:waterY-4,fill:MU,fontSize:7},"depth: "+depth+"m"),
+    h("text",{x:14,y:waterY-14,fill:MU,fontSize:7},"depth: "+depth+"m"),
     scenarios.map(function(s,i){
-      var bx=20+(i*90),chainLen=depth*s.scope;
+      var bx=25+(i*90),chainLen=depth*s.scope;
       var endX=Math.min(bx+chainLen*3.5,bx+70);
       return h("g",{key:i},
-        h("text",{x:bx+35,y:waterY+10,fill:s.color,fontSize:7,textAnchor:"middle"},s.label),
+        h("text",{x:bx+35,y:waterY-6,fill:s.color,fontSize:7.5,textAnchor:"middle",fontWeight:600},s.label),
         h("text",{x:bx+10,y:waterY+8,fontSize:10},"⛵"),
         h("line",{x1:bx+10,y1:waterY+5,x2:endX,y2:seabedY,stroke:s.color,strokeWidth:2,strokeDasharray:"4 2",opacity:0.8}),
-        h("text",{x:endX,y:seabedY+8,fontSize:8,textAnchor:"middle"},"⚓"),
-        h("text",{x:bx+35,y:145,fill:MU,fontSize:6.5,textAnchor:"middle"},s.note)
+        h("text",{x:endX,y:seabedY+10,fontSize:8,textAnchor:"middle"},"⚓"),
+        h("text",{x:bx+35,y:148,fill:MU,fontSize:6.5,textAnchor:"middle"},s.note)
       );
     })
   );
 }
 
 function PointsOfSailDiagram(){
-  var cx=150,cy=118,r=88;
+  var cx=150,cy=130,r=82;
   var sectors=[
     {from:-45,to:45,label:"In Irons",sublabel:"no-go zone",color:RE},
     {from:45,to:80,label:"Close\nHauled",sublabel:"sheets hard in",color:GO},
@@ -741,22 +741,22 @@ function PointsOfSailDiagram(){
     {from:280,to:315,label:"Close\nReach",sublabel:"",color:GL},
     {from:315,to:360-45,label:"Close\nHauled",sublabel:"",color:GO},
   ];
-  return h("svg",{width:"100%",viewBox:"0 0 300 248",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
-    h("rect",{width:300,height:248,fill:"#050D18"}),
+  return h("svg",{width:"100%",viewBox:"0 0 300 270",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
+    h("rect",{width:300,height:270,fill:"#050D18"}),
     sectors.map(function(s,i){
       var sa=(s.from-90)*Math.PI/180,ea=(s.to-90)*Math.PI/180;
       var x1=cx+r*Math.cos(sa),y1=cy+r*Math.sin(sa);
       var x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);
       var large=(s.to-s.from)>180?1:0;
       var mid=((s.from+s.to)/2-90)*Math.PI/180;
-      var tr=r+26;
+      var tr=r+32;
       var lx=cx+tr*Math.cos(mid),ly=cy+tr*Math.sin(mid);
       var parts2=s.label.split("\n");
       return h("g",{key:i},
         h("path",{d:"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 "+large+",1 "+x2+","+y2+" Z",fill:s.color,opacity:0.18}),
         h("path",{d:"M"+x1+","+y1+" A"+r+","+r+" 0 "+large+",1 "+x2+","+y2,fill:"none",stroke:s.color,strokeWidth:2,opacity:0.7}),
-        s.sublabel&&h("text",{x:lx,y:ly-5,fill:s.color,fontSize:7,textAnchor:"middle",fontWeight:700},parts2[0]),
-        s.sublabel&&parts2[1]&&h("text",{x:lx,y:ly+4,fill:s.color,fontSize:7,textAnchor:"middle",fontWeight:700},parts2[1]),
+        s.sublabel&&h("text",{x:lx,y:ly-4,fill:s.color,fontSize:6.5,textAnchor:"middle",fontWeight:700},parts2[0]),
+        s.sublabel&&parts2[1]&&h("text",{x:lx,y:ly+5,fill:s.color,fontSize:6.5,textAnchor:"middle",fontWeight:700},parts2[1]),
         s.sublabel&&h("text",{x:lx,y:ly+13,fill:MU,fontSize:6,textAnchor:"middle"},s.sublabel)
       );
     }),
@@ -765,7 +765,7 @@ function PointsOfSailDiagram(){
     h("line",{x1:cx,y1:cy-r-16,x2:cx,y2:cy-r+4,stroke:BL,strokeWidth:2}),
     h("polygon",{points:cx+","+(cy-r-18)+" "+(cx-4)+","+(cy-r-12)+" "+(cx+4)+","+(cy-r-12),fill:BL}),
     h("text",{x:cx,y:cy-r-22,fill:BL,fontSize:8,textAnchor:"middle"},"WIND"),
-    h("text",{x:cx,y:242,fill:MU,fontSize:7,textAnchor:"middle"},"Sail trim varies with apparent wind — always use telltales")
+    h("text",{x:cx,y:262,fill:MU,fontSize:7,textAnchor:"middle"},"Sail trim varies with apparent wind — always use telltales")
   );
 }
 
@@ -1622,7 +1622,8 @@ function HomeScreen(props){
     {id:"safety",icon:"🦺",label:"Safety & First Aid",desc:"First aid · Harness · Hypothermia"},
     {id:"cocktails",icon:"🍹",label:"Elixirs of the Sea",desc:"The High Seas · Dark 'n Stormy · Navy Grog"},
     {id:"shanties",icon:"🎵",label:"Shanties & Songs",desc:"How Pleasant · Hanging Johnny · Shallow Brown"},
-    {id:"poetry",icon:"📜",label:"When Words Are Needed",desc:"Masefield · Tennyson · Kipling · Hardy · more"}
+    {id:"poetry",icon:"📜",label:"When Words Are Needed",desc:"Masefield · Tennyson · Kipling · Hardy · more"},
+    {id:"history",icon:"⚔️",label:"Maritime History",desc:"Trafalgar · The Nile · Great Voyages"}
   ];
 
   // PWA install prompt
@@ -3082,23 +3083,12 @@ function ChartTool(){
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
-      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18",overflowY:"auto"}},
-        h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"\ud83d\uddfa\ufe0f"),
+      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+        h("div",{style:{fontSize:48,marginBottom:24,opacity:0.2}},"\u2693"),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
-        h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
-          h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),
-          h("br"),h("br"),
-          h("span",{style:{color:GD}},"Fair winds and following seas.")
-        ),
-        h("div",{style:{display:"flex",flexDirection:"column",width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
-          [{name:"Navionics",desc:"Offline charts & tidal data"},{name:"iSailor",desc:"Downloadable chart regions"},{name:"UKHO Admiralty",desc:"Official paper charts"}]
-          .map(function(item,i){
-            return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none"}},
-              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
-              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
-            );
-          })
+        h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 24px"}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.8,maxWidth:280}},
+          "Nelson didn\u2019t need the internet to command the seas \u2014 and neither do you. Grab your paper charts and take to the winds."
         )
       ),
       !isOffline&&loading&&h("div",{style:{position:"absolute",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,background:"#040C18"}},
@@ -3882,6 +3872,120 @@ var CONTENT={
     ]}),
     h(InfoBox,{type:"tip",title:"Practice"},"Celestial navigation is a skill that requires practice. Take sights in good conditions alongside GPS to build confidence before relying on it. A sextant is only as good as the person using it.")
   );}},
+  trafalgar:{title:"Trafalgar",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"21 October 1805"),
+    h(STitle,{noTop:true},"The Day That Made the Modern World"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"27 British ships against 33 French and Spanish. Nelson\u2019s flagship HMS Victory leading the attack. The fate of Europe hanging on a single afternoon."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Napoleon had assembled the largest invasion force since William the Conqueror. 200,000 troops at Boulogne, flat-bottomed boats ready to cross the Channel. All he needed was three days of naval superiority. If the Combined Fleet could control the Channel for seventy-two hours, England would fall. Nelson was the only thing standing in the way."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"His plan was genius disguised as madness. Every admiral in history had fought in parallel lines. Nelson would attack in two columns, driving perpendicular into the enemy line \u2014 straight into their broadsides. His leading ships would be under devastating fire for forty minutes before they could fire a single shot in reply. Any other fleet would have been annihilated. But Nelson understood something no one else did: his crews were so superbly trained, so aggressive in close action, that once they broke through the line and fought ship-to-ship, the result was inevitable."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson did not command from the rear. He led the attack personally, aboard Victory, at the head of the weather column \u2014 the first ship into the enemy guns. For forty minutes his flagship absorbed broadside after broadside from multiple ships while he stood on the quarterdeck in full view, refusing to take cover, refusing to go below. His secretary was killed beside him. His mizzen topmast was shot away. Men fell all around him. He did not move. When Victory finally smashed through the enemy line, her carronades erupted at point-blank range and the battle became a close-quarters brawl in which British gunnery was devastatingly superior. The French and Spanish fleet was cut into three isolated groups, each overwhelmed by concentrated fire. Twenty-two enemy ships were captured or destroyed. Not a single British ship was lost."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson would not let another man lead the attack and answer for his plan. And he would not hide who he was. He wore his full admiral\u2019s coat emblazoned with the four gold stars of his orders of chivalry, glinting in the October sun. His officers begged him to cover them \u2014 they made him the most conspicuous target on the quarterdeck. He refused. At 1:15, a French marksman in the mizzen top of the R\u00e9doutable spotted those stars and fired. He was carried below to the cockpit, where he lay dying for three hours as the battle raged above. His last confirmed words were: \u201cThank God I have done my duty.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:16}},"He was forty-seven. He had lost his right arm at Tenerife, the sight in his right eye at Calvi, and most of his teeth to scurvy. He had won every major fleet action he had commanded. He had saved his country. He was \u2014 and remains \u2014 the greatest admiral who ever lived."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"Trafalgar did not just win a battle. It ended any possibility of a French invasion of Britain. It gave the Royal Navy unchallenged command of every ocean for a hundred years. It secured the trade routes that built the British Empire. The world we live in was shaped on that October afternoon off the coast of Spain.")
+  );}},
+  nile:{title:"Battle of the Nile",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"1\u20132 August 1798"),
+    h(STitle,{noTop:true},"The Night Nelson Rewrote the Rules"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"13 British ships against 13 French \u2014 equal numbers, but the French were anchored in a defensive line with shore batteries. By dawn, 11 of the 13 French ships were captured or destroyed."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Napoleon had invaded Egypt with 40,000 troops. His fleet, under Admiral Brueys, was the army\u2019s lifeline \u2014 its only route home. Nelson had been hunting them across the Mediterranean for weeks with no intelligence, no charts of Egyptian waters, and no margin for error. If Brueys escaped, Napoleon would conquer the Middle East and threaten India."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson found the French fleet anchored in a strong defensive line in Aboukir Bay. Brueys believed his position was impregnable \u2014 shallows on one side, his ships\u2019 broadsides on the other. Any conventional admiral would have waited until morning to reconnoitre. Nelson attacked immediately, at dusk, with the sun setting behind him."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Then came the stroke of genius. Nelson saw what Brueys had missed: if the French ships had enough water under them to swing at anchor, there was enough room to sail between them and the shore. Captain Foley, leading the British line, took his ship around the head of the French formation and down their landward side. The French had not even manned their shore-facing guns. They were caught in a murderous crossfire from both sides simultaneously."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The French flagship L\u2019Orient \u2014 a 120-gun leviathan, one of the largest warships afloat \u2014 caught fire and exploded with such force that the detonation was heard twenty-five miles away. Both fleets stopped firing in shock. Burning debris rained from the sky for minutes. Only two French ships escaped from the entire fleet."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson was struck in the forehead by a piece of shrapnel during the battle. Blood poured into his one good eye and he believed he was dying. He refused to be seen before other wounded men. When told of the scale of the victory, he insisted on writing despatches before being treated."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"The Nile stranded Napoleon\u2019s army in Egypt, ended French ambitions in the eastern Mediterranean, and made Nelson the most famous man in Europe. It demonstrated his defining quality as a commander: the ability to see an opportunity that everyone else assumed was impossible, and to seize it instantly.")
+  );}},
+  copenhagen:{title:"Copenhagen",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"2 April 1801"),
+    h(STitle,{noTop:true},"I Really Do Not See the Signal"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"Nelson\u2019s squadron against the entire Danish fleet plus shore batteries. Ordered by his own commander-in-chief to withdraw. He refused, fought on, and won."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Denmark, Russia, Sweden, and Prussia had formed the League of Armed Neutrality, threatening Britain\u2019s vital Baltic trade routes and access to the naval supplies \u2014 timber, tar, rope \u2014 without which the fleet could not sail. If the League held, the Royal Navy would slowly wither. The stakes could not have been higher."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson was given the attack division under the cautious Admiral Sir Hyde Parker. The Danes had turned their harbour into a fortress: ships moored as floating gun platforms, reinforced with soldiers, backed by shore batteries. Copenhagen was the most heavily defended anchorage in northern Europe."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The battle was savage. Several British ships ran aground on uncharted shoals. Others were badly damaged by the relentless Danish fire. The Danes fought with extraordinary courage, manning their guns even as their ships were shot to pieces around them. For three hours the outcome hung in the balance."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Parker, watching from two miles away aboard HMS London, decided the battle was lost. He hoisted Signal 39: \u201cDiscontinue the action.\u201d It was a direct order from the commander-in-chief of the fleet."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson\u2019s signal lieutenant reported the flag. Nelson raised his telescope to his blind eye \u2014 the one he had lost at Calvi seven years earlier \u2014 and said the words that have defined courage and initiative ever since: \u201cI really do not see the signal.\u201d He turned to his flag captain: \u201cKeep mine for closer battle flying. That\u2019s the one I obey.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Within the hour, the Danish resistance collapsed. Nelson had won. The League of Armed Neutrality disintegrated. Britain\u2019s Baltic trade was secured."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"Copenhagen showed Nelson\u2019s moral courage as much as his tactical genius. He disobeyed a direct order from his superior because he knew \u2014 from the deck of his own ship, in the smoke and thunder of battle \u2014 that he was winning. The man two miles away could not see that. Nelson trusted his own judgement over rank, and he was right. Parker was recalled in disgrace. Nelson was given command of the fleet.")
+  );}},
+  capestv:{title:"Cape St Vincent",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"14 February 1797"),
+    h(STitle,{noTop:true},"The Day Nelson Made His Name"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"15 British ships against 27 Spanish. Nelson, a mere commodore, broke formation without orders and single-handedly prevented the enemy fleet from reuniting. Then he boarded two enemy ships in succession \u2014 by using one as a bridge to reach the other."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Spain had just joined France against Britain. The Spanish fleet was sailing to join the French at Brest, which would have given the combined enemy fleet overwhelming superiority in the Channel. Admiral Sir John Jervis had fifteen ships to stop twenty-seven. When told of the odds, Jervis replied: \u201cEnough, sir. If there are fifty sail, I will go through them.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The Spanish fleet was sailing in two loose groups with a wide gap between them. Jervis drove his line between the two groups to divide them. But the leading Spanish group \u2014 including several massive first-rates of over a hundred guns \u2014 began turning north to rejoin their comrades. If they succeeded, the British would face the full combined fleet and the battle would be lost."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson, near the rear of the British line in HMS Captain \u2014 a 74-gun third-rate, one of the smaller ships in the fleet \u2014 saw what was happening before anyone else. Without waiting for orders, without signalling, without hesitation, he hauled his ship out of the line and threw her directly into the path of the Spanish van. One 74-gun ship against first-rates of 112 and 130 guns."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Captain was dismasted, her rigging shot away, her hull battered. But Nelson held his ground. He slowed the Spanish turn long enough for the rest of the British fleet to come up. Then, with his ship crippled and unable to manoeuvre, he did something no flag officer had done in living memory: he personally led a boarding party onto the 80-gun San Nicolas, fought his way across her deck, and used her as a bridge to board the 112-gun San Josef alongside."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"He captured both ships. The feat became known as \u201cNelson\u2019s Patent Bridge for Boarding First-Rates\u201d \u2014 a joke that captured the sheer audacity of what he had done. He was thirty-eight years old. He entered the battle as an unknown commodore. He left it a national hero."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"Cape St Vincent prevented the Spanish fleet from joining the French, preserving British control of the western approaches at a moment when invasion was a real possibility. It also revealed Nelson\u2019s defining quality: the willingness to act on his own initiative, to break the rules, to risk everything on his own judgement \u2014 and to be right. Jervis, to his eternal credit, recognised genius rather than punishing disobedience. Nelson was promoted to Rear Admiral the same month.")
+  );}},
+    armada:{title:"The Spanish Armada",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"July\u2013August 1588"),
+    h(STitle,{noTop:true},"The Island That Refused to Fall"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Philip II of Spain assembled the greatest fleet the world had ever seen: 130 ships, 30,000 men, the combined might of the most powerful empire on Earth. His plan was simple \u2014 sail up the English Channel, collect the Duke of Parma\u2019s invasion army from the Netherlands, and conquer England. Catholic Europe would be united. Protestant England would be crushed."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Against this armada stood a fleet of smaller, faster English ships commanded by Lord Howard of Effingham, with Sir Francis Drake as his deputy. Drake \u2014 who had already circumnavigated the globe, raided Spanish ports, and singed the King of Spain\u2019s beard at Cadiz \u2014 was not a man who frightened easily."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The English refused to play the Spanish game. Instead of closing for the boarding actions the Spanish wanted, they stood off and hammered the Armada with long-range gunnery as it processed up the Channel. The English ships were faster, more weatherly, and handled by better seamen. The Armada could not catch them."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"When the Armada anchored off Calais to rendezvous with Parma, Drake struck the decisive blow. Eight fireships, packed with pitch, brimstone, and loaded cannons, were sent blazing into the anchorage at midnight. The Spanish panicked. They cut their anchor cables and scattered into the darkness. The tight formation that had protected them up the Channel was gone."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Then the weather turned. A ferocious southwesterly gale \u2014 the \u201cProtestant wind\u201d \u2014 drove the remnants of the Armada north around Scotland and down the west coast of Ireland. Storm after storm shattered the fleet on rocky shores. Of the 130 ships that sailed from Spain, barely 60 limped home. England would not be invaded."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Superior seamanship defeats superior numbers. Know your waters, use your advantages, and never underestimate a lee shore in a gale.")
+  );}},
+  jutland:{title:"Jutland",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"31 May \u2013 1 June 1916"),
+    h(STitle,{noTop:true},"The Day the Dreadnoughts Clashed"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The North Sea, 80 miles off the Danish coast. For two years the British Grand Fleet and the German High Seas Fleet had circled each other like heavyweight boxers, neither willing to risk everything on a single engagement. On 31 May 1916, they finally met."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"It was the largest naval battle ever fought between surface ships. 250 vessels. 100,000 men. The dreadnoughts that both nations had spent a decade building \u2014 vast, armoured, bristling with guns \u2014 were about to prove what they could do."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The British lost more: fourteen ships to Germany\u2019s eleven, 6,094 men to 2,551. Three British battlecruisers blew up catastrophically when plunging shells penetrated their magazines. Admiral Beatty, watching his ships explode, turned to his flag captain and said: \u201cThere seems to be something wrong with our bloody ships today.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"But Germany retreated. The High Seas Fleet returned to port and never again challenged British control of the North Sea. The blockade that was slowly strangling Germany held. Jutland was a tactical disappointment but a strategic victory \u2014 the fleet that controls the sea lanes wins, even without a decisive battle."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Jellicoe was described as the only man on either side who could have lost the war in an afternoon. Sometimes the bravest decision is the cautious one.")
+  );}},
+  midway:{title:"Midway",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"4\u20137 June 1942"),
+    h(STitle,{noTop:true},"Five Minutes That Changed the War"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Six months after Pearl Harbor, Japan was undefeated. The Imperial Navy had swept across the Pacific with a speed and ferocity that stunned the world. Admiral Yamamoto\u2019s plan for Midway was to lure the remnants of the American fleet into a trap and destroy it. He had four fleet carriers, the finest naval air power on Earth, and the confidence of a navy that had not lost a battle."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"He did not know that American codebreakers had cracked the Japanese naval code. Admiral Nimitz knew exactly what was coming, and where. He positioned his three carriers northeast of Midway and waited."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"On the morning of 4 June, wave after wave of American torpedo bombers attacked the Japanese carriers at low level. They were slaughtered. Entire squadrons were wiped out without scoring a single hit. Torpedo Squadron 8 from USS Hornet lost all fifteen aircraft and all but one of its thirty men."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"But the torpedo bombers had drawn the Japanese fighters down to sea level. At 10:22, thirty-seven American dive bombers from Enterprise and Yorktown arrived at 14,000 feet and found the Japanese flight decks unprotected, crammed with fuelled and armed aircraft. In five minutes \u2014 five minutes \u2014 three Japanese carriers were turned into infernos. A fourth was sunk that afternoon."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Japan lost four fleet carriers, a cruiser, 248 aircraft, and over 3,000 men, including many of their most experienced pilots. They never recovered. The tide of the Pacific war turned in five minutes of screaming dive bombers over a blue ocean."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Intelligence wins wars. The codebreakers who cracked JN-25 did as much to win Midway as the pilots who flew the missions. And the sacrifice of the torpedo bomber crews, who died almost to a man without scoring a hit, drew down the fighters that made the dive bombers\u2019 attack possible. Their courage was not wasted.")
+  );}},
+  salamis:{title:"Salamis",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"September 480 BC"),
+    h(STitle,{noTop:true},"The Strait Where Western Civilisation Was Saved"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Xerxes, Great King of Persia, had invaded Greece with the largest army the ancient world had ever assembled. The Spartans had died at Thermopylae. Athens was burning. The Greek fleet \u2014 370 ships against perhaps 800 Persian \u2014 was the last thing standing between Greece and total conquest."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The Athenian commander Themistocles understood one thing: in the open sea, the Persians\u2019 numbers would overwhelm them. But in a narrow strait, numbers become a liability. He lured the Persian fleet into the channel between the island of Salamis and the mainland \u2014 a channel barely a mile wide."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The Persian ships poured into the strait at dawn, confident of victory. They jammed together. They could not manoeuvre. The heavier Greek triremes, built for ramming, drove into them. The Persian fleet, unable to use its speed or its numbers, was methodically destroyed. Ship after ship was rammed, boarded, or driven onto the rocks."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Xerxes watched from a golden throne on the hillside above the strait. By sunset, a third of his fleet was gone. He withdrew from Greece. The invasion was over."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"If Salamis had gone the other way, there would have been no Athenian democracy, no Socrates, no Plato, no Aristotle. The entire intellectual foundation of Western civilisation depended on 370 wooden ships and the cunning of one Athenian admiral who chose his ground."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Choose your waters. In the right strait, 370 ships can defeat 800. Themistocles did not fight the battle the Persians wanted \u2014 he fought the battle he could win.")
+  );}},
+  greatvoyages:{title:"Great Voyages",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"Exploration & Endurance"),
+    h(STitle,{noTop:true},"The Voyages That Made the World"),
+    h(RTable,{headers:["Voyage","Date","The Story"],rows:[
+      ["Magellan / Elcano","1519\u201322","Set out with 5 ships and 270 men to find a western route to the Spice Islands. Magellan was killed in the Philippines. Elcano brought one ship and 18 men home \u2014 the first to sail around the world."],
+      ["Drake","1577\u201380","Sailed the Golden Hind around the globe, raiding Spanish treasure ships along the way. Returned to Plymouth with \u00a3600,000 of Spanish silver \u2014 more than the Crown\u2019s annual income. Knighted on his own deck by Elizabeth I."],
+      ["Cook","1768\u201371","Observed the Transit of Venus, then sailed south into uncharted ocean. Charted New Zealand and the east coast of Australia. His methods of preventing scurvy \u2014 sauerkraut, fresh provisions, obsessive cleanliness \u2014 kept his crew alive when most expeditions lost half their men."],
+      ["Shackleton","1914\u201316","Endurance crushed by Antarctic pack ice. Led 28 men across ice floes, then sailed 800 miles across the Southern Ocean in a 22-foot open boat to South Georgia. Crossed unmapped mountains to reach a whaling station. Went back for every man. Not a single life lost."],
+      ["Chichester","1966\u201367","Sailed Gipsy Moth IV solo around the world with one stop in Sydney. 29,630 miles. Knighted at Greenwich by the Queen using the same sword Elizabeth I had used on Drake."],
+      ["Knox-Johnston","1968\u201369","First solo non-stop circumnavigation. 312 days alone at sea in Suahili. Won the Golden Globe Race \u2014 the only finisher out of nine starters."],
+      ["MacArthur","2004\u201305","Fastest solo circumnavigation: 71 days, 14 hours. A 28-year-old from Derbyshire, alone on a 75-foot trimaran, sailing through the Southern Ocean in winter."]
+    ]})
+  );}},
+  navhistory:{title:"The Royal Navy",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"Five Centuries of Command"),
+    h(STitle,{noTop:true},"The Service That Shaped the World"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:16}},"From Tudor adventurers to nuclear submarines, the Royal Navy has been the instrument of British power for five centuries. No other institution has shaped the modern world as profoundly \u2014 for better and worse."),
+    h(RTable,{headers:["Date","Event"],rows:[
+      ["1340","Battle of Sluys \u2014 Edward III destroys the French fleet in the first major English naval victory"],
+      ["1588","The Armada \u2014 Drake and Howard defeat the greatest invasion fleet ever assembled"],
+      ["1660","Royal Navy formally established under Charles II with professional officer corps and permanent fleet"],
+      ["1759","Annus Mirabilis \u2014 victories at Lagos and Quiberon Bay establish global naval dominance"],
+      ["1805","Trafalgar \u2014 Nelson\u2019s final and greatest victory secures a century of unchallenged supremacy"],
+      ["1906","HMS Dreadnought launched \u2014 so revolutionary she makes every other battleship in the world obsolete overnight"],
+      ["1916","Jutland \u2014 the last great clash of battleship fleets"],
+      ["1940","Dunkirk \u2014 the Navy and 700 civilian boats evacuate 338,000 troops from the beaches of France in nine days"],
+      ["1941\u201345","Battle of the Atlantic \u2014 the longest and most vital campaign of the war, fought against U-boats in the freezing North Atlantic"],
+      ["1982","The Falklands \u2014 a task force sails 8,000 miles in three weeks to retake islands most people had never heard of. Six ships lost, 255 killed. The islands were liberated in 74 days."]
+    ]})
+  );}},
     fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
     h(Badge,{type:"reference"},"Reference"),
     h(WeatherFrontsDiagram),
@@ -4567,7 +4671,7 @@ var CONTENT={
 var SECTIONS={
   knowyourboat:{title:"Know Your Boat",icon:"🚢",topics:[{id:"boatanatomy",name:"Boat Anatomy",preview:"Deck, hull and rigging terms"},{id:"sailnames",name:"The Sails",preview:"Mainsail, jib, spinnaker and more"}]},
   emergency:{title:"Emergency Procedures",icon:"🆘",topics:[{id:"mob",name:"Man Overboard",preview:"Immediate recovery"},{id:"mayday",name:"Mayday Call",preview:"VHF Ch 16 script"},{id:"fire",name:"Fire on Board",preview:"By type — actions"},{id:"flood",name:"Taking on Water",preview:"Plug & pump"},{id:"abandon",name:"Abandon Ship",preview:"Life raft procedure"},{id:"aground",name:"Running Aground",preview:"Assess & free"},{id:"enginefail",name:"Engine Failure",preview:"Diagnose & sail home"}]},
-  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"},{id:"celestial",name:"Celestial Navigation",preview:"Sun, stars & finding your position"}]},
+  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"},{id:"celestial",name:"Celestial Navigation",preview:"Sun, stars & finding your position"},{id:"papercharts",name:"Paper Charts & Plotting",preview:"Bearings, fixes, course to steer"}]},
   weather:{title:"Weather & Wind",icon:"🌬️",topics:[{id:"stormtactics",name:"Storm Tactics",preview:"Heave-to, lie a-hull"},{id:"fronts",name:"Weather Fronts",preview:"Warm, cold, squall prep"},{id:"barometer",name:"Barometer & Pressure",preview:"Tendency, readings, what they mean"}]},
   sailing:{title:"Sail Handling",icon:"⛵",topics:[{id:"reef",name:"Reefing",preview:"When & how"},{id:"tacking",name:"Tacking",preview:"Helm & crew actions"},{id:"sailtrim",name:"Sail Trim",preview:"Points of sail, telltales, controls"},{id:"heaveto",name:"Heaving-To",preview:"Stop the boat safely"},{id:"jibing",name:"Jibing",preview:"Controlled gybe"}]},
   seamanship:{title:"Seamanship",icon:"⚓",topics:[{id:"anchoring",name:"Anchoring",preview:"Scope, holding, procedure"},{id:"berthing",name:"Coming Alongside",preview:"Approach, lines, med moor"}]},
@@ -4576,6 +4680,7 @@ var SECTIONS={
   cocktails:{title:"Elixirs of the Sea",icon:"🍹",topics:[{id:"highseas",name:"The High Seas",preview:"Premium gin & lemon"},{id:"darkstormy",name:"Dark 'n Stormy",preview:"Dark rum & ginger beer"},{id:"saltydog",name:"Salty Dog",preview:"Gin, grapefruit, salted rim"},{id:"navygrog",name:"Navy Grog",preview:"Rum, lime, honey"},{id:"anchorsaway",name:"Anchor's Away",preview:"Spiced rum & blue curaçao"},{id:"mermaidkiss",name:"Mermaid's Kiss",preview:"Coconut rum & pineapple"},{id:"captainscoffee",name:"Captain's Coffee",preview:"Dark rum & hot coffee"}]},
   shanties:{title:"Shanties & Songs of the Sea",icon:"🎵",topics:[{id:"howpleasant",name:"How Pleasant and Delightful",preview:"A sailor's farewell ballad"},{id:"hangingjohnny",name:"Hanging Johnny",preview:"A hauling shanty"},{id:"shallowbrown",name:"Shallow Brown",preview:"A capstan shanty"},{id:"shoalsofherring",name:"Shoals of Herring",preview:"A fisherman's ballad"}]},
   poetry:{title:"When Words Are Needed",icon:"📜",topics:[{id:"sailorsblessing",name:"A Sailor's Blessing",preview:"An opening invocation"},{id:"seafever",name:"Sea Fever",preview:"John Masefield"},{id:"crossingbar",name:"Crossing the Bar",preview:"Alfred Lord Tennyson"},{id:"if",name:"If —",preview:"Rudyard Kipling"},{id:"drakesdrum",name:"Drake's Drum",preview:"Henry Newbolt"},{id:"doverbeach",name:"Dover Beach",preview:"Matthew Arnold"},{id:"convergence",name:"The Convergence of the Twain",preview:"Thomas Hardy"},{id:"ulysses",name:"Ulysses",preview:"Alfred Lord Tennyson — final passage"},{id:"chapman",name:"On First Looking into Chapman's Homer",preview:"John Keats"},{id:"mobydick",name:"Loomings",preview:"Herman Melville — Moby Dick, Chapter I"},{id:"arielsong",name:"Ariel's Song",preview:"William Shakespeare — The Tempest"},{id:"crispinsday",name:"St Crispin's Day",preview:"William Shakespeare — Henry V"},{id:"prospero",name:"We Are Such Stuff",preview:"William Shakespeare — The Tempest"},{id:"othello",name:"Moving Accidents by Flood and Field",preview:"William Shakespeare — Othello"},{id:"invictus",name:"Invictus",preview:"W.E. Henley"},{id:"innisfree",name:"The Lake Isle of Innisfree",preview:"W.B. Yeats"},{id:"donotgo",name:"Do Not Go Gentle into That Good Night",preview:"Dylan Thomas"},{id:"highflight",name:"High Flight",preview:"John Gillespie Magee"},{id:"shackleton",name:"Men Wanted",preview:"Ernest Shackleton"}]},
+  history:{title:"Maritime History",icon:"⚔️",topics:[{id:"capestv",name:"Cape St Vincent",preview:"Nelson makes his name, 1797"},{id:"nile",name:"Battle of the Nile",preview:"Nelson destroys the French fleet, 1798"},{id:"copenhagen",name:"Copenhagen",preview:"Nelson\u2019s blind eye, 1801"},{id:"trafalgar",name:"Trafalgar",preview:"Nelson\u2019s greatest victory, 1805"},{id:"salamis",name:"Salamis",preview:"Themistocles saves Greece, 480 BC"},{id:"armada",name:"The Spanish Armada",preview:"Drake & the Protestant wind, 1588"},{id:"jutland",name:"Jutland",preview:"The last great fleet action, 1916"},{id:"midway",name:"Midway",preview:"The turning point in the Pacific, 1942"},{id:"greatvoyages",name:"Great Voyages",preview:"Magellan, Cook, Shackleton, Chichester"},{id:"navhistory",name:"The Royal Navy",preview:"From Drake to the modern fleet"}]},
 };
 
 var SEARCH_IDX=[];
@@ -4589,6 +4694,12 @@ for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SE
   {id:"units",title:"Units Converter",section:"Tools",preview:"Knots, metres, nautical miles, temperature"},
   {id:"passage",title:"Passage Planner",section:"Tools",preview:"ETA, tidal effect, departure time"},
   {id:"celestial",title:"Celestial Navigation",section:"Navigation",preview:"Sun, stars, noon sight, Polaris",type:"content"},
+  {id:"papercharts",title:"Paper Charts & Plotting",section:"Navigation",preview:"Bearings, fixes, course to steer",type:"content"},
+  {id:"trafalgar",title:"Trafalgar",section:"Maritime History",preview:"Nelson\'s greatest victory, 1805",type:"content"},
+  {id:"nile",title:"Battle of the Nile",section:"Maritime History",preview:"Nelson destroys the French fleet, 1798",type:"content"},
+  {id:"copenhagen",title:"Copenhagen",section:"Maritime History",preview:"Nelson\'s blind eye, 1801",type:"content"},
+  {id:"capestv",title:"Cape St Vincent",section:"Maritime History",preview:"Nelson makes his name, 1797",type:"content"},
+  {id:"greatvoyages",title:"Great Voyages",section:"Maritime History",preview:"Magellan, Cook, Shackleton, Chichester",type:"content"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
   {id:"anchor",title:"Anchor Calculator",section:"Tools",preview:"Scope and chain calculator"},
@@ -4611,7 +4722,12 @@ var RELATED={
   barometer:["fronts","stormtactics","weather"],
   firstaid:["hypothermia","mob","harness"],
   tides:["anchoring","passage","fronts"],
-  celestial:["nightsailing","fogsailing","colregs"],
+  celestial:["nightsailing","papercharts","colregs"],
+  papercharts:["celestial","colregs","buoyage"],
+  trafalgar:["nile","copenhagen","capestv"],
+  capestv:["nile","trafalgar","navhistory"],
+  nile:["trafalgar","copenhagen","greatvoyages"],
+  copenhagen:["trafalgar","nile","navhistory"],
   sailtrim:["tacking","reef","heaveto"],
 };
 
@@ -5642,8 +5758,8 @@ function BerthingLinesDiagram(){
 }
 
 function WeatherFrontsDiagram(){
-  return h("svg",{width:"100%",viewBox:"0 0 300 170",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
-    h("rect",{width:300,height:170,fill:"#050D18"}),
+  return h("svg",{width:"100%",viewBox:"0 0 300 182",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
+    h("rect",{width:300,height:182,fill:"#050D18"}),
     h("text",{x:150,y:11,fill:MU,fontSize:8,textAnchor:"middle",letterSpacing:"0.1em"},"WARM FRONT APPROACHING →"),
     h("rect",{x:0,y:16,width:300,height:140,fill:"#040C18"}),
     h("path",{d:"M0,90 L300,90",stroke:"rgba(48,112,184,0.2)",strokeWidth:1}),
@@ -5682,30 +5798,30 @@ function ScopeExplainerDiagram(){
     {scope:5,label:"5:1 — Standard",color:AM,note:"Normal conditions"},
     {scope:7,label:"7:1 — Recommended",color:GR,note:"Offshore / overnight"},
   ];
-  var depth=5,w=300,seabedY=120,waterY=40;
-  return h("svg",{width:"100%",viewBox:"0 0 300 155",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
-    h("rect",{width:w,height:155,fill:"#050D18"}),
+  var depth=5,w=300,seabedY=130,waterY=50;
+  return h("svg",{width:"100%",viewBox:"0 0 300 165",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
+    h("rect",{width:w,height:165,fill:"#050D18"}),
     h("rect",{x:0,y:waterY,width:w,height:seabedY-waterY,fill:"rgba(6,16,44,0.9)"}),
-    h("rect",{x:0,y:seabedY,width:w,height:155-seabedY,fill:"rgba(24,14,6,0.9)"}),
+    h("rect",{x:0,y:seabedY,width:w,height:165-seabedY,fill:"rgba(24,14,6,0.9)"}),
     h("line",{x1:0,y1:waterY,x2:w,y2:waterY,stroke:"rgba(48,112,184,0.25)",strokeWidth:1}),
     h("line",{x1:0,y1:seabedY,x2:w,y2:seabedY,stroke:"rgba(60,42,18,0.5)",strokeWidth:1}),
-    h("text",{x:14,y:waterY-4,fill:MU,fontSize:7},"depth: "+depth+"m"),
+    h("text",{x:14,y:waterY-14,fill:MU,fontSize:7},"depth: "+depth+"m"),
     scenarios.map(function(s,i){
-      var bx=20+(i*90),chainLen=depth*s.scope;
+      var bx=25+(i*90),chainLen=depth*s.scope;
       var endX=Math.min(bx+chainLen*3.5,bx+70);
       return h("g",{key:i},
-        h("text",{x:bx+35,y:waterY+10,fill:s.color,fontSize:7,textAnchor:"middle"},s.label),
+        h("text",{x:bx+35,y:waterY-6,fill:s.color,fontSize:7.5,textAnchor:"middle",fontWeight:600},s.label),
         h("text",{x:bx+10,y:waterY+8,fontSize:10},"⛵"),
         h("line",{x1:bx+10,y1:waterY+5,x2:endX,y2:seabedY,stroke:s.color,strokeWidth:2,strokeDasharray:"4 2",opacity:0.8}),
-        h("text",{x:endX,y:seabedY+8,fontSize:8,textAnchor:"middle"},"⚓"),
-        h("text",{x:bx+35,y:145,fill:MU,fontSize:6.5,textAnchor:"middle"},s.note)
+        h("text",{x:endX,y:seabedY+10,fontSize:8,textAnchor:"middle"},"⚓"),
+        h("text",{x:bx+35,y:148,fill:MU,fontSize:6.5,textAnchor:"middle"},s.note)
       );
     })
   );
 }
 
 function PointsOfSailDiagram(){
-  var cx=150,cy=118,r=88;
+  var cx=150,cy=130,r=82;
   var sectors=[
     {from:-45,to:45,label:"In Irons",sublabel:"no-go zone",color:RE},
     {from:45,to:80,label:"Close\nHauled",sublabel:"sheets hard in",color:GO},
@@ -5718,22 +5834,22 @@ function PointsOfSailDiagram(){
     {from:280,to:315,label:"Close\nReach",sublabel:"",color:GL},
     {from:315,to:360-45,label:"Close\nHauled",sublabel:"",color:GO},
   ];
-  return h("svg",{width:"100%",viewBox:"0 0 300 248",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
-    h("rect",{width:300,height:248,fill:"#050D18"}),
+  return h("svg",{width:"100%",viewBox:"0 0 300 270",style:{display:"block",margin:"10px 0",borderRadius:8,border:"1px solid "+NB}},
+    h("rect",{width:300,height:270,fill:"#050D18"}),
     sectors.map(function(s,i){
       var sa=(s.from-90)*Math.PI/180,ea=(s.to-90)*Math.PI/180;
       var x1=cx+r*Math.cos(sa),y1=cy+r*Math.sin(sa);
       var x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);
       var large=(s.to-s.from)>180?1:0;
       var mid=((s.from+s.to)/2-90)*Math.PI/180;
-      var tr=r+26;
+      var tr=r+32;
       var lx=cx+tr*Math.cos(mid),ly=cy+tr*Math.sin(mid);
       var parts2=s.label.split("\n");
       return h("g",{key:i},
         h("path",{d:"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 "+large+",1 "+x2+","+y2+" Z",fill:s.color,opacity:0.18}),
         h("path",{d:"M"+x1+","+y1+" A"+r+","+r+" 0 "+large+",1 "+x2+","+y2,fill:"none",stroke:s.color,strokeWidth:2,opacity:0.7}),
-        s.sublabel&&h("text",{x:lx,y:ly-5,fill:s.color,fontSize:7,textAnchor:"middle",fontWeight:700},parts2[0]),
-        s.sublabel&&parts2[1]&&h("text",{x:lx,y:ly+4,fill:s.color,fontSize:7,textAnchor:"middle",fontWeight:700},parts2[1]),
+        s.sublabel&&h("text",{x:lx,y:ly-4,fill:s.color,fontSize:6.5,textAnchor:"middle",fontWeight:700},parts2[0]),
+        s.sublabel&&parts2[1]&&h("text",{x:lx,y:ly+5,fill:s.color,fontSize:6.5,textAnchor:"middle",fontWeight:700},parts2[1]),
         s.sublabel&&h("text",{x:lx,y:ly+13,fill:MU,fontSize:6,textAnchor:"middle"},s.sublabel)
       );
     }),
@@ -5742,7 +5858,7 @@ function PointsOfSailDiagram(){
     h("line",{x1:cx,y1:cy-r-16,x2:cx,y2:cy-r+4,stroke:BL,strokeWidth:2}),
     h("polygon",{points:cx+","+(cy-r-18)+" "+(cx-4)+","+(cy-r-12)+" "+(cx+4)+","+(cy-r-12),fill:BL}),
     h("text",{x:cx,y:cy-r-22,fill:BL,fontSize:8,textAnchor:"middle"},"WIND"),
-    h("text",{x:cx,y:242,fill:MU,fontSize:7,textAnchor:"middle"},"Sail trim varies with apparent wind — always use telltales")
+    h("text",{x:cx,y:262,fill:MU,fontSize:7,textAnchor:"middle"},"Sail trim varies with apparent wind — always use telltales")
   );
 }
 
@@ -6582,7 +6698,8 @@ function HomeScreen(props){
     {id:"safety",icon:"🦺",label:"Safety & First Aid",desc:"First aid · Harness · Hypothermia"},
     {id:"cocktails",icon:"🍹",label:"Elixirs of the Sea",desc:"The High Seas · Dark 'n Stormy · Navy Grog"},
     {id:"shanties",icon:"🎵",label:"Shanties & Songs",desc:"How Pleasant · Hanging Johnny · Shallow Brown"},
-    {id:"poetry",icon:"📜",label:"When Words Are Needed",desc:"Masefield · Tennyson · Kipling · Hardy · more"}
+    {id:"poetry",icon:"📜",label:"When Words Are Needed",desc:"Masefield · Tennyson · Kipling · Hardy · more"},
+    {id:"history",icon:"⚔️",label:"Maritime History",desc:"Trafalgar · The Nile · Great Voyages"}
   ];
 
   // PWA install prompt
@@ -8042,23 +8159,12 @@ function ChartTool(){
     ),
     err&&h("div",{style:{background:"rgba(196,48,48,0.1)",borderBottom:"1px solid rgba(196,48,48,0.2)",padding:"6px 12px",fontFamily:"'Crimson Text',Georgia,serif",fontSize:13,color:"#E08080",fontStyle:"italic"}},err),
     h("div",{ref:mapRef,style:{flex:1,background:"#040C18",position:"relative",minHeight:0}},
-      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18",overflowY:"auto"}},
-        h("div",{style:{fontSize:48,marginBottom:20,opacity:0.25}},"\ud83d\uddfa\ufe0f"),
+      isOffline&&h("div",{style:{position:"absolute",inset:0,zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 28px",textAlign:"center",background:"#040C18"}},
+        h("div",{style:{fontSize:48,marginBottom:24,opacity:0.2}},"\u2693"),
         h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:22,fontWeight:600,color:GL,letterSpacing:"0.03em",marginBottom:12}},"No connection"),
-        h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 20px"}}),
-        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.75,marginBottom:28,maxWidth:280}},
-          h("span",null,"Chart tiles need an internet connection. Grab your paper chart."),
-          h("br"),h("br"),
-          h("span",{style:{color:GD}},"Fair winds and following seas.")
-        ),
-        h("div",{style:{display:"flex",flexDirection:"column",width:"100%",maxWidth:280,borderRadius:8,overflow:"hidden",border:"1px solid rgba(22,36,56,0.9)"}},
-          [{name:"Navionics",desc:"Offline charts & tidal data"},{name:"iSailor",desc:"Downloadable chart regions"},{name:"UKHO Admiralty",desc:"Official paper charts"}]
-          .map(function(item,i){
-            return h("div",{key:i,style:{padding:"11px 14px",background:NC,borderBottom:i<2?"1px solid rgba(22,36,56,0.9)":"none"}},
-              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:14,color:WH}},item.name),
-              h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:11,color:MU}},item.desc)
-            );
-          })
+        h("div",{style:{width:40,height:1,background:"linear-gradient(90deg,transparent,rgba(200,168,74,0.3),transparent)",margin:"0 auto 24px"}}),
+        h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontStyle:"italic",fontSize:16,color:WH,lineHeight:1.8,maxWidth:280}},
+          "Nelson didn\u2019t need the internet to command the seas \u2014 and neither do you. Grab your paper charts and take to the winds."
         )
       ),
       !isOffline&&loading&&h("div",{style:{position:"absolute",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,background:"#040C18"}},
@@ -8842,6 +8948,120 @@ var CONTENT={
     ]}),
     h(InfoBox,{type:"tip",title:"Practice"},"Celestial navigation is a skill that requires practice. Take sights in good conditions alongside GPS to build confidence before relying on it. A sextant is only as good as the person using it.")
   );}},
+  trafalgar:{title:"Trafalgar",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"21 October 1805"),
+    h(STitle,{noTop:true},"The Day That Made the Modern World"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"27 British ships against 33 French and Spanish. Nelson\u2019s flagship HMS Victory leading the attack. The fate of Europe hanging on a single afternoon."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Napoleon had assembled the largest invasion force since William the Conqueror. 200,000 troops at Boulogne, flat-bottomed boats ready to cross the Channel. All he needed was three days of naval superiority. If the Combined Fleet could control the Channel for seventy-two hours, England would fall. Nelson was the only thing standing in the way."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"His plan was genius disguised as madness. Every admiral in history had fought in parallel lines. Nelson would attack in two columns, driving perpendicular into the enemy line \u2014 straight into their broadsides. His leading ships would be under devastating fire for forty minutes before they could fire a single shot in reply. Any other fleet would have been annihilated. But Nelson understood something no one else did: his crews were so superbly trained, so aggressive in close action, that once they broke through the line and fought ship-to-ship, the result was inevitable."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson did not command from the rear. He led the attack personally, aboard Victory, at the head of the weather column \u2014 the first ship into the enemy guns. For forty minutes his flagship absorbed broadside after broadside from multiple ships while he stood on the quarterdeck in full view, refusing to take cover, refusing to go below. His secretary was killed beside him. His mizzen topmast was shot away. Men fell all around him. He did not move. When Victory finally smashed through the enemy line, her carronades erupted at point-blank range and the battle became a close-quarters brawl in which British gunnery was devastatingly superior. The French and Spanish fleet was cut into three isolated groups, each overwhelmed by concentrated fire. Twenty-two enemy ships were captured or destroyed. Not a single British ship was lost."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson would not let another man lead the attack and answer for his plan. And he would not hide who he was. He wore his full admiral\u2019s coat emblazoned with the four gold stars of his orders of chivalry, glinting in the October sun. His officers begged him to cover them \u2014 they made him the most conspicuous target on the quarterdeck. He refused. At 1:15, a French marksman in the mizzen top of the R\u00e9doutable spotted those stars and fired. He was carried below to the cockpit, where he lay dying for three hours as the battle raged above. His last confirmed words were: \u201cThank God I have done my duty.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:16}},"He was forty-seven. He had lost his right arm at Tenerife, the sight in his right eye at Calvi, and most of his teeth to scurvy. He had won every major fleet action he had commanded. He had saved his country. He was \u2014 and remains \u2014 the greatest admiral who ever lived."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"Trafalgar did not just win a battle. It ended any possibility of a French invasion of Britain. It gave the Royal Navy unchallenged command of every ocean for a hundred years. It secured the trade routes that built the British Empire. The world we live in was shaped on that October afternoon off the coast of Spain.")
+  );}},
+  nile:{title:"Battle of the Nile",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"1\u20132 August 1798"),
+    h(STitle,{noTop:true},"The Night Nelson Rewrote the Rules"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"13 British ships against 13 French \u2014 equal numbers, but the French were anchored in a defensive line with shore batteries. By dawn, 11 of the 13 French ships were captured or destroyed."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Napoleon had invaded Egypt with 40,000 troops. His fleet, under Admiral Brueys, was the army\u2019s lifeline \u2014 its only route home. Nelson had been hunting them across the Mediterranean for weeks with no intelligence, no charts of Egyptian waters, and no margin for error. If Brueys escaped, Napoleon would conquer the Middle East and threaten India."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson found the French fleet anchored in a strong defensive line in Aboukir Bay. Brueys believed his position was impregnable \u2014 shallows on one side, his ships\u2019 broadsides on the other. Any conventional admiral would have waited until morning to reconnoitre. Nelson attacked immediately, at dusk, with the sun setting behind him."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Then came the stroke of genius. Nelson saw what Brueys had missed: if the French ships had enough water under them to swing at anchor, there was enough room to sail between them and the shore. Captain Foley, leading the British line, took his ship around the head of the French formation and down their landward side. The French had not even manned their shore-facing guns. They were caught in a murderous crossfire from both sides simultaneously."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The French flagship L\u2019Orient \u2014 a 120-gun leviathan, one of the largest warships afloat \u2014 caught fire and exploded with such force that the detonation was heard twenty-five miles away. Both fleets stopped firing in shock. Burning debris rained from the sky for minutes. Only two French ships escaped from the entire fleet."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson was struck in the forehead by a piece of shrapnel during the battle. Blood poured into his one good eye and he believed he was dying. He refused to be seen before other wounded men. When told of the scale of the victory, he insisted on writing despatches before being treated."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"The Nile stranded Napoleon\u2019s army in Egypt, ended French ambitions in the eastern Mediterranean, and made Nelson the most famous man in Europe. It demonstrated his defining quality as a commander: the ability to see an opportunity that everyone else assumed was impossible, and to seize it instantly.")
+  );}},
+  copenhagen:{title:"Copenhagen",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"2 April 1801"),
+    h(STitle,{noTop:true},"I Really Do Not See the Signal"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"Nelson\u2019s squadron against the entire Danish fleet plus shore batteries. Ordered by his own commander-in-chief to withdraw. He refused, fought on, and won."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Denmark, Russia, Sweden, and Prussia had formed the League of Armed Neutrality, threatening Britain\u2019s vital Baltic trade routes and access to the naval supplies \u2014 timber, tar, rope \u2014 without which the fleet could not sail. If the League held, the Royal Navy would slowly wither. The stakes could not have been higher."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson was given the attack division under the cautious Admiral Sir Hyde Parker. The Danes had turned their harbour into a fortress: ships moored as floating gun platforms, reinforced with soldiers, backed by shore batteries. Copenhagen was the most heavily defended anchorage in northern Europe."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The battle was savage. Several British ships ran aground on uncharted shoals. Others were badly damaged by the relentless Danish fire. The Danes fought with extraordinary courage, manning their guns even as their ships were shot to pieces around them. For three hours the outcome hung in the balance."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Parker, watching from two miles away aboard HMS London, decided the battle was lost. He hoisted Signal 39: \u201cDiscontinue the action.\u201d It was a direct order from the commander-in-chief of the fleet."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson\u2019s signal lieutenant reported the flag. Nelson raised his telescope to his blind eye \u2014 the one he had lost at Calvi seven years earlier \u2014 and said the words that have defined courage and initiative ever since: \u201cI really do not see the signal.\u201d He turned to his flag captain: \u201cKeep mine for closer battle flying. That\u2019s the one I obey.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Within the hour, the Danish resistance collapsed. Nelson had won. The League of Armed Neutrality disintegrated. Britain\u2019s Baltic trade was secured."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"Copenhagen showed Nelson\u2019s moral courage as much as his tactical genius. He disobeyed a direct order from his superior because he knew \u2014 from the deck of his own ship, in the smoke and thunder of battle \u2014 that he was winning. The man two miles away could not see that. Nelson trusted his own judgement over rank, and he was right. Parker was recalled in disgrace. Nelson was given command of the fleet.")
+  );}},
+  capestv:{title:"Cape St Vincent",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"14 February 1797"),
+    h(STitle,{noTop:true},"The Day Nelson Made His Name"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:GL,lineHeight:1.7,marginBottom:12,fontWeight:600}},"15 British ships against 27 Spanish. Nelson, a mere commodore, broke formation without orders and single-handedly prevented the enemy fleet from reuniting. Then he boarded two enemy ships in succession \u2014 by using one as a bridge to reach the other."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Spain had just joined France against Britain. The Spanish fleet was sailing to join the French at Brest, which would have given the combined enemy fleet overwhelming superiority in the Channel. Admiral Sir John Jervis had fifteen ships to stop twenty-seven. When told of the odds, Jervis replied: \u201cEnough, sir. If there are fifty sail, I will go through them.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The Spanish fleet was sailing in two loose groups with a wide gap between them. Jervis drove his line between the two groups to divide them. But the leading Spanish group \u2014 including several massive first-rates of over a hundred guns \u2014 began turning north to rejoin their comrades. If they succeeded, the British would face the full combined fleet and the battle would be lost."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Nelson, near the rear of the British line in HMS Captain \u2014 a 74-gun third-rate, one of the smaller ships in the fleet \u2014 saw what was happening before anyone else. Without waiting for orders, without signalling, without hesitation, he hauled his ship out of the line and threw her directly into the path of the Spanish van. One 74-gun ship against first-rates of 112 and 130 guns."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Captain was dismasted, her rigging shot away, her hull battered. But Nelson held his ground. He slowed the Spanish turn long enough for the rest of the British fleet to come up. Then, with his ship crippled and unable to manoeuvre, he did something no flag officer had done in living memory: he personally led a boarding party onto the 80-gun San Nicolas, fought his way across her deck, and used her as a bridge to board the 112-gun San Josef alongside."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"He captured both ships. The feat became known as \u201cNelson\u2019s Patent Bridge for Boarding First-Rates\u201d \u2014 a joke that captured the sheer audacity of what he had done. He was thirty-eight years old. He entered the battle as an unknown commodore. He left it a national hero."),
+    h(InfoBox,{type:"tip",title:"Why it matters"},"Cape St Vincent prevented the Spanish fleet from joining the French, preserving British control of the western approaches at a moment when invasion was a real possibility. It also revealed Nelson\u2019s defining quality: the willingness to act on his own initiative, to break the rules, to risk everything on his own judgement \u2014 and to be right. Jervis, to his eternal credit, recognised genius rather than punishing disobedience. Nelson was promoted to Rear Admiral the same month.")
+  );}},
+    armada:{title:"The Spanish Armada",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"July\u2013August 1588"),
+    h(STitle,{noTop:true},"The Island That Refused to Fall"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Philip II of Spain assembled the greatest fleet the world had ever seen: 130 ships, 30,000 men, the combined might of the most powerful empire on Earth. His plan was simple \u2014 sail up the English Channel, collect the Duke of Parma\u2019s invasion army from the Netherlands, and conquer England. Catholic Europe would be united. Protestant England would be crushed."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Against this armada stood a fleet of smaller, faster English ships commanded by Lord Howard of Effingham, with Sir Francis Drake as his deputy. Drake \u2014 who had already circumnavigated the globe, raided Spanish ports, and singed the King of Spain\u2019s beard at Cadiz \u2014 was not a man who frightened easily."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The English refused to play the Spanish game. Instead of closing for the boarding actions the Spanish wanted, they stood off and hammered the Armada with long-range gunnery as it processed up the Channel. The English ships were faster, more weatherly, and handled by better seamen. The Armada could not catch them."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"When the Armada anchored off Calais to rendezvous with Parma, Drake struck the decisive blow. Eight fireships, packed with pitch, brimstone, and loaded cannons, were sent blazing into the anchorage at midnight. The Spanish panicked. They cut their anchor cables and scattered into the darkness. The tight formation that had protected them up the Channel was gone."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Then the weather turned. A ferocious southwesterly gale \u2014 the \u201cProtestant wind\u201d \u2014 drove the remnants of the Armada north around Scotland and down the west coast of Ireland. Storm after storm shattered the fleet on rocky shores. Of the 130 ships that sailed from Spain, barely 60 limped home. England would not be invaded."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Superior seamanship defeats superior numbers. Know your waters, use your advantages, and never underestimate a lee shore in a gale.")
+  );}},
+  jutland:{title:"Jutland",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"31 May \u2013 1 June 1916"),
+    h(STitle,{noTop:true},"The Day the Dreadnoughts Clashed"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The North Sea, 80 miles off the Danish coast. For two years the British Grand Fleet and the German High Seas Fleet had circled each other like heavyweight boxers, neither willing to risk everything on a single engagement. On 31 May 1916, they finally met."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"It was the largest naval battle ever fought between surface ships. 250 vessels. 100,000 men. The dreadnoughts that both nations had spent a decade building \u2014 vast, armoured, bristling with guns \u2014 were about to prove what they could do."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The British lost more: fourteen ships to Germany\u2019s eleven, 6,094 men to 2,551. Three British battlecruisers blew up catastrophically when plunging shells penetrated their magazines. Admiral Beatty, watching his ships explode, turned to his flag captain and said: \u201cThere seems to be something wrong with our bloody ships today.\u201d"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"But Germany retreated. The High Seas Fleet returned to port and never again challenged British control of the North Sea. The blockade that was slowly strangling Germany held. Jutland was a tactical disappointment but a strategic victory \u2014 the fleet that controls the sea lanes wins, even without a decisive battle."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Jellicoe was described as the only man on either side who could have lost the war in an afternoon. Sometimes the bravest decision is the cautious one.")
+  );}},
+  midway:{title:"Midway",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"4\u20137 June 1942"),
+    h(STitle,{noTop:true},"Five Minutes That Changed the War"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Six months after Pearl Harbor, Japan was undefeated. The Imperial Navy had swept across the Pacific with a speed and ferocity that stunned the world. Admiral Yamamoto\u2019s plan for Midway was to lure the remnants of the American fleet into a trap and destroy it. He had four fleet carriers, the finest naval air power on Earth, and the confidence of a navy that had not lost a battle."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"He did not know that American codebreakers had cracked the Japanese naval code. Admiral Nimitz knew exactly what was coming, and where. He positioned his three carriers northeast of Midway and waited."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"On the morning of 4 June, wave after wave of American torpedo bombers attacked the Japanese carriers at low level. They were slaughtered. Entire squadrons were wiped out without scoring a single hit. Torpedo Squadron 8 from USS Hornet lost all fifteen aircraft and all but one of its thirty men."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"But the torpedo bombers had drawn the Japanese fighters down to sea level. At 10:22, thirty-seven American dive bombers from Enterprise and Yorktown arrived at 14,000 feet and found the Japanese flight decks unprotected, crammed with fuelled and armed aircraft. In five minutes \u2014 five minutes \u2014 three Japanese carriers were turned into infernos. A fourth was sunk that afternoon."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Japan lost four fleet carriers, a cruiser, 248 aircraft, and over 3,000 men, including many of their most experienced pilots. They never recovered. The tide of the Pacific war turned in five minutes of screaming dive bombers over a blue ocean."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Intelligence wins wars. The codebreakers who cracked JN-25 did as much to win Midway as the pilots who flew the missions. And the sacrifice of the torpedo bomber crews, who died almost to a man without scoring a hit, drew down the fighters that made the dive bombers\u2019 attack possible. Their courage was not wasted.")
+  );}},
+  salamis:{title:"Salamis",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"September 480 BC"),
+    h(STitle,{noTop:true},"The Strait Where Western Civilisation Was Saved"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Xerxes, Great King of Persia, had invaded Greece with the largest army the ancient world had ever assembled. The Spartans had died at Thermopylae. Athens was burning. The Greek fleet \u2014 370 ships against perhaps 800 Persian \u2014 was the last thing standing between Greece and total conquest."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The Athenian commander Themistocles understood one thing: in the open sea, the Persians\u2019 numbers would overwhelm them. But in a narrow strait, numbers become a liability. He lured the Persian fleet into the channel between the island of Salamis and the mainland \u2014 a channel barely a mile wide."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"The Persian ships poured into the strait at dawn, confident of victory. They jammed together. They could not manoeuvre. The heavier Greek triremes, built for ramming, drove into them. The Persian fleet, unable to use its speed or its numbers, was methodically destroyed. Ship after ship was rammed, boarded, or driven onto the rocks."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"Xerxes watched from a golden throne on the hillside above the strait. By sunset, a third of his fleet was gone. He withdrew from Greece. The invasion was over."),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:12}},"If Salamis had gone the other way, there would have been no Athenian democracy, no Socrates, no Plato, no Aristotle. The entire intellectual foundation of Western civilisation depended on 370 wooden ships and the cunning of one Athenian admiral who chose his ground."),
+    h(InfoBox,{type:"tip",title:"The lesson"},"Choose your waters. In the right strait, 370 ships can defeat 800. Themistocles did not fight the battle the Persians wanted \u2014 he fought the battle he could win.")
+  );}},
+  greatvoyages:{title:"Great Voyages",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"Exploration & Endurance"),
+    h(STitle,{noTop:true},"The Voyages That Made the World"),
+    h(RTable,{headers:["Voyage","Date","The Story"],rows:[
+      ["Magellan / Elcano","1519\u201322","Set out with 5 ships and 270 men to find a western route to the Spice Islands. Magellan was killed in the Philippines. Elcano brought one ship and 18 men home \u2014 the first to sail around the world."],
+      ["Drake","1577\u201380","Sailed the Golden Hind around the globe, raiding Spanish treasure ships along the way. Returned to Plymouth with \u00a3600,000 of Spanish silver \u2014 more than the Crown\u2019s annual income. Knighted on his own deck by Elizabeth I."],
+      ["Cook","1768\u201371","Observed the Transit of Venus, then sailed south into uncharted ocean. Charted New Zealand and the east coast of Australia. His methods of preventing scurvy \u2014 sauerkraut, fresh provisions, obsessive cleanliness \u2014 kept his crew alive when most expeditions lost half their men."],
+      ["Shackleton","1914\u201316","Endurance crushed by Antarctic pack ice. Led 28 men across ice floes, then sailed 800 miles across the Southern Ocean in a 22-foot open boat to South Georgia. Crossed unmapped mountains to reach a whaling station. Went back for every man. Not a single life lost."],
+      ["Chichester","1966\u201367","Sailed Gipsy Moth IV solo around the world with one stop in Sydney. 29,630 miles. Knighted at Greenwich by the Queen using the same sword Elizabeth I had used on Drake."],
+      ["Knox-Johnston","1968\u201369","First solo non-stop circumnavigation. 312 days alone at sea in Suahili. Won the Golden Globe Race \u2014 the only finisher out of nine starters."],
+      ["MacArthur","2004\u201305","Fastest solo circumnavigation: 71 days, 14 hours. A 28-year-old from Derbyshire, alone on a 75-foot trimaran, sailing through the Southern Ocean in winter."]
+    ]})
+  );}},
+  navhistory:{title:"The Royal Navy",badge:"reference",render:function(){return h("div",{style:{padding:16}},
+    h(Badge,{type:"reference"},"Five Centuries of Command"),
+    h(STitle,{noTop:true},"The Service That Shaped the World"),
+    h("div",{style:{fontFamily:"'Crimson Text',Georgia,serif",fontSize:15,color:WH,lineHeight:1.7,marginBottom:16}},"From Tudor adventurers to nuclear submarines, the Royal Navy has been the instrument of British power for five centuries. No other institution has shaped the modern world as profoundly \u2014 for better and worse."),
+    h(RTable,{headers:["Date","Event"],rows:[
+      ["1340","Battle of Sluys \u2014 Edward III destroys the French fleet in the first major English naval victory"],
+      ["1588","The Armada \u2014 Drake and Howard defeat the greatest invasion fleet ever assembled"],
+      ["1660","Royal Navy formally established under Charles II with professional officer corps and permanent fleet"],
+      ["1759","Annus Mirabilis \u2014 victories at Lagos and Quiberon Bay establish global naval dominance"],
+      ["1805","Trafalgar \u2014 Nelson\u2019s final and greatest victory secures a century of unchallenged supremacy"],
+      ["1906","HMS Dreadnought launched \u2014 so revolutionary she makes every other battleship in the world obsolete overnight"],
+      ["1916","Jutland \u2014 the last great clash of battleship fleets"],
+      ["1940","Dunkirk \u2014 the Navy and 700 civilian boats evacuate 338,000 troops from the beaches of France in nine days"],
+      ["1941\u201345","Battle of the Atlantic \u2014 the longest and most vital campaign of the war, fought against U-boats in the freezing North Atlantic"],
+      ["1982","The Falklands \u2014 a task force sails 8,000 miles in three weeks to retake islands most people had never heard of. Six ships lost, 255 killed. The islands were liberated in 74 days."]
+    ]})
+  );}},
     fronts:{title:"Weather Fronts",badge:"reference",render:function(){return h("div",{style:{padding:16}},
     h(Badge,{type:"reference"},"Reference"),
     h(WeatherFrontsDiagram),
@@ -9527,7 +9747,7 @@ var CONTENT={
 var SECTIONS={
   knowyourboat:{title:"Know Your Boat",icon:"🚢",topics:[{id:"boatanatomy",name:"Boat Anatomy",preview:"Deck, hull and rigging terms"},{id:"sailnames",name:"The Sails",preview:"Mainsail, jib, spinnaker and more"}]},
   emergency:{title:"Emergency Procedures",icon:"🆘",topics:[{id:"mob",name:"Man Overboard",preview:"Immediate recovery"},{id:"mayday",name:"Mayday Call",preview:"VHF Ch 16 script"},{id:"fire",name:"Fire on Board",preview:"By type — actions"},{id:"flood",name:"Taking on Water",preview:"Plug & pump"},{id:"abandon",name:"Abandon Ship",preview:"Life raft procedure"},{id:"aground",name:"Running Aground",preview:"Assess & free"},{id:"enginefail",name:"Engine Failure",preview:"Diagnose & sail home"}]},
-  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"},{id:"celestial",name:"Celestial Navigation",preview:"Sun, stars & finding your position"}]},
+  navigation:{title:"Navigation",icon:"🧭",topics:[{id:"colregs",name:"Rules of the Road",preview:"Priority & stand-on rules"},{id:"navlights",name:"Navigation Lights",preview:"Light arcs & reading vessels"},{id:"buoyage",name:"IALA Buoyage",preview:"Lateral, cardinal, special marks"},{id:"dayssignals",name:"Lights & Day Shapes",preview:"Shapes, sound & whistle signals"},{id:"vhf",name:"VHF Channel Guide",preview:"Ch 16, working channels, DSC"},{id:"tides",name:"Tides & Tidal Streams",preview:"HW/LW, springs, neaps"},{id:"fogsailing",name:"Sailing in Fog",preview:"Signals, speed, radar"},{id:"nightsailing",name:"Night Sailing",preview:"Lookout, lights, watches"},{id:"celestial",name:"Celestial Navigation",preview:"Sun, stars & finding your position"},{id:"papercharts",name:"Paper Charts & Plotting",preview:"Bearings, fixes, course to steer"}]},
   weather:{title:"Weather & Wind",icon:"🌬️",topics:[{id:"stormtactics",name:"Storm Tactics",preview:"Heave-to, lie a-hull"},{id:"fronts",name:"Weather Fronts",preview:"Warm, cold, squall prep"},{id:"barometer",name:"Barometer & Pressure",preview:"Tendency, readings, what they mean"}]},
   sailing:{title:"Sail Handling",icon:"⛵",topics:[{id:"reef",name:"Reefing",preview:"When & how"},{id:"tacking",name:"Tacking",preview:"Helm & crew actions"},{id:"sailtrim",name:"Sail Trim",preview:"Points of sail, telltales, controls"},{id:"heaveto",name:"Heaving-To",preview:"Stop the boat safely"},{id:"jibing",name:"Jibing",preview:"Controlled gybe"}]},
   seamanship:{title:"Seamanship",icon:"⚓",topics:[{id:"anchoring",name:"Anchoring",preview:"Scope, holding, procedure"},{id:"berthing",name:"Coming Alongside",preview:"Approach, lines, med moor"}]},
@@ -9536,6 +9756,7 @@ var SECTIONS={
   cocktails:{title:"Elixirs of the Sea",icon:"🍹",topics:[{id:"highseas",name:"The High Seas",preview:"Premium gin & lemon"},{id:"darkstormy",name:"Dark 'n Stormy",preview:"Dark rum & ginger beer"},{id:"saltydog",name:"Salty Dog",preview:"Gin, grapefruit, salted rim"},{id:"navygrog",name:"Navy Grog",preview:"Rum, lime, honey"},{id:"anchorsaway",name:"Anchor's Away",preview:"Spiced rum & blue curaçao"},{id:"mermaidkiss",name:"Mermaid's Kiss",preview:"Coconut rum & pineapple"},{id:"captainscoffee",name:"Captain's Coffee",preview:"Dark rum & hot coffee"}]},
   shanties:{title:"Shanties & Songs of the Sea",icon:"🎵",topics:[{id:"howpleasant",name:"How Pleasant and Delightful",preview:"A sailor's farewell ballad"},{id:"hangingjohnny",name:"Hanging Johnny",preview:"A hauling shanty"},{id:"shallowbrown",name:"Shallow Brown",preview:"A capstan shanty"},{id:"shoalsofherring",name:"Shoals of Herring",preview:"A fisherman's ballad"}]},
   poetry:{title:"When Words Are Needed",icon:"📜",topics:[{id:"sailorsblessing",name:"A Sailor's Blessing",preview:"An opening invocation"},{id:"seafever",name:"Sea Fever",preview:"John Masefield"},{id:"crossingbar",name:"Crossing the Bar",preview:"Alfred Lord Tennyson"},{id:"if",name:"If —",preview:"Rudyard Kipling"},{id:"drakesdrum",name:"Drake's Drum",preview:"Henry Newbolt"},{id:"doverbeach",name:"Dover Beach",preview:"Matthew Arnold"},{id:"convergence",name:"The Convergence of the Twain",preview:"Thomas Hardy"},{id:"ulysses",name:"Ulysses",preview:"Alfred Lord Tennyson — final passage"},{id:"chapman",name:"On First Looking into Chapman's Homer",preview:"John Keats"},{id:"mobydick",name:"Loomings",preview:"Herman Melville — Moby Dick, Chapter I"},{id:"arielsong",name:"Ariel's Song",preview:"William Shakespeare — The Tempest"},{id:"crispinsday",name:"St Crispin's Day",preview:"William Shakespeare — Henry V"},{id:"prospero",name:"We Are Such Stuff",preview:"William Shakespeare — The Tempest"},{id:"othello",name:"Moving Accidents by Flood and Field",preview:"William Shakespeare — Othello"},{id:"invictus",name:"Invictus",preview:"W.E. Henley"},{id:"innisfree",name:"The Lake Isle of Innisfree",preview:"W.B. Yeats"},{id:"donotgo",name:"Do Not Go Gentle into That Good Night",preview:"Dylan Thomas"},{id:"highflight",name:"High Flight",preview:"John Gillespie Magee"},{id:"shackleton",name:"Men Wanted",preview:"Ernest Shackleton"}]},
+  history:{title:"Maritime History",icon:"⚔️",topics:[{id:"capestv",name:"Cape St Vincent",preview:"Nelson makes his name, 1797"},{id:"nile",name:"Battle of the Nile",preview:"Nelson destroys the French fleet, 1798"},{id:"copenhagen",name:"Copenhagen",preview:"Nelson\u2019s blind eye, 1801"},{id:"trafalgar",name:"Trafalgar",preview:"Nelson\u2019s greatest victory, 1805"},{id:"salamis",name:"Salamis",preview:"Themistocles saves Greece, 480 BC"},{id:"armada",name:"The Spanish Armada",preview:"Drake & the Protestant wind, 1588"},{id:"jutland",name:"Jutland",preview:"The last great fleet action, 1916"},{id:"midway",name:"Midway",preview:"The turning point in the Pacific, 1942"},{id:"greatvoyages",name:"Great Voyages",preview:"Magellan, Cook, Shackleton, Chichester"},{id:"navhistory",name:"The Royal Navy",preview:"From Drake to the modern fleet"}]},
 };
 
 var SEARCH_IDX=[];
@@ -9549,6 +9770,12 @@ for(var sid in SECTIONS){var sec=SECTIONS[sid];sec.topics.forEach(function(t){SE
   {id:"units",title:"Units Converter",section:"Tools",preview:"Knots, metres, nautical miles, temperature"},
   {id:"passage",title:"Passage Planner",section:"Tools",preview:"ETA, tidal effect, departure time"},
   {id:"celestial",title:"Celestial Navigation",section:"Navigation",preview:"Sun, stars, noon sight, Polaris",type:"content"},
+  {id:"papercharts",title:"Paper Charts & Plotting",section:"Navigation",preview:"Bearings, fixes, course to steer",type:"content"},
+  {id:"trafalgar",title:"Trafalgar",section:"Maritime History",preview:"Nelson\'s greatest victory, 1805",type:"content"},
+  {id:"nile",title:"Battle of the Nile",section:"Maritime History",preview:"Nelson destroys the French fleet, 1798",type:"content"},
+  {id:"copenhagen",title:"Copenhagen",section:"Maritime History",preview:"Nelson\'s blind eye, 1801",type:"content"},
+  {id:"capestv",title:"Cape St Vincent",section:"Maritime History",preview:"Nelson makes his name, 1797",type:"content"},
+  {id:"greatvoyages",title:"Great Voyages",section:"Maritime History",preview:"Magellan, Cook, Shackleton, Chichester",type:"content"},
   {id:"compass",title:"Compass",section:"Tools",preview:"Live bearing from device sensor"},
   {id:"wind",title:"Wind Advisor",section:"Tools",preview:"Points of sail, apparent wind"},
   {id:"anchor",title:"Anchor Calculator",section:"Tools",preview:"Scope and chain calculator"},
@@ -9571,7 +9798,12 @@ var RELATED={
   barometer:["fronts","stormtactics","weather"],
   firstaid:["hypothermia","mob","harness"],
   tides:["anchoring","passage","fronts"],
-  celestial:["nightsailing","fogsailing","colregs"],
+  celestial:["nightsailing","papercharts","colregs"],
+  papercharts:["celestial","colregs","buoyage"],
+  trafalgar:["nile","copenhagen","capestv"],
+  capestv:["nile","trafalgar","navhistory"],
+  nile:["trafalgar","copenhagen","greatvoyages"],
+  copenhagen:["trafalgar","nile","navhistory"],
   sailtrim:["tacking","reef","heaveto"],
 };
 
